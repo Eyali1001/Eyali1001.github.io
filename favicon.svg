@@ -1,8 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
-  <line x1="16" y1="4" x2="16" y2="8.5" stroke="#111" stroke-width="2"/>
-  <circle cx="16" cy="4" r="3.2" fill="#0000ee"/>
-  <rect x="3.5" y="8.5" width="25" height="20" rx="5" fill="#fff" stroke="#111" stroke-width="2.5"/>
-  <circle cx="11.5" cy="17.5" r="2.7" fill="#111"/>
-  <circle cx="20.5" cy="17.5" r="2.7" fill="#111"/>
-  <rect x="11" y="23" width="10" height="2.2" rx="1.1" fill="#111"/>
+  <!-- the [o_o] bullet bot; it blinks where browsers animate favicons -->
+  <rect x="0.5" y="0.5" width="31" height="31" rx="7" fill="#fff" stroke="#d0d0d0"/>
+  <g fill="none" stroke="#111" stroke-width="2.2" stroke-linecap="square" stroke-linejoin="miter">
+    <path d="M7.2 7.5 H4.6 V24.5 H7.2"/>
+    <path d="M24.8 7.5 H27.4 V24.5 H24.8"/>
+    <ellipse cx="11.2" cy="15" rx="2.9" ry="3.2">
+      <animate attributeName="ry" values="3.2;3.2;0.35;3.2" keyTimes="0;0.94;0.97;1" dur="4.3s" repeatCount="indefinite"/>
+    </ellipse>
+    <ellipse cx="20.8" cy="15" rx="2.9" ry="3.2">
+      <animate attributeName="ry" values="3.2;3.2;0.35;3.2" keyTimes="0;0.94;0.97;1" dur="4.3s" repeatCount="indefinite"/>
+    </ellipse>
+    <path d="M14 20.2 H18"/>
+  </g>
 </svg>

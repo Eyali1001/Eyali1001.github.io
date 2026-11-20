@@ -7,7 +7,7 @@
 
 import * as THREE from '../vendor/three/three.module.min.js'
 import loadMujoco from '../vendor/mujoco/mujoco.js'
-import { createArms } from './arms.js?v=b18eafc744'
+import { createArms, BASES } from './arms.js?v=79e89a0143'
 
 const BASE = new URL('./models/', import.meta.url)
 const LOAD_TIMEOUT_MS = 30000
@@ -90,9 +90,9 @@ export async function mount(figure) {
       g.fillRect(0, 0, 64, 64)
       return new THREE.CanvasTexture(c)
     })()
-    for (const x of [-0.5, 0, 0.5]) {
+    for (const [x, y] of BASES) {
       const disc = new THREE.Mesh(new THREE.PlaneGeometry(0.26, 0.26), new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false }))
-      disc.position.set(x, 0.03, 0.001)
+      disc.position.set(x, y + 0.03, 0.001)
       world.add(disc)
     }
 
@@ -163,9 +163,9 @@ export async function mount(figure) {
 
     const camera = new THREE.PerspectiveCamera(26, 2, 0.05, 20)
     // Everywhere any part of an arm can go (measured over the routine and every kind
-    // of throw: x -0.58..0.96, y -0.17..0.66, z 0..0.77 m), plus margin. The camera
-    // always fits this whole box, so no arm is ever cropped.
-    const ENVELOPE = { x: [-0.63, 1.01], y: [-0.2, 0.7], z: [0, 0.8] }
+    // of throw, catch and pickup: x -0.55..0.95, y -0.33..0.47, z 0..0.85 m), plus
+    // margin. The camera always fits this whole box, so no arm is ever cropped.
+    const ENVELOPE = { x: [-0.61, 1.0], y: [-0.38, 0.52], z: [0, 0.89] }
     const corners = []
     for (const x of ENVELOPE.x) for (const y of ENVELOPE.y) for (const z of ENVELOPE.z) corners.push(new THREE.Vector3(x, z, -y)) // MuJoCo → three
     const viewDir = new THREE.Vector3(0.3, 0.36, -1).normalize() // elevated three-quarter view, from the side the arms reach toward
@@ -239,7 +239,8 @@ export async function mount(figure) {
       sim.grab(p)
     }
     const onMove = e => {
-      if (!drag || e.pointerId !== drag.id) return
+      if (!drag) { if (e.pointerType === 'mouse') sim.lookAt(toWorld(e)); return } // idle arms glance at the pointer
+      if (e.pointerId !== drag.id) return
       const p = toWorld(e)
       if (!p) return
       sim.move(p)
@@ -267,6 +268,7 @@ export async function mount(figure) {
       canvas.addEventListener('pointermove', onMove)
       canvas.addEventListener('pointerup', e => onUp(e, false))
       canvas.addEventListener('pointercancel', e => onUp(e, true)) // the page scrolled instead
+      canvas.addEventListener('pointerleave', () => sim.lookAt(null))
     } else if (caption) caption.remove()
 
     const spin = { q: new THREE.Quaternion(), last: null, t: 0 }

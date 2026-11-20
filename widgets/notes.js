@@ -43,6 +43,7 @@ export function enhance() {
   const hoverable = window.matchMedia('(hover: hover)').matches
   for (const note of notes) {
     const clickable = !!note.querySelector('.pop a, .pop button')
+    if (clickable) note.querySelector('.pop')?.classList.add('live')
     if (hoverable && clickable) {
       note.addEventListener('mouseenter', () => {
         clearTimeout(note._closeTimer)

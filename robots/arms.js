@@ -1,5 +1,5 @@
 // Three different robot arms (an SO-101, an i2rt YAM and a Franka Panda)
-// tossing a ball down the line and catching it.
+// tossing a ball down the line, catching it, and playing with visitors.
 //
 // Pure simulation logic: no DOM, no three.js, so it runs (and is tested) in
 // Node as well as the browser. Every arm is driven by MuJoCo physics through
@@ -8,65 +8,75 @@
 // planned and the simulated arm tracks it with real dynamics and lag.
 //
 // All three arms run the same logic. What differs per robot (size, joints,
-// gripper, which way its tool points) lives in ARMS below.
+// gripper, which way its tool points, how it likes to reach low) lives in
+// ARMS below. All of them work in one vertical plane, y = PLANE, which is
+// also the plane a visitor drags the ball in.
 //
 // The ball is a mocap body: while held it rides the holder's grasp site, in
-// flight it follows the exact ballistic arc toward the catcher's planned
-// catch point.
+// flight it follows a ballistic arc.
 
 const G = 9.81
+const PLANE = 0.4 // every arm works in the vertical plane y = PLANE
 const SEG = 1.6 // seconds per throw
 const RELEASE = 0.3 // wind-up duration before release
 const THROWS = [[0, 1], [1, 2], [2, 0]] // the long one sails over the middle arm
 const CYCLE = SEG * THROWS.length
 
 // Per-robot setup. Positions are world coordinates; every arm faces +y.
-//   base     x of the arm's base (must match scene.xml)
+//   base     [x, y] of the arm's base (must match tools/build-models.mjs)
 //   joints   arm joints the IK drives (not the gripper)
 //   site     the point the IK steers, at the fingertips
 //   tool     the tool's pointing axis in that site's frame
 //   grip     gripper actuator and its open / holding-the-ball / resting commands
 //   seed     a comfortable starting posture; the IK keeps drifting back toward it
-//   y, z     how far forward and how high the arm works (idle, release, catch)
+//   z        how high the arm works (idle, release, catch)
 //   tilt     how much the gripper prefers to point down (−) or up (+) from the shared aim
-//   reach    half-width of the catch zone around the base, for loose balls
+//   low      [z0, z1]: below z1 the gripper starts turning down, below z0 it points
+//            straight at the table (measured: where each arm can still reach)
+//   reach    half-width of the arm's zone around its base, for loose balls
+//   top      highest point the arm reaches for a loose ball
 //   side     how far toward its partner the arm leans to throw or catch
+//   speed    how briskly it chases a new goal (rad/s of a critically damped spring)
+//   kv       servo damping override (the stock SO-101 servos ring on fast moves)
 const ARMS = [
   {
-    name: 'so101', prefix: 'a0_', base: -0.45,
+    name: 'so101', prefix: 'a0_', base: [-0.45, 0.07],
     joints: ['shoulder_pan', 'shoulder_lift', 'elbow_flex', 'wrist_flex', 'wrist_roll'],
     site: 'gripperframe', tool: [1, 0, 0],
     grip: { act: 'gripper', open: 0.9, hold: 0.3, rest: 0.55 },
     seed: [0, -0.6, 0.9, 0.6, 0],
-    y: 0.29, z: { idle: 0.18, release: 0.22, catch: 0.22 }, tilt: 0, reach: 0.2, side: 0.04,
-    zone: { y: [0.18, 0.4], z: [0.08, 0.36] },
+    z: { idle: 0.18, release: 0.22, catch: 0.22 }, tilt: 0, low: [0.08, 0.15],
+    reach: 0.2, top: 0.4, side: 0.04, speed: 13, kv: 8,
   },
   {
-    name: 'yam', prefix: 'a1_', base: 0,
+    name: 'yam', prefix: 'a1_', base: [0, 0],
     joints: ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6'],
     site: 'grasp_site', tool: [0, 0, 1],
     grip: { act: 'gripper', open: 0.037, hold: 0.018, rest: 0.022 },
     seed: [0, 1.0, 1.1, 0, 0, 0],
-    y: 0.39, z: { idle: 0.24, release: 0.3, catch: 0.32 }, tilt: 0, reach: 0.28, side: 0.06,
-    zone: { y: [0.22, 0.58], z: [0.1, 0.55] },
+    z: { idle: 0.24, release: 0.3, catch: 0.32 }, tilt: 0, low: [0.12, 0.25],
+    reach: 0.28, top: 0.58, side: 0.06, speed: 14,
   },
   {
-    name: 'panda', prefix: 'a2_', base: 0.58,
+    name: 'panda', prefix: 'a2_', base: [0.58, -0.15],
     joints: ['joint1', 'joint2', 'joint3', 'joint4', 'joint5', 'joint6', 'joint7'],
     site: 'grasp_site', tool: [0, 0, 1],
     grip: { act: 'actuator8', open: 255, hold: 127, rest: 190 },
     seed: [0, 0.3, 0, -2.2, 0, 2.6, 0.785],
-    y: 0.55, z: { idle: 0.46, release: 0.52, catch: 0.52 }, tilt: -0.8, reach: 0.36, side: 0.08,
-    zone: { y: [0.4, 0.75], z: [0.3, 0.75] },
+    z: { idle: 0.46, release: 0.52, catch: 0.52 }, tilt: -0.8, low: [0.25, 0.4],
+    reach: 0.36, top: 0.75, side: 0.08, speed: 12,
   },
 ]
-const BASES = ARMS.map(a => a.base)
+export const BASES = ARMS.map(a => a.base)
+const X = ARMS.map(a => a.base[0])
+const SIZE = ARMS.map(a => (PLANE - a.base[1]) / 0.4) // motions scale with the arm
 
 const v3 = {
   add: (a, b) => [a[0] + b[0], a[1] + b[1], a[2] + b[2]],
   sub: (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]],
   scale: (a, s) => [a[0] * s, a[1] * s, a[2] * s],
   lerp: (a, b, t) => [a[0] + (b[0] - a[0]) * t, a[1] + (b[1] - a[1]) * t, a[2] + (b[2] - a[2]) * t],
+  len: a => Math.hypot(a[0], a[1], a[2]),
   norm: a => {
     const l = Math.hypot(a[0], a[1], a[2]) || 1
     return [a[0] / l, a[1] / l, a[2] / l]
@@ -74,9 +84,24 @@ const v3 = {
   cross: (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]],
   dot: (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2],
 }
+const dist = (a, b) => v3.len(v3.sub(a, b))
 
 const smooth = t => (t <= 0 ? 0 : t >= 1 ? 1 : t * t * t * (t * (6 * t - 15) + 10)) // min-jerk
 const clamp01 = t => Math.max(0, Math.min(1, t))
+
+// Exact step of a critically damped spring pulling e (with rate ev) to zero.
+function damp(e, ev, w, dt) {
+  const k = Math.exp(-w * dt)
+  const c = [0, 1, 2].map(j => ev[j] + w * e[j])
+  return [[0, 1, 2].map(j => (e[j] + c[j] * dt) * k), [0, 1, 2].map(j => (ev[j] - w * c[j] * dt) * k)]
+}
+// How long that spring needs to close a gap of D metres to within 2.5 cm.
+function settleTime(D, w) {
+  const r = 0.025 / Math.max(D, 0.026)
+  let x = 1
+  for (let k = 0; k < 30; k++) x += ((1 + x) * Math.exp(-x) - r) / (x * Math.exp(-x)) // Newton on (1+x)e^-x = r
+  return x / w
+}
 
 // Solve A x = b for a small dense n×n system (Gaussian elimination, partial pivoting).
 function solve(A, b, n) {
@@ -106,13 +131,20 @@ function solve(A, b, n) {
 }
 
 // Where each arm likes to be, in world coordinates (arms face +y).
-const towards = (i, j) => Math.sign(BASES[j] - BASES[i])
-const idlePoint = i => [BASES[i], ARMS[i].y, ARMS[i].z.idle]
-const releasePoint = (i, j) => [BASES[i] + ARMS[i].side * towards(i, j), ARMS[i].y, ARMS[i].z.release]
-const catchPoint = (i, j) => [BASES[j] - 1.3 * ARMS[j].side * towards(i, j), ARMS[j].y, ARMS[j].z.catch]
+const towards = (i, j) => Math.sign(X[j] - X[i])
+const idlePoint = i => [X[i], PLANE, ARMS[i].z.idle]
+const releasePoint = (i, j) => [X[i] + ARMS[i].side * towards(i, j), PLANE, ARMS[i].z.release]
+const catchPoint = (i, j) => [X[j] - 1.3 * ARMS[j].side * towards(i, j), PLANE, ARMS[j].z.catch]
 // Tools point forward (+y), tilted toward the action.
 const aim = (side, up) => v3.norm([side, 1, up])
 const aimFor = (i, side, up) => aim(side, up + ARMS[i].tilt)
+// The same, but turning toward the table when working low (each arm has its own band).
+const aimAt = (i, side, up, z) => {
+  const [z0, z1] = ARMS[i].low
+  const u = smooth((z - z0) / (z1 - z0))
+  return aim(side * u, -3.3 + (up + ARMS[i].tilt + 3.3) * u)
+}
+const DOWN = aim(0, -3.3)
 const idleDir = i => aimFor(i, 0, 0.25)
 const meetDir = (i, j) => aimFor(j, -0.5 * towards(i, j), 0.3) // jaws turned toward the thrower
 // Longer throws fly longer (and higher).
@@ -140,6 +172,7 @@ export function createArms(mujoco, model, data) {
       for (let a = 0; a < model.nu; a++) if (model.actuator_trntype[a] === 0 && model.actuator_trnid[2 * a] === j) return a
       throw new Error(`no actuator for joint ${j}`)
     })
+    if (cfg.kv) for (const a of act) model.actuator_biasprm[10 * a + 2] = -cfg.kv
     return {
       cfg,
       n: joints.length,
@@ -151,6 +184,10 @@ export function createArms(mujoco, model, data) {
       grip: id(obj.mjOBJ_ACTUATOR, cfg.prefix + cfg.grip.act),
       home: cfg.seed.slice(),
       q: cfg.seed.slice(), // IK solution, fed to the actuators
+      // the commanded tool pose and its rate, kept continuous through every change of plan
+      cmd: { p: [0, 0, 0], v: [0, 0, 0], d: [0, 1, 0], dv: [0, 0, 0] },
+      // while in the routine: how far the command still is from the script, decaying to zero
+      off: { e: [0, 0, 0], ev: [0, 0, 0], de: [0, 0, 0], dev: [0, 0, 0] },
     }
   })
   const ballBody = id(obj.mjOBJ_BODY, 'ball')
@@ -160,16 +197,20 @@ export function createArms(mujoco, model, data) {
   const jacp = new mujoco.DoubleBuffer(3 * nv)
   const jacr = new mujoco.DoubleBuffer(3 * nv)
 
+  // A visitor's pointer hovering over the scene: idle arms turn to look at it.
+  const look = { target: null, p: null, w: 0 }
+
   // Plan for one arm at cycle time t: where the grasp site should be, where the
   // gripper should point, and how open it is.
   // `wall` is continuous time, used for the idle sway so it never jumps when
   // the routine loops; `t` is the routine clock (mod CYCLE).
   function plan(i, t, wall = t) {
     const g = ARMS[i].grip
-    const k0 = ARMS[i].y / 0.39 // sway scaled to the arm's size
+    const k0 = SIZE[i]
     const sway = [0.015 * k0 * Math.sin(wall * 1.3 + i), 0.01 * k0 * Math.sin(wall * 0.9 + 2 * i), 0.012 * k0 * Math.sin(wall * 1.7 + i)]
     let pos = v3.add(idlePoint(i), sway)
     let dir = idleDir(i)
+    if (look.p && look.w > 0.001) dir = v3.norm(v3.lerp(dir, v3.norm(v3.sub(look.p, pos)), 0.55 * look.w))
     let grip = g.rest
 
     // Walk the throws of the previous, current and next loop, so phases that
@@ -183,7 +224,7 @@ export function createArms(mujoco, model, data) {
       const pc = catchPoint(a, b)
       const v0 = launchVelocity(pr, pc, flightTime(a, b))
       const vin = [v0[0], v0[1], v0[2] - G * flightTime(a, b)]
-      const pw = v3.sub(pr, v3.scale(v0, 0.06 * (ARMS[a].y / 0.39))) // wind-up: back along the throw
+      const pw = v3.sub(pr, v3.scale(v0, 0.06 * SIZE[a])) // wind-up: back along the throw
       pw[2] = Math.max(pw[2], ARMS[a].z.idle * 0.8)
       const throwDir = aimFor(a, 0.45 * towards(a, b), 0.45)
       const meet = meetDir(a, b)
@@ -308,16 +349,19 @@ export function createArms(mujoco, model, data) {
   // ---------------------------------------------------------------------------
   // Runtime. Three modes:
   //   routine — the scripted toss-and-catch loop above;
-  //   hand    — a visitor is holding the ball (dragging it around);
-  //   free    — the ball is loose: thrown by a visitor, or dropped. Every frame
-  //             the arms predict its arc, the best-placed arm goes to intercept
-  //             it, the others watch it. A ball that lands is picked up or
-  //             handed back, and the routine resumes from whoever has it.
+  //   hand    — a visitor is holding the ball (dragging it around): arms nearby
+  //             reach for it, and one can take it if it is held right at its jaws;
+  //   free    — the ball is loose: thrown by a visitor, or dropped. The arm that
+  //             can get under its arc first commits to a catch point and goes
+  //             there; the others watch. A ball on the table is picked up:
+  //             above it, down, close the gripper, lift.
+  // Every arm's commanded pose is continuous in position and velocity through
+  // all of these changes of plan, so nothing ever snaps.
   // ---------------------------------------------------------------------------
 
   const BALL_R = 0.02
   const CATCH_DIST = 0.045
-  const ARM_SPEED = 1.6 // m/s the planner assumes a gripper can travel
+  const LAG = 0.07 // seconds the real arm trails its command
 
   let mode = 'routine'
   let routineT = 0 // routine clock, seconds (mod CYCLE)
@@ -327,31 +371,34 @@ export function createArms(mujoco, model, data) {
   let releasePos = null
   let releaseVel = null
   let flightCheck = null // routine flight we must verify was caught
-  const ball = { p: [0, 0.4, 0.3], v: [0, 0, 0] }
-  let catcher = -1
+  const ball = { p: [0, PLANE, 0.3], v: [0, 0, 0] }
+  let held = { off: [0, 0, 0], t: -1 } // a just-caught ball settles into the jaws
+  let catchPlan = null // { i, p, v, t }: the arm committed to a catch, where and when
+  let bounces = 0
+  let pick = null // { i, phase: 'above' | 'down' | 'close', t0, start }
   let restT = 0
-  let picker = -1
-  let pickPhase = 0
-  const blend = arms.map(() => ({ dp: [0, 0, 0], dd: [0, 0, 0] }))
+  let snatch = { i: -1, t: 0 }
 
   const sitePos = s => [data.site_xpos[3 * s], data.site_xpos[3 * s + 1], data.site_xpos[3 * s + 2]]
-  // Where a held ball sits: on the grasp site.
   const gripPos = i => sitePos(arms[i].site)
+  // Where a held ball sits: on the grasp site, plus whatever is left of the catch offset.
+  const heldPos = i => v3.add(gripPos(i), v3.scale(held.off, Math.exp(-(time - held.t) / 0.05)))
   function setBall(p) {
     ball.p = p.slice()
     data.mocap_pos[3 * ballMocap] = p[0]
     data.mocap_pos[3 * ballMocap + 1] = p[1]
     data.mocap_pos[3 * ballMocap + 2] = p[2]
   }
+  // Arm i now has the ball, wherever it was: it slides into the jaws over ~0.1 s.
+  function attach(i) {
+    held = { off: v3.sub(ball.p, gripPos(i)), t: time }
+    holder = i
+  }
 
-  // Remember where each arm was headed, so a change of plan blends in
-  // smoothly instead of snapping.
-  function rebase(newTargets) {
-    if (!lastTargets) return
-    arms.forEach((_, i) => {
-      blend[i].dp = v3.add(blend[i].dp, v3.sub(lastTargets[i].pos, newTargets[i].pos))
-      blend[i].dd = v3.add(blend[i].dd, v3.sub(lastTargets[i].dir, newTargets[i].dir))
-    })
+  // The script's pose for arm i at the current routine clock, and its rate.
+  function scripted(i, t = routineT, wall = time) {
+    const a = plan(i, t, wall), b = plan(i, (t + 0.01) % CYCLE, wall + 0.01)
+    return { ...a, vel: v3.scale(v3.sub(b.pos, a.pos), 100), dvel: v3.scale(v3.sub(b.dir, a.dir), 100) }
   }
 
   // Routine clock position at which arm `a` is about to wind up for its throw.
@@ -361,26 +408,44 @@ export function createArms(mujoco, model, data) {
   }
 
   function enterRoutine(a) {
-    holder = a
     mode = 'routine'
     routineT = routineFor(a)
     releasePos = null
     flightCheck = null
-    catcher = -1
-    picker = -1
+    catchPlan = null
+    pick = null
     restT = 0
-    rebase(arms.map((_, i) => plan(i, routineT, time)))
+    snatch = { i: -1, t: 0 }
+    // keep every arm exactly where it is, moving as it moves; the difference to
+    // the script fades out smoothly
+    arms.forEach((arm, i) => {
+      const s = scripted(i)
+      arm.off.e = v3.sub(arm.cmd.p, s.pos)
+      arm.off.ev = v3.sub(arm.cmd.v, s.vel)
+      arm.off.de = v3.sub(arm.cmd.d, s.dir)
+      arm.off.dev = v3.sub(arm.cmd.dv, s.dvel)
+    })
   }
 
   function enterFree(p, v) {
     mode = 'free'
     ball.p = p.slice()
     ball.v = v.slice()
-    catcher = -1
-    picker = -1
+    catchPlan = null
+    pick = null
     restT = 0
+    bounces = 0
     flightCheck = null
     releasePos = null
+  }
+
+  // A ball that is gone for good (rolled off, or nobody could reach it) drops
+  // back in from above the nearest arm, which catches it.
+  function dropIn() {
+    let best = 0
+    X.forEach((x, i) => { if (Math.abs(x - ball.p[0]) < Math.abs(X[best] - ball.p[0])) best = i })
+    enterFree([X[best], PLANE, 2.0], [0, 0, 0])
+    setBall(ball.p)
   }
 
   // Ballistic ball with floor bounces (the floor is the page: z = 0).
@@ -390,9 +455,12 @@ export function createArms(mujoco, model, data) {
     for (let k = 0; k < 3; k++) b.p[k] += b.v[k] * h
     if (b.p[2] < BALL_R) {
       b.p[2] = BALL_R
-      if (b.v[2] < 0) b.v[2] = -b.v[2] * 0.55
+      if (b.v[2] < 0) {
+        b.v[2] = -b.v[2] * 0.55
+        bounces++
+      }
       if (Math.abs(b.v[2]) < 0.15) b.v[2] = 0
-      const roll = Math.exp(-1.8 * h) // rolling friction on the table
+      const roll = Math.exp(-3 * h) // rolling friction on the table
       b.v[0] *= roll
       b.v[1] *= roll
     }
@@ -400,102 +468,156 @@ export function createArms(mujoco, model, data) {
 
   const inZone = (i, p) => {
     const c = ARMS[i]
-    return Math.abs(p[0] - BASES[i]) < c.reach && p[1] > c.zone.y[0] && p[1] < c.zone.y[1] && p[2] > c.zone.z[0] && p[2] < c.zone.z[1]
+    return Math.abs(p[0] - X[i]) < c.reach && Math.abs(p[1] - PLANE) < 0.12 && p[2] > 0.06 && p[2] < c.top
   }
 
-  // Where along the ball's predicted arc can arm i be first, and when?
+  // Where along the ball's predicted arc can arm i be first, and when (from now)?
+  // If it cannot make it anywhere, the point it comes closest to making, as an
+  // attempt: a lunge that may or may not get there.
   function intercept(i) {
-    const s = gripPos(i)
+    const from = arms[i].cmd.p
     let p = ball.p.slice(), v = ball.v.slice()
-    for (let t = 0.02; t < 1.6; t += 0.02) {
+    let best = null
+    for (let t = 0.02; t < 1.8; t += 0.02) {
       v = [v[0], v[1], v[2] - G * 0.02]
       p = v3.add(p, v3.scale(v, 0.02))
-      if (p[2] < 0.03) return null
+      if (p[2] < 0.04) break
       if (!inZone(i, p)) continue
-      const travel = Math.hypot(p[0] - s[0], p[1] - s[1], p[2] - s[2]) / ARM_SPEED + 0.08
-      if (travel <= t) return { t, p, v }
+      const slack = t - settleTime(dist(p, from), ARMS[i].speed) - LAG
+      if (slack >= 0) return { t, p, v, slack }
+      if (!best || slack > best.slack) best = { t, p, v, slack }
     }
-    return null
+    return best && best.slack > -0.3 ? best : null
   }
 
-  const watching = (i, extra = 0) => {
-    const s = sitePos(arms[i].site)
+  const watching = i => {
+    const s = arms[i].cmd.p
     const look = v3.norm(v3.sub(ball.p, s))
-    return v3.norm(v3.add(aimFor(i, 0, 0.2), v3.scale(look, 0.7 + extra)))
+    return v3.norm(v3.add(aimFor(i, 0, 0.2), v3.scale(look, 0.7)))
+  }
+  const restPose = (i, t) => {
+    const k0 = SIZE[i]
+    const sway = [0.01 * k0 * Math.sin(t * 1.3 + i), 0, 0.01 * k0 * Math.sin(t * 1.7 + i)]
+    return { pos: v3.add(idlePoint(i), sway), dir: watching(i), grip: ARMS[i].grip.rest }
   }
 
-  function freePlan(t) {
-    const out = arms.map((_, i) => {
-      const k0 = ARMS[i].y / 0.39
-      const sway = [0.01 * k0 * Math.sin(t * 1.3 + i), 0, 0.01 * k0 * Math.sin(t * 1.7 + i)]
-      return { pos: v3.add(idlePoint(i), sway), dir: watching(i), grip: ARMS[i].grip.rest }
-    })
-    if (mode === 'hand') return out
+  function freePlan(t, h) {
+    const out = arms.map((_, i) => restPose(i, t))
 
-    // In the air: choose the arm that gets there first (keep the current one if it still can).
+    if (mode === 'hand') {
+      // Arms near the ball lean in for it, jaws opening; the closer, the keener.
+      arms.forEach((arm, i) => {
+        const c = ARMS[i]
+        const home = idlePoint(i)
+        const dx = (ball.p[0] - X[i]) / (c.reach * 1.25)
+        const dz = (ball.p[2] - home[2]) / (c.top * 0.9)
+        const want = smooth(1 - Math.hypot(dx, dz))
+        if (want <= 0) return
+        const to = [ball.p[0], PLANE, Math.max(0.04, ball.p[2])]
+        out[i] = {
+          pos: v3.lerp(out[i].pos, to, 0.85 * want),
+          dir: aimAt(i, 0.4 * Math.sign(ball.p[0] - X[i]), 0.25, to[2]),
+          grip: c.grip.rest + (c.grip.open - c.grip.rest) * Math.min(1, 2 * want),
+        }
+      })
+      return out
+    }
+
     const airborne = ball.p[2] > BALL_R + 0.005 || ball.v[2] > 0.05
     if (airborne) {
-      const plans = arms.map((_, i) => intercept(i))
-      if (catcher < 0 || !plans[catcher]) {
-        let best = -1
-        plans.forEach((pl, i) => { if (pl && (best < 0 || pl.t < plans[best].t)) best = i })
-        catcher = best
+      pick = null
+      // Keep a committed catch unless the ball bounced off the plan or the moment passed.
+      if (catchPlan && (catchPlan.bounces !== bounces || t > catchPlan.t + 0.15)) catchPlan = null
+      if (!catchPlan) {
+        // the earliest sure catch; failing that, the most promising attempt
+        let best = null
+        arms.forEach((_, i) => {
+          const pl = intercept(i)
+          if (!pl) return
+          const better = !best || (pl.slack >= 0 && (best.slack < 0 || pl.t < best.t)) || (pl.slack < 0 && best.slack < 0 && pl.slack > best.slack)
+          if (better) best = { ...pl, i }
+        })
+        if (best) catchPlan = { i: best.i, p: best.p, v: best.v, t: t + best.t, bounces }
       }
-      if (catcher >= 0) {
-        const pl = plans[catcher]
-        const side = Math.sign(-pl.v[0]) || 0
-        out[catcher] = { pos: pl.p, dir: aimFor(catcher, 0.5 * side, 0.25), grip: ARMS[catcher].grip.open }
+      if (catchPlan) {
+        const i = catchPlan.i
+        const side = -0.5 * Math.sign(catchPlan.v[0])
+        out[i] = { pos: catchPlan.p, dir: aimAt(i, side, 0.3, catchPlan.p[2]), grip: ARMS[i].grip.open }
       }
       return out
     }
 
-    // On the floor: the nearest arm that can reach it picks it up.
-    catcher = -1
-    if (picker < 0) {
-      let best = -1, bd = 1e9
+    // On the table: the nearest arm that can reach it picks it up.
+    catchPlan = null
+    if (!pick) {
+      let best = -1
       arms.forEach((_, i) => {
-        const c = ARMS[i]
-        const dx = Math.abs(ball.p[0] - BASES[i])
-        if (dx < c.reach && ball.p[1] > c.zone.y[0] && ball.p[1] < c.zone.y[1] && dx < bd) { bd = dx; best = i }
+        const dx = Math.abs(ball.p[0] - X[i])
+        if (dx < ARMS[i].reach && (best < 0 || dx < Math.abs(ball.p[0] - X[best]))) best = i
       })
-      picker = best
-      pickPhase = 0
+      if (best >= 0) pick = { i: best, phase: 'above', t0: t, start: t }
     }
-    if (picker >= 0) {
-      const down = aim(0, -0.9)
-      const above = v3.add(ball.p, [0, 0, 0.1])
-      const s = gripPos(picker)
-      if (pickPhase === 0 && Math.hypot(...v3.sub(above, s)) < 0.03) pickPhase = 1
-      out[picker] = { pos: pickPhase ? v3.add(ball.p, [0, 0, 0.005]) : above, dir: down, grip: ARMS[picker].grip.open }
+    if (pick) {
+      const i = pick.i, s = gripPos(i), slow = v3.len(ball.v) < 0.2
+      const above = v3.add(ball.p, [0, 0, 0.09])
+      if (pick.phase === 'above' && slow && dist(s, above) < 0.025) Object.assign(pick, { phase: 'down', t0: t })
+      if (pick.phase === 'down' && dist(s, ball.p) < 0.012) Object.assign(pick, { phase: 'close', t0: t })
+      const g = ARMS[i].grip
+      if (pick.phase === 'above') out[i] = { pos: above, dir: DOWN, grip: g.open }
+      else out[i] = { pos: ball.p.slice(), dir: DOWN, grip: pick.phase === 'close' ? g.hold : g.open }
     }
     return out
   }
 
-  function decayBlend(targets, dt) {
-    const k = Math.exp(-dt / 0.22)
-    return targets.map((tg, i) => {
-      const b = blend[i]
-      b.dp = v3.scale(b.dp, k)
-      b.dd = v3.scale(b.dd, k)
-      return { pos: v3.add(tg.pos, b.dp), dir: v3.norm(v3.add(tg.dir, b.dd)), grip: tg.grip }
+  // Bring each arm's commanded pose to this frame's plan, without any jumps.
+  function command(goals, T) {
+    arms.forEach((arm, i) => {
+      const g = goals[i], c = arm.cmd
+      if (mode === 'routine') {
+        const o = arm.off
+        ;[o.e, o.ev] = damp(o.e, o.ev, 9, T)
+        ;[o.de, o.dev] = damp(o.de, o.dev, 9, T)
+        c.p = v3.add(g.pos, o.e)
+        c.v = v3.add(g.vel, o.ev)
+        c.d = v3.norm(v3.add(g.dir, o.de))
+        c.dv = v3.add(g.dvel, o.dev)
+      } else {
+        // a spring toward the goal: a new goal changes where it pulls, never where it is
+        const w = ARMS[i].speed
+        const [e, ev] = damp(v3.sub(c.p, g.pos), c.v, w, T)
+        c.p = v3.add(g.pos, e)
+        c.v = ev
+        const [de, dev] = damp(v3.sub(c.d, g.dir), c.dv, w, T)
+        c.d = v3.norm(v3.add(g.dir, de))
+        c.dv = dev
+      }
     })
+    return arms.map((arm, i) => ({ pos: arm.cmd.p, dir: arm.cmd.d, grip: goals[i].grip }))
   }
 
   function reset() {
     time = 0
     routineT = 0
     mode = 'routine'
+    holder = THROWS[0][0]
+    look.target = look.p = null
+    look.w = 0
     // Solve each arm into its resting pose from its seed posture, and make that
     // the posture it drifts back toward.
     const rest = arms.map((_, i) => ({ pos: idlePoint(i), dir: idleDir(i), grip: ARMS[i].grip.rest }))
     for (let k = 0; k < 80; k++) ikStep(rest, 1)
     arms.forEach(arm => { arm.home = arm.q.slice() })
-    const targets = arms.map((_, i) => plan(i, 0))
+    const targets = arms.map((_, i) => scripted(i, 0, 0))
+    arms.forEach((arm, i) => {
+      arm.cmd = { p: targets[i].pos, v: targets[i].vel, d: targets[i].dir, dv: targets[i].dvel }
+      arm.off = { e: [0, 0, 0], ev: [0, 0, 0], de: [0, 0, 0], dev: [0, 0, 0] }
+    })
     for (let k = 0; k < 40; k++) ikStep(targets, 1)
     arms.forEach(arm => arm.qadr.forEach((a, k) => (data.qpos[a] = arm.q[k])))
     for (let i = 0; i < data.qvel.length; i++) data.qvel[i] = 0
     mujoco.mj_forward(model, data)
     lastTargets = targets
+    held = { off: [0, 0, 0], t: -1 }
     setBall(gripPos(holder))
   }
 
@@ -503,14 +625,22 @@ export function createArms(mujoco, model, data) {
   function step(dt) {
     const h = model.opt.timestep
     const n = Math.max(1, Math.round(dt / h))
-    let targets = mode === 'routine' ? arms.map((_, i) => plan(i, (routineT + n * h) % CYCLE, time + n * h)) : freePlan(time)
-    const goal = targets
-    targets = decayBlend(targets, n * h)
+    const T = n * h
+
+    // follow the pointer's gaze target smoothly
+    const lw = 1 - Math.exp(-T / 0.25)
+    look.w += ((look.target ? 1 : 0) - look.w) * lw
+    if (look.target) look.p = look.p ? v3.lerp(look.p, look.target, 1 - Math.exp(-T / 0.12)) : look.target.slice()
+
+    const goals = mode === 'routine' ? arms.map((_, i) => scripted(i, (routineT + T) % CYCLE, time + T)) : freePlan(time, T)
+    const targets = command(goals, T)
     ikStep(targets, 2)
-    lastTargets = goal
+    lastTargets = targets
+    const ballHeld = mode === 'routine' && !releasePos
     arms.forEach((arm, i) => {
       arm.act.forEach((a, k) => (data.ctrl[a] = arm.q[k]))
-      data.ctrl[arm.grip] = targets[i].grip
+      // whoever has the ball keeps a grip on it
+      data.ctrl[arm.grip] = ballHeld && i === holder ? ARMS[i].grip.hold : targets[i].grip
     })
 
     for (let k = 0; k < n; k++) {
@@ -520,7 +650,7 @@ export function createArms(mujoco, model, data) {
         const st = ballState(routineT)
         if (st.flight) {
           if (!releasePos) {
-            releasePos = gripPos(st.flight.from)
+            releasePos = ball.p.slice()
             releaseVel = launchVelocity(releasePos, catchPoint(st.flight.from, st.flight.to), st.flight.tc - st.flight.tr)
             flightCheck = st.flight
           }
@@ -530,31 +660,37 @@ export function createArms(mujoco, model, data) {
         } else {
           if (flightCheck) {
             // The catcher should be there; if it was knocked off course, let the ball fly on.
-            const s = gripPos(flightCheck.to)
-            if (Math.hypot(...v3.sub(s, ball.p)) > 0.07) { enterFree(ball.p, ball.v); continue }
+            if (dist(gripPos(flightCheck.to), ball.p) > 0.07) { enterFree(ball.p, ball.v); continue }
+            attach(flightCheck.to)
             flightCheck = null
           }
           releasePos = null
           holder = st.holder
-          setBall(gripPos(holder))
+          setBall(heldPos(holder))
         }
+      } else if (mode === 'hand') {
+        // held right at an arm's jaws for a moment, the arm takes it
+        let near = -1
+        arms.forEach((_, i) => { if (dist(gripPos(i), ball.p) < 0.035) near = i })
+        snatch = near >= 0 && near === snatch.i ? { i: near, t: snatch.t + h } : { i: near, t: 0 }
+        if (near >= 0 && snatch.t > 0.3) { attach(near); enterRoutine(near) }
       } else if (mode === 'free') {
-        integrateBall(h)
-        setBall(ball.p)
-        for (let i = 0; i < arms.length; i++) {
-          if (Math.hypot(...v3.sub(gripPos(i), ball.p)) < CATCH_DIST) { enterRoutine(i); break }
+        if (pick?.phase === 'close') {
+          if (time - pick.t0 > 0.25) { attach(pick.i); enterRoutine(pick.i) }
+        } else {
+          integrateBall(h)
+          setBall(ball.p)
+          if (ball.p[2] > BALL_R + 0.01) {
+            for (let i = 0; i < arms.length; i++) {
+              if (dist(gripPos(i), ball.p) < CATCH_DIST) { attach(i); enterRoutine(i); break }
+            }
+          }
         }
         if (mode === 'free') {
-          const resting = ball.p[2] <= BALL_R + 0.002 && Math.hypot(...ball.v) < 0.12
+          const resting = ball.p[2] <= BALL_R + 0.002 && v3.len(ball.v) < 0.12
           restT = resting ? restT + h : 0
-          const lost = Math.abs(ball.p[0]) > 1.5 || ball.p[1] < -0.8 || ball.p[1] > 1.4
-          if (lost || (restT > 1.2 && picker < 0) || restT > 4) {
-            // Hand it back to the nearest arm.
-            let best = 0
-            BASES.forEach((x, i) => { if (Math.abs(x - ball.p[0]) < Math.abs(BASES[best] - ball.p[0])) best = i })
-            enterRoutine(best)
-            setBall(gripPos(best))
-          }
+          const lost = ball.p[0] < -1.0 || ball.p[0] > 1.3 || Math.abs(ball.p[1] - PLANE) > 0.6
+          if (lost || (restT > 0.8 && !pick) || (pick && time - pick.start > 4)) dropIn()
         }
       }
       mujoco.mj_step(model, data)
@@ -564,23 +700,27 @@ export function createArms(mujoco, model, data) {
   // --- visitor interaction (positions in MuJoCo world coordinates) ---
   function grab(p) {
     mode = 'hand'
-    catcher = -1
-    picker = -1
+    catchPlan = null
+    pick = null
     releasePos = null
     flightCheck = null
-    rebase(freePlan(time))
+    snatch = { i: -1, t: 0 }
     move(p)
   }
   function move(p) {
     if (mode !== 'hand') return
-    const q = [Math.max(-1.2, Math.min(1.2, p[0])), p[1], Math.max(BALL_R, Math.min(1.0, p[2]))]
+    const q = [Math.max(-1.0, Math.min(1.3, p[0])), p[1], Math.max(BALL_R, Math.min(1.0, p[2]))]
     setBall(q)
   }
   function release(v) {
     if (mode !== 'hand') return
-    const sp = Math.hypot(...v)
+    const sp = v3.len(v)
     const cap = 5.5
     enterFree(ball.p, sp > cap ? v3.scale(v, cap / sp) : v)
+  }
+  // The pointer is hovering at world point p (or has left: null).
+  function lookAt(p) {
+    look.target = p ? p.slice() : null
   }
 
   function dispose() {
@@ -590,8 +730,10 @@ export function createArms(mujoco, model, data) {
   }
 
   return {
-    ikStep, reset, step, dispose, arms, ballBody, grab, move, release,
+    ikStep, reset, step, dispose, arms, ballBody, grab, move, release, lookAt,
     get mode() { return mode },
+    get holding() { return mode === 'routine' && !releasePos },
     get flying() { return mode === 'free' || (mode === 'routine' && !!releasePos) }, get ball() { return ball }, get time() { return time }, get lastTargets() { return lastTargets },
+    get pick() { return pick }, get catchPlan() { return catchPlan },
   }
 }

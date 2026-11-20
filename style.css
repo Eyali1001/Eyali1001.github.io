@@ -68,6 +68,7 @@ h2 { font-size: 1.15rem; font-weight: normal; margin: 2rem 0 0.5rem; }
 }
 .me img {
   display: block; width: 100%; height: auto; border: 1px solid var(--rule);
+  pointer-events: none; /* hover is the thumbnail's own spot, not the enlarged picture */
   transform-origin: top right; transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 /* Hover (or tap) the photo: it grows and the page dims behind it. */
@@ -215,6 +216,11 @@ img, video { max-width: 100%; height: auto; }
 @keyframes bullet-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(47, 191, 74, 0.5); } 50% { box-shadow: 0 0 0 0.35em rgba(47, 191, 74, 0); } }
 @media (prefers-reduced-motion: reduce) { .home .projects li::before { animation: none !important; } }
 .projects .alt { font-size: 0.9em; }
+/* project cards: the title keeps its link underline, no dotted hint on top */
+.projects a.note { text-decoration: none; }
+.projects .pop { max-width: min(24rem, calc(100vw - 2rem)); }
+.pop .para { display: block; }
+.pop .para + .para { margin-top: 0.45em; }
 
 /* ---------- hover notes ---------- */
 
@@ -256,9 +262,17 @@ h1 .pop { font-size: 0.9rem; }
 /* an invisible bridge over the gap, so the pointer can reach the card */
 .pop::before { content: ''; position: absolute; left: 0; right: 0; top: -0.6rem; height: 0.6rem; }
 .note:hover > .pop,
-.note:focus > .pop,
-.note:focus-within > .pop,
+.note:focus-visible > .pop,
 .note.open > .pop { display: block; }
+/* keyboard focus inside a card keeps it open (separate rule: older browsers drop :has) */
+.note:has(:focus-visible) > .pop { display: block; }
+/* With a mouse, a card with nothing to click is see-through to the pointer, so it
+   closes the moment the pointer leaves its word, even when it covers what is below.
+   (notes.js marks the cards that do have something to click: .live) */
+@media (hover: hover) {
+  .pop { pointer-events: none; }
+  .pop.live { pointer-events: auto; }
+}
 
 /* ---------- robot arms ---------- */
 
