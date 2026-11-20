@@ -7,7 +7,7 @@
 
 import * as THREE from '../vendor/three/three.module.min.js'
 import loadMujoco from '../vendor/mujoco/mujoco.js'
-import { createArms, BASES } from './arms.js?v=79e89a0143'
+import { createArms, BASES } from './arms.js?v=c869802274'
 
 const BASE = new URL('./models/', import.meta.url)
 const LOAD_TIMEOUT_MS = 30000

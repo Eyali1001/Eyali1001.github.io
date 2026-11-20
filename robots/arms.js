@@ -37,6 +37,7 @@ const CYCLE = SEG * THROWS.length
 //   top      highest point the arm reaches for a loose ball
 //   side     how far toward its partner the arm leans to throw or catch
 //   speed    how briskly it chases a new goal (rad/s of a critically damped spring)
+//   kp       servo stiffness multiplier (the stock YAM servos are too soft to catch a fast throw)
 //   kv       servo damping override (the stock SO-101 servos ring on fast moves)
 const ARMS = [
   {
@@ -55,7 +56,7 @@ const ARMS = [
     grip: { act: 'gripper', open: 0.037, hold: 0.018, rest: 0.022 },
     seed: [0, 1.0, 1.1, 0, 0, 0],
     z: { idle: 0.24, release: 0.3, catch: 0.32 }, tilt: 0, low: [0.12, 0.25],
-    reach: 0.28, top: 0.58, side: 0.06, speed: 14,
+    reach: 0.28, top: 0.58, side: 0.06, speed: 14, kp: 1.6,
   },
   {
     name: 'panda', prefix: 'a2_', base: [0.58, -0.15],
@@ -172,6 +173,7 @@ export function createArms(mujoco, model, data) {
       for (let a = 0; a < model.nu; a++) if (model.actuator_trntype[a] === 0 && model.actuator_trnid[2 * a] === j) return a
       throw new Error(`no actuator for joint ${j}`)
     })
+    if (cfg.kp) for (const a of act) { model.actuator_gainprm[10 * a] *= cfg.kp; model.actuator_biasprm[10 * a + 1] *= cfg.kp }
     if (cfg.kv) for (const a of act) model.actuator_biasprm[10 * a + 2] = -cfg.kv
     return {
       cfg,
@@ -362,6 +364,7 @@ export function createArms(mujoco, model, data) {
   const BALL_R = 0.02
   const CATCH_DIST = 0.045
   const LAG = 0.07 // seconds the real arm trails its command
+  const CATCH_BOOST = 1.6 // how much harder an arm pulls when going for a catch
 
   let mode = 'routine'
   let routineT = 0 // routine clock, seconds (mod CYCLE)
@@ -457,10 +460,12 @@ export function createArms(mujoco, model, data) {
       b.p[2] = BALL_R
       if (b.v[2] < 0) {
         b.v[2] = -b.v[2] * 0.55
+        b.v[0] *= 0.8 // each bounce scrubs off some speed
+        b.v[1] *= 0.8
         bounces++
       }
       if (Math.abs(b.v[2]) < 0.15) b.v[2] = 0
-      const roll = Math.exp(-3 * h) // rolling friction on the table
+      const roll = Math.exp(-4 * h) // rolling friction on the table
       b.v[0] *= roll
       b.v[1] *= roll
     }
@@ -483,7 +488,7 @@ export function createArms(mujoco, model, data) {
       p = v3.add(p, v3.scale(v, 0.02))
       if (p[2] < 0.04) break
       if (!inZone(i, p)) continue
-      const slack = t - settleTime(dist(p, from), ARMS[i].speed) - LAG
+      const slack = t - settleTime(dist(p, from), ARMS[i].speed * CATCH_BOOST) - LAG
       if (slack >= 0) return { t, p, v, slack }
       if (!best || slack > best.slack) best = { t, p, v, slack }
     }
@@ -542,7 +547,19 @@ export function createArms(mujoco, model, data) {
       if (catchPlan) {
         const i = catchPlan.i
         const side = -0.5 * Math.sign(catchPlan.v[0])
-        out[i] = { pos: catchPlan.p, dir: aimAt(i, side, 0.3, catchPlan.p[2]), grip: ARMS[i].grip.open }
+        // In the last moments, reach for where the ball really will be, not just the plan.
+        const left = catchPlan.t - t
+        let to = catchPlan.p
+        if (left < 0.22) {
+          const L = LAG
+          const pb = [ball.p[0] + ball.v[0] * L, ball.p[1] + ball.v[1] * L, ball.p[2] + ball.v[2] * L - 0.5 * G * L * L]
+          if (inZone(i, pb)) to = v3.lerp(catchPlan.p, pb, smooth((0.22 - left) / 0.22))
+        }
+        // Lead the command by how far the real gripper still trails it, so soft servos arrive on time.
+        let lead = v3.scale(v3.sub(to, gripPos(i)), 0.6)
+        const ll = v3.len(lead)
+        if (ll > 0.06) lead = v3.scale(lead, 0.06 / ll)
+        out[i] = { pos: v3.add(to, lead), dir: aimAt(i, side, 0.3, to[2]), grip: ARMS[i].grip.open }
       }
       return out
     }
@@ -583,11 +600,12 @@ export function createArms(mujoco, model, data) {
         c.dv = v3.add(g.dvel, o.dev)
       } else {
         // a spring toward the goal: a new goal changes where it pulls, never where it is
-        const w = ARMS[i].speed
+        // (an arm going for a catch pulls harder)
+        const w = ARMS[i].speed * (catchPlan && catchPlan.i === i ? CATCH_BOOST : 1)
         const [e, ev] = damp(v3.sub(c.p, g.pos), c.v, w, T)
         c.p = v3.add(g.pos, e)
         c.v = ev
-        const [de, dev] = damp(v3.sub(c.d, g.dir), c.dv, w, T)
+        const [de, dev] = damp(v3.sub(c.d, g.dir), c.dv, ARMS[i].speed, T) // the wrist turns at its usual pace
         c.d = v3.norm(v3.add(g.dir, de))
         c.dv = dev
       }
