@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Labelings, models, and gauge theory — Eyal Merhavi</title>
+<meta name="description" content="A computational course for CS and math undergraduates: random labelings of a graph by a group, dynamics derived from them, and lattice Yang–Mills as one model in the framework.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="../../style.css?v=b18eafc744">
+<style>
+  figure { margin: 1.25rem 0; }
+  figure img { display: block; max-width: 100%; height: auto; }
+  figure.square img { max-width: min(100%, 24rem); }
+  figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
+  .part { margin: 1.1rem 0 0.25rem; }
+  .map { padding-left: 1.25rem; margin-top: 0.25rem; }
+  .map li { margin: 0.3rem 0; }
+  .map .what { color: var(--muted); }
+</style>
+</head>
+<body>
+<main>
+  <p class="back"><a href="../../">← Eyal Merhavi</a></p>
+  <h1>Labelings, models, and gauge theory</h1>
+  <p class="tagline">A computational course for CS and math undergraduates.</p>
+  <p>
+    The course starts from an abstract framework: random labelings of a graph by a group.
+    It derives "quantum dynamics" as a consequence, rather than assuming it, and only then
+    turns to physics, showing that lattice Yang–Mills is one model in the framework. Every
+    idea is checked numerically on an example small enough to enumerate exactly.
+  </p>
+  <p>
+    Each chapter is a Jupyter notebook, shown here as a static page with its code, outputs
+    and figures, and with the answers to the exercises folded away.
+  </p>
+  <p>
+    <a href="lab/notebooks/index.html?path=ch00_currency_market.ipynb" target="_blank" rel="noopener">Run the notebooks in your browser ↗</a>
+    · <a href="https://github.com/Eyali1001/lattice-gauge-course" target="_blank" rel="noopener">Code on GitHub ↗</a><br>
+    <span class="meta">The notebooks run on JupyterLite, starting with chapter 0. The first time, it downloads Python and its libraries (about 40 MB).</span>
+  </p>
+
+  <figure>
+    <a href="ch02.html"><img src="ch02-media/fig5.png" width="1386" height="342" alt="Four samples of a 10 by 10 grid with labels plus or minus one, at stiffness 0, 0.5, 1 and 2. The number of defect faces, shaded coral, drops from 49 to 23 to 12 to 3, while the gold edges look equally random in all four."></a>
+    <figcaption>From chapter 2: samples of the coin model at four stiffnesses. The coral defect faces thin out as the stiffness grows; the gold edges look like the same noise every time.</figcaption>
+  </figure>
+
+  <h2>Course map</h2>
+  <p class="meta">All chapters are drafts.</p>
+
+  <p class="part">I. The world of labelings</p>
+  <ul class="map">
+    <li><a href="ch00.html">0. A market of currencies</a> <span class="what">— exchange rates as labels, arbitrage as a loop product.</span></li>
+    <li><a href="ch01.html">1. Labelings, reframings and classes</a> <span class="what">— any group of labels, and what survives a change of conventions.</span></li>
+    <li><a href="ch01b.html">Interlude. Why the labels are forced</a> <span class="what">— charged fields, and electromagnetism as circle labels.</span></li>
+    <li><a href="ch02.html">2. Models</a> <span class="what">— a probability distribution on labelings, set by a face cost and the stiffness β.</span></li>
+    <li><a href="ch03.html">3. What a model can tell you</a> <span class="what">— invariants, averages, and loops that decay with area.</span></li>
+    <li><a href="ch04.html">4. Sampling</a> <span class="what">— Markov chains with honest error bars, and a jump in four dimensions.</span></li>
+  </ul>
+  <p class="part">II. Dynamics from the distribution</p>
+  <ul class="map">
+    <li><a href="ch05.html">5. Layers and the transfer matrix</a> <span class="what">— eigenvalues as rates at which layers forget each other.</span></li>
+  </ul>
+  <p class="part">Bridge</p>
+  <ul class="map">
+    <li><a href="ch06.html">6. Yang–Mills and the Millennium problem, in our terms</a> <span class="what">— the problem stated in the course's vocabulary.</span></li>
+  </ul>
+  <p class="part">III. What can be proved</p>
+  <ul class="map">
+    <li><a href="ch07.html">7. A gap you can prove</a> <span class="what">— coupling gives a gap at small stiffness, and why it stops short of the continuum.</span></li>
+  </ul>
+
+  <figure class="square">
+    <a href="ch01b.html"><img src="ch01b-media/fig3.png" width="719" height="688" loading="lazy" alt="A dense, symmetric fractal pattern of dots shaped like a butterfly: the smoothness spectrum of a charged field on a 24 by 24 torus, plotted against the angle of the defect carried by every face."></a>
+    <figcaption>From the interlude: give every face of a 24×24 torus the same defect and plot the possible smoothness costs of a charged field against the defect's angle. The picture is Hofstadter's butterfly.</figcaption>
+  </figure>
+</main>
+</body>
+</html>

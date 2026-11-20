@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter 0: A market of currencies — Eyal Merhavi</title>
+<meta name="description" content="Chapter 0 of the course Labelings, models, and gauge theory, rendered from the executed notebook.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="../../style.css?v=b18eafc744">
+<style>
+  .crumbs { margin-top: 0; }
+  .pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1.5rem; font-size: 0.95rem; }
+  .pager a[rel="next"] { margin-left: auto; text-align: right; }
+  .pager-top .t { display: none; }
+  @media (max-width: 40rem) { .pager-bottom { flex-direction: column; } .pager-bottom a[rel="next"] { margin-left: 0; text-align: left; } }
+  .pager-bottom { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .rendered-note { font-size: 0.9rem; color: var(--muted); }
+  .actions { margin-top: -0.25rem; }
+  .cell.code pre { font-size: 0.8rem; line-height: 1.4; }
+  .output pre { background: #fff; border: 0; border-left: 3px solid #e4e4e4; margin-top: -0.5rem; }
+  pre { max-width: 100%; box-sizing: border-box; }
+  figure { margin: 1rem 0; }
+  figure img, .anim img { display: block; max-width: 100%; height: auto; }
+  figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
+  .math-block { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+  .math-wide { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; vertical-align: middle; }
+  th, td { border: 1px solid var(--rule); padding: 0.2rem 0.5rem; }
+  blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--rule); }
+  details { margin: 0.25rem 0 0.75rem 1.25rem; }
+  summary { cursor: pointer; color: var(--muted); }
+  .cell.markdown h1 { margin-top: 1.25rem; }
+  .cell.markdown h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
+</style>
+</head>
+<body>
+<main>
+  <p class="crumbs"><a href="../../">← Eyal Merhavi</a> · <a href="./">Labelings, models, and gauge theory</a></p>
+  <nav class="pager pager-top" aria-label="Chapters"><a href="./">← Course overview</a><a rel="next" href="ch01.html">Chapter 1<span class="t">: Labelings, reframings and classes</span> →</a></nav>
+  <p class="rendered-note">Chapter 0 of <a href="./"><i>Labelings, models, and gauge theory</i></a>, rendered from the executed notebook. Code cells and their outputs are shown as they ran.</p>
+  <p class="actions"><a href="lab/notebooks/index.html?path=ch00_currency_market.ipynb" target="_blank" rel="noopener">Run this chapter in your browser ↗</a> · <a href="https://github.com/Eyali1001/lattice-gauge-course/blob/main/chapters/ch00_currency_market.py" target="_blank" rel="noopener">Source on GitHub ↗</a><br><span class="rendered-note">Runs on JupyterLite. The first time, it downloads Python and its libraries (about 40 MB).</span></p>
+<section id="chapter-0--a-market-of-currencies" class="cell markdown">
+<h1>Chapter 0 — A market of currencies</h1>
+<p>A trader starts with 1,000 US dollars. She buys euros with them, uses
+the euros to buy pounds, and uses the pounds to buy dollars back. She
+ends up with 1,002.10 dollars. Nothing about the world changed, and she
+is 2.10 dollars richer. Where did the money come from?</p>
+<p>A second puzzle. In 1985 Israel replaced its currency: 1000 old
+shekels became 1 <em>new</em> shekel. Overnight, every exchange rate
+involving the shekel changed by a factor of 1000. Did any trading
+opportunity appear or disappear? Which of the numbers on a currency
+board are <em>real</em>, and which are just a choice of units?</p>
+<p>This chapter answers both questions. The language we build here
+(labels on the edges of a graph, products around loops, changes of units
+at the vertices) is the language of the whole course. Later chapters
+swap currencies for other groups and add probability. The ideas stay the
+same.</p>
+<p><strong>What you'll learn</strong></p>
+<ul>
+<li>How to describe a currency market as a <em>board</em> with a
+<em>labeling</em>, and a round trip as a <em>loop product</em>.</li>
+<li>Why changing units (a <em>reframing</em>) moves every exchange rate
+but never changes a loop product.</li>
+<li>How to count the market's "real" numbers, and how to find arbitrage
+with a classic graph algorithm.</li>
+</ul>
+<p><strong>Prerequisites:</strong> none. We use graphs, logarithms and a
+little group theory: the positive real numbers under multiplication form
+a group, written
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mo>,</mo><mi>×</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\mathbb R_{&gt;0},\times)</annotation></semantics></math>.</p>
+</section>
+<div class="cell code" data-execution_count="1">
+<pre class="python"><code>import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+from IPython.display import HTML
+
+from lgt import *
+from lgt import viz
+
+viz.use_style()
+G = PositiveReals()  # the label group of this chapter: (R_{&gt;0}, x)</code></pre>
+</div>
+<div class="cell markdown">
+<p><strong>Helpers for this chapter.</strong> These are small drawing
+utilities: they write rates on edges, write each triangle's round-trip
+factor inside it, and mark edges in gold. You can skip reading them.</p>
+</div>
+<div class="cell code" data-execution_count="2">
+<pre class="python"><code>NAMES = [&quot;USD&quot;, &quot;EUR&quot;, &quot;GBP&quot;, &quot;JPY&quot;, &quot;ILS&quot;]
+OFFSETS = {0: (0.0, -0.28), 1: (-0.3, 0.2), 2: (0.3, 0.2), 3: (0.3, -0.2), 4: (-0.3, -0.2)}
+
+def rate_labels(U, sig=4):
+    return [f&quot;{x:.{sig}g}&quot; for x in U]
+
+def name_vertices(ax, board, names=NAMES, offsets=OFFSETS):
+    for v, nm in enumerate(names):
+        dx, dy = offsets.get(v, (0, 0.22))
+        ax.text(*(board.pos[v] + (dx, dy)), nm, ha=&quot;center&quot;, va=&quot;center&quot;,
+                fontsize=11, fontweight=&quot;bold&quot;, color=viz.INK, zorder=11)
+
+def annotate_faces(ax, board, U, fmt=&quot;×{:.4f}&quot;):
+    for poly, x in zip(board.face_polys, face_products(G, board, U)):
+        c = 0.72 * np.asarray(poly).mean(axis=0) + 0.28 * board.pos[0]   # pull toward the hub
+        ax.text(*c, fmt.format(x), ha=&quot;center&quot;, va=&quot;center&quot;, fontsize=9, color=viz.INK,
+                style=&quot;italic&quot;, zorder=7)
+
+def mark_edges(ax, board, edges, color=viz.GOLD):
+    for e in edges:
+        (x0, y0), (x1, y1) = board.pos[board.edges[e]]
+        ax.plot([x0, x1], [y0, y1], color=color, lw=9, alpha=0.45, zorder=2,
+                solid_capstyle=&quot;round&quot;)
+
+FACE_NORM = mpl.colors.Normalize(-0.006, 0.006)   # log of face product; 0 = pale
+
+def draw_market(ax, board, U, title=None, faces=True, **kw):
+    viz.draw_board(ax, board, U, G, edge_labels=rate_labels(U), faces=faces,
+                   face_values=np.log(face_products(G, board, U)), face_cmap=&quot;RdBu_r&quot;,
+                   face_norm=FACE_NORM, pad=0.55, title=title, **kw)
+    name_vertices(ax, board)
+    if faces:
+        annotate_faces(ax, board, U)</code></pre>
+</div>
+<section id="01-the-market-as-a-board" class="cell markdown">
+<h2>0.1 The market as a board</h2>
+<p>Five currencies trade with each other: the US dollar, the euro, the
+British pound, the Japanese yen and the Israeli shekel. Not every pair
+trades directly. In our toy market every currency trades against the
+dollar, and the other four trade in a ring: EUR–GBP, GBP–JPY, JPY–ILS
+and ILS–EUR.</p>
+<p>This is a graph. The <strong>vertices</strong> are the currencies,
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>V</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mtext mathvariant="normal">USD</mtext><mo>,</mo><mtext mathvariant="normal">EUR</mtext><mo>,</mo><mtext mathvariant="normal">GBP</mtext><mo>,</mo><mtext mathvariant="normal">JPY</mtext><mo>,</mo><mtext mathvariant="normal">ILS</mtext><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">V=\lbrace \text{USD},\text{EUR},\text{GBP},\text{JPY},\text{ILS}\rbrace</annotation></semantics></math></span>.
+The <strong>edges</strong> are the trading pairs, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">|E|=8</annotation></semantics></math>.</p>
+<p>We also mark the four <em>triangles</em> of currencies in which all
+three pairs trade, such as USD–EUR–GBP. A triangle is a short round
+trip, and short round trips are where arbitrage hides. A graph together
+with a chosen list of closed walks is called a <strong>board</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+(glossary 1.1), and the chosen closed walks are its
+<strong>faces</strong> (glossary 1.3). We write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+for the list of faces. Our board has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>F</mi><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">|F|=4</annotation></semantics></math>.</p>
+<p>Each edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>s</mi><mo>,</mo><mi>t</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\lbrace s,t\rbrace</annotation></semantics></math>
+can be walked in two <strong>directions</strong>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>→</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">s\to t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>→</mo><mi>s</mi></mrow><annotation encoding="application/x-tex">t\to s</annotation></semantics></math>
+(glossary 1.2). We write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>E</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec E</annotation></semantics></math>
+for the set of all directions. It has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>2</mn><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">|\vec E|=2|E|=16</annotation></semantics></math>
+elements. For a direction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>d</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar d</annotation></semantics></math>
+is the same edge walked the other way.</p>
+</section>
+<div class="cell code" data-execution_count="3">
+<pre class="python"><code>pos = [(0, 0), (-1.3, 1.0), (1.3, 1.0), (1.3, -1.0), (-1.3, -1.0)]
+edges = [(0, 1), (0, 2), (0, 3), (0, 4),          # USD -&gt; X   (the &quot;spokes&quot;)
+         (1, 2), (2, 3), (3, 4), (4, 1)]          # the ring EUR-&gt;GBP-&gt;JPY-&gt;ILS-&gt;EUR
+triangles = [[0, 1, 2, 0], [0, 2, 3, 0], [0, 3, 4, 0], [0, 4, 1, 0]]
+market = Board.from_vertex_cycles(5, edges, triangles, pos=pos, name=&quot;market&quot;,
+                                  vertex_names=NAMES)
+print(market)
+
+fig, ax = plt.subplots(figsize=(5.5, 4.5))
+viz.draw_board(ax, market, pad=0.55, title=&quot;The market: 5 currencies, 8 pairs, 4 faces&quot;)
+name_vertices(ax, market)
+plt.show()</code></pre>
+<div class="output stream stdout">
+<pre><code>Board(&#39;market&#39;: 5 vertices, 8 edges, 4 faces)
+</code></pre>
+</div>
+<div class="output display_data">
+<figure><a href="ch00-media/fig1.png"><img src="ch00-media/fig1.png" width="476" height="426" loading="lazy" alt="The market as a board: USD in the middle, joined to EUR, GBP, JPY and ILS, which form a ring around it. There are four triangular faces."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Look at the shaded triangles: those are the four faces. The small
+arrows show each edge's <em>reference orientation</em>. It is just a
+bookkeeping choice of which direction we store a number for, and it
+carries no meaning.</p>
+<blockquote>
+<p><strong>Recap.</strong> A board
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+is a graph
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>V</mi><mo>,</mo><mi>E</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(V,E)</annotation></semantics></math>
+plus a list
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+of closed walks called faces. Every edge can be walked in two
+directions. In our market, vertices are currencies, edges are trading
+pairs and faces are triangles of currencies.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>A new currency, the Swiss franc, starts trading only against the
+dollar. How many vertices, edges and faces does the board gain?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>One vertex (CHF), one edge (USD–CHF) and no faces. A single new edge
+closes no new triangle.</p>
+</details>
+<ol start="2">
+<li>If <em>every</em> pair of the five currencies traded directly, how
+many edges and triangles would there be?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mn>5</mn><mn>2</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">\binom52=10</annotation></semantics></math>
+edges and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mo stretchy="true" form="prefix">(</mo><mfrac linethickness="0"><mn>5</mn><mn>3</mn></mfrac><mo stretchy="true" form="postfix">)</mo></mrow><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">\binom53=10</annotation></semantics></math>
+triangles.</p>
+</details>
+</div>
+<section id="02-exchange-rates-are-a-labeling" class="cell markdown">
+<h2>0.2 Exchange rates are a labeling</h2>
+<p>An exchange rate is a positive number attached to a
+<em>direction</em>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">USD</mtext><mo>→</mo><mtext mathvariant="normal">JPY</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>150</mn></mrow><annotation encoding="application/x-tex">U(\text{USD}\to\text{JPY})=150</annotation></semantics></math>
+means one dollar buys 150 yen.</p>
+<p>The rates come from the group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mo>,</mo><mi>×</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G=(\mathbb R_{&gt;0},\times)</annotation></semantics></math>
+of positive numbers under multiplication. We call the group the labels
+come from the <strong>label group</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+(glossary 2.1). Later chapters use other label groups. Formally, a
+<strong>labeling</strong> (glossary 2.2) is a function</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>d</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U:\vec E\to\mathbb R_{&gt;0},\qquad U(\bar d)=U(d)^{-1}.
+</annotation></semantics></math></span></p>
+<p>The rule
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>d</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(\bar d)=U(d)^{-1}</annotation></semantics></math>
+says that going back undoes going forward: if a dollar buys 150 yen, a
+yen buys
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>150</mn></mfrac></mstyle><annotation encoding="application/x-tex">\tfrac{1}{150}</annotation></semantics></math>
+dollar. Real markets break this rule slightly, because a dealer buys at
+one price and sells at a slightly worse one (the <em>bid/ask
+spread</em>). We ignore spreads and fees throughout. With that
+assumption, a labeling is just one positive number per edge, stored for
+its reference orientation. The reverse direction is forced.</p>
+<p>Here is our market. The four spokes hold today's dollar rates. The
+ring rates are what you get by going through the dollar,
+<strong>except</strong> for one quote: EUR→GBP is quoted at 0.8605
+instead of 0.79/0.92 ≈ 0.8587.</p>
+</section>
+<div class="cell code" data-execution_count="4">
+<pre class="python"><code>usd = {&quot;EUR&quot;: 0.92, &quot;GBP&quot;: 0.79, &quot;JPY&quot;: 150.0, &quot;ILS&quot;: 3.70}   # units of X per 1 USD
+via_usd = lambda a, b: usd[b] / usd[a]                         # a -&gt; b through the dollar
+U = np.array([usd[&quot;EUR&quot;], usd[&quot;GBP&quot;], usd[&quot;JPY&quot;], usd[&quot;ILS&quot;],
+              0.8605,                                          # EUR -&gt; GBP (slightly off!)
+              via_usd(&quot;GBP&quot;, &quot;JPY&quot;), via_usd(&quot;JPY&quot;, &quot;ILS&quot;), via_usd(&quot;ILS&quot;, &quot;EUR&quot;)])
+
+for e, (s, t) in enumerate(market.edges):
+    print(f&quot;{NAMES[s]}-&gt;{NAMES[t]}: {U[e]:&gt;9.5g}     {NAMES[t]}-&gt;{NAMES[s]}: {1/U[e]:&gt;9.5g}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>USD-&gt;EUR:      0.92     EUR-&gt;USD:     1.087
+USD-&gt;GBP:      0.79     GBP-&gt;USD:    1.2658
+USD-&gt;JPY:       150     JPY-&gt;USD: 0.0066667
+USD-&gt;ILS:       3.7     ILS-&gt;USD:   0.27027
+EUR-&gt;GBP:    0.8605     GBP-&gt;EUR:    1.1621
+GBP-&gt;JPY:    189.87     JPY-&gt;GBP: 0.0052667
+JPY-&gt;ILS:  0.024667     ILS-&gt;JPY:    40.541
+ILS-&gt;EUR:   0.24865     EUR-&gt;ILS:    4.0217
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A labeling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">U:\vec E\to\mathbb R_{&gt;0}</annotation></semantics></math>
+puts a rate on every direction, with the reverse direction carrying the
+inverse. It is stored as one number per edge, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|E|</annotation></semantics></math>
+numbers in total.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">USD</mtext><mo>→</mo><mtext mathvariant="normal">JPY</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>150</mn></mrow><annotation encoding="application/x-tex">U(\text{USD}\to\text{JPY})=150</annotation></semantics></math>.
+What is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">JPY</mtext><mo>→</mo><mtext mathvariant="normal">USD</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(\text{JPY}\to\text{USD})</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>150</mn></mfrac></mstyle><mo>≈</mo><mn>0.00667</mn></mrow><annotation encoding="application/x-tex">\tfrac{1}{150}\approx 0.00667</annotation></semantics></math>
+dollars per yen.</p>
+</details>
+<ol start="2">
+<li>With a bid/ask spread, what happens if you change dollars to yen and
+immediately back?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>You lose a little: the two directions are no longer exact inverses,
+and their product is slightly below 1. That is exactly the rule
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>d</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(\bar d)=U(d)^{-1}</annotation></semantics></math>
+failing. We assume it holds.</p>
+</details>
+</div>
+<section id="03-routes-and-round-trips-walk-products"
+class="cell markdown">
+<h2>0.3 Routes and round trips: walk products</h2>
+<p>Converting money along a route multiplies the rates. Changing dollars
+to euros and then euros to pounds gives 0.92 × 0.8605 ≈ 0.7917 pounds
+per dollar.</p>
+<p>For a walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mn>1</mn></msub><mo>,</mo><msub><mi>d</mi><mn>2</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\gamma=(d_1,d_2,\dots,d_k)</annotation></semantics></math>,
+a sequence of directions where each one starts where the previous one
+ended, the <strong>walk product</strong> (glossary 2.3) is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo><mi>⋯</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U(\gamma)=U(d_1)\,U(d_2)\cdots U(d_k)\in\mathbb R_{&gt;0}.
+</annotation></semantics></math></span></p>
+<p>It answers the question: one unit of the starting currency becomes
+how many units of the final currency?</p>
+<p>A <strong>loop product</strong> (glossary 2.4) is the walk product of
+a <em>closed</em> walk, one that ends where it started. It is a round
+trip: one unit of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+becomes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(\gamma)</annotation></semantics></math>
+units of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>.
+<strong>Arbitrage</strong> is a round trip with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo>≠</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">U(\gamma)\neq1</annotation></semantics></math>.
+If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">U(\gamma)&gt;1</annotation></semantics></math>
+you walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>.
+If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">U(\gamma)&lt;1</annotation></semantics></math>
+you walk it backwards, which gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">U(\gamma)^{-1}&gt;1</annotation></semantics></math>.</p>
+<p>The loop product of a face
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+is its <strong>face product</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>∈</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">U_f\in\mathbb R_{&gt;0}</annotation></semantics></math>
+(glossary 2.5). A face with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>≠</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">U_f\neq1</annotation></semantics></math>
+is a <strong>defect</strong>.</p>
+</section>
+<div class="cell code" data-execution_count="5">
+<pre class="python"><code>route = walk_product(G, market, U, [0, 1, 2])               # USD -&gt; EUR -&gt; GBP
+trip = loop_product(G, market, U, [0, 1, 2, 0])            # ... -&gt; USD
+print(f&quot;USD-&gt;EUR-&gt;GBP: one dollar becomes {route:.4f} pounds&quot;)
+print(f&quot;USD-&gt;EUR-&gt;GBP-&gt;USD: one dollar becomes {trip:.5f} dollars&quot;)
+print(&quot;face products:&quot;, np.round(face_products(G, market, U), 5))
+print(&quot;defects:      &quot;, defects(G, market, U))</code></pre>
+<div class="output stream stdout">
+<pre><code>USD-&gt;EUR-&gt;GBP: one dollar becomes 0.7917 pounds
+USD-&gt;EUR-&gt;GBP-&gt;USD: one dollar becomes 1.00210 dollars
+face products: [1.0021 1.     1.     1.    ]
+defects:       [ True False False False]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>That is the trader's 2.10 dollars on 1,000: a round trip with factor
+1.0021. In the picture, each face shows its face product. Defects are
+shaded red when the round trip (walked in the face's stored order)
+gains, and blue when it loses. Faces with no arbitrage are pale.</p>
+</div>
+<div class="cell code" data-execution_count="6">
+<pre class="python"><code>fig, ax = plt.subplots(figsize=(6, 5))
+draw_market(ax, market, U, title=&quot;Rates on edges, round-trip factors on faces&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch00-media/fig2.png"><img src="ch00-media/fig2.png" width="527" height="468" loading="lazy" alt="The market with an exchange rate on every edge and a round-trip factor in every face. The top triangle (USD, EUR, GBP) has factor 1.0021 and is shaded; the other three faces have factor 1.0000."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>A <strong>consistent</strong> labeling (glossary 2.6) is one where
+<em>every</em> loop product is 1. In currency terms: no arbitrage
+anywhere. Our market is not consistent, and the only culprit is the top
+triangle.</p>
+<blockquote>
+<p><strong>Recap.</strong> Walk products multiply rates along a route.
+Loop products are round trips, face products are round trips around
+faces, and a defect is a face whose round trip is not 1. Consistent
+means no arbitrage on any loop.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>One shekel becomes how many yen along ILS→USD→JPY?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>3.70</mn></mfrac></mstyle><mo>×</mo><mn>150</mn><mo>≈</mo><mn>40.5</mn></mrow><annotation encoding="application/x-tex">\tfrac{1}{3.70}\times150\approx 40.5</annotation></semantics></math>
+yen. The first step walks the USD→ILS edge backwards, so it uses the
+inverse rate.</p>
+</details>
+<ol start="2">
+<li>A loop has product 1.003. What is the product of the same loop
+walked backwards?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>1.003</mn></mfrac></mstyle><annotation encoding="application/x-tex">\tfrac{1}{1.003}</annotation></semantics></math>.
+Reversing a walk reverses the order of the factors and inverts each one.
+Arbitrage in one direction is a loss in the other.</p>
+</details>
+<ol start="3">
+<li>What is the loop product of USD→EUR→USD, there and straight
+back?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Exactly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>⋅</mo><msup><mi>U</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">U\cdot U^{-1}=1</annotation></semantics></math>,
+always. A walk that only goes out and straight back can never carry
+arbitrage. A loop needs to go around a cycle of the graph.</p>
+</details>
+</div>
+<section id="04-changing-units-reframings" class="cell markdown">
+<h2>0.4 Changing units: reframings</h2>
+<p>Back to 1985. Choose, for every currency
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>,
+a number</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mtext mathvariant="normal">how many old units make one new unit of </mtext><mspace width="0.333em"></mspace></mrow><mi>v</mi><mo>,</mo><mspace width="2.0em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+h(v)=\text{how many old units make one new unit of }v,\qquad h(v)\in\mathbb R_{&gt;0}.
+</annotation></semantics></math></span></p>
+<p>For the shekel,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">ILS</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1000</mn></mrow><annotation encoding="application/x-tex">h(\text{ILS})=1000</annotation></semantics></math>.
+Every other currency keeps its unit, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h=1</annotation></semantics></math>
+there. What happens to a rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(s\to t)</annotation></semantics></math>?
+One <em>new</em> unit of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)</annotation></semantics></math>
+old units of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>.
+Those buy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)\,U(s\to t)</annotation></semantics></math>
+old units of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>,
+which is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)\,U(s\to t)/h(t)</annotation></semantics></math>
+new units of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
+So</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.222em"></mspace><mo>↦</mo><mspace width="0.222em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U(s\to t)\ \longmapsto\ h(s)\,U(s\to t)\,h(t)^{-1}.
+</annotation></semantics></math></span></p>
+<p>A function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">h:V\to\mathbb R_{&gt;0}</annotation></semantics></math>
+used this way is a <strong>reframing</strong> (glossary 3.1). The name
+says what it is: every currency changes its own convention, and a rate,
+being a conversion between two conventions, feels the change at both of
+its ends.</p>
+<p>Let's check with 1985 numbers. If a dollar bought 1500 old shekels,
+it now buys
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">USD</mtext><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>1500</mn><mo>⋅</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">ILS</mtext><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1500</mn><mn>1000</mn></mfrac></mstyle><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">h(\text{USD})\cdot1500\cdot h(\text{ILS})^{-1}=\tfrac{1500}{1000}=1.5</annotation></semantics></math></span>
+new shekels.</p>
+</section>
+<div class="cell code" data-execution_count="7">
+<pre class="python"><code>mini = Board.from_vertex_cycles(2, [(0, 1)], [])                # USD -&gt; ILS, one edge
+print(&quot;new rate:&quot;, reframe(G, mini, np.array([1500.0]), np.array([1.0, 1000.0])))</code></pre>
+<div class="output stream stdout">
+<pre><code>new rate: [1.5]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p><strong>Why loop products survive.</strong> Walk two steps,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>→</mo><mi>v</mi><mo>→</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">s\to v\to t</annotation></semantics></math>,
+after reframing:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>⋅</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">[</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">]</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+h(s)U(s\to v)h(v)^{-1}\cdot h(v)U(v\to t)h(t)^{-1}=h(s)\,\big[U(s\to v)U(v\to t)\big]\,h(t)^{-1}.
+</annotation></semantics></math></span></p>
+<p>The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(v)</annotation></semantics></math>
+in the middle cancels. Along any walk only the <em>endpoints</em> feel a
+reframing. For a round trip both endpoints are the same currency
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>,
+so the loop product becomes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(v)\,U(\gamma)\,h(v)^{-1}=U(\gamma)</annotation></semantics></math>:
+numbers commute, and the factors cancel.</p>
+<blockquote>
+<p><strong>Fact 0.1 (round trips don't care about units).</strong> For
+every reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">h:V\to\mathbb R_{&gt;0}</annotation></semantics></math>
+and every closed walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>,
+the loop product of the reframed labeling equals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(\gamma)</annotation></semantics></math>.</p>
+</blockquote>
+<p>Let's redenominate in two stages: first the shekel
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>×</mi><mn>1000</mn></mrow><annotation encoding="application/x-tex">\times1000</annotation></semantics></math>),
+then also the yen
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>×</mi><mn>100</mn></mrow><annotation encoding="application/x-tex">\times100</annotation></semantics></math>)
+and the pound
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>×</mi><mn>0.01</mn></mrow><annotation encoding="application/x-tex">\times0.01</annotation></semantics></math>,
+so a "new pound" is a penny). Gold bars mark the edges whose rate
+changed.</p>
+</div>
+<div class="cell code" data-execution_count="8">
+<pre class="python"><code>h1 = np.array([1, 1, 1, 1, 1000.0])                    # order: USD EUR GBP JPY ILS
+h2 = np.array([1, 1, 0.01, 100, 1000.0])
+stages = [(U, &quot;today&quot;, []), (reframe(G, market, U, h1), &quot;new shekel&quot;, [3, 6, 7]),
+          (reframe(G, market, U, h2), &quot;+ new yen, + penny-pound&quot;, [1, 2, 3, 4, 5, 6, 7])]
+fig, axs = plt.subplots(1, 3, figsize=(16, 4.8))
+for ax, (V_, title, changed) in zip(axs, stages):
+    mark_edges(ax, market, changed)
+    draw_market(ax, market, V_, title=title)
+plt.show()
+for V_, title, _ in stages:
+    print(f&quot;{title:&gt;26}: face products {np.round(face_products(G, market, V_), 6)}&quot;)</code></pre>
+<div class="output display_data">
+<figure><a href="ch00-media/fig3.png"><img src="ch00-media/fig3.png" width="1386" height="381" loading="lazy" alt="Three panels: today, after the new shekel, and after a new yen and a penny-pound. The rates on the edges change, sometimes by factors of a thousand, while the factors in the faces stay the same."></a></figure>
+</div>
+<div class="output stream stdout">
+<pre><code>                     today: face products [1.002101 1.       1.       1.      ]
+                new shekel: face products [1.002101 1.       1.       1.      ]
+  + new yen, + penny-pound: face products [1.002101 1.       1.       1.      ]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Compare the three panels. Almost every rate changes, and some by
+factors of a thousand. The italic numbers inside the triangles don't
+move, and neither do their colors.</p>
+<p>The animation below makes the point continuously. Every currency's
+unit drifts up and down, so the rates on the edges churn while the
+triangles stay frozen.</p>
+</div>
+<div class="cell code" data-execution_count="9">
+<pre class="python"><code>from matplotlib.animation import FuncAnimation
+
+amp = np.array([0.0, 0.7, 1.1, 0.9, 1.3])              # how far each unit drifts (log-scale)
+phase = np.array([0.0, 0.5, 2.0, 3.5, 5.0])
+
+def frame(k, ax, n=40):
+    ax.clear()
+    h = np.exp(amp * np.sin(2 * np.pi * k / n + phase))
+    draw_market(ax, market, reframe(G, market, U, h), title=&quot;units drifting; round trips frozen&quot;)
+
+fig, ax = plt.subplots(figsize=(5.5, 4.6), dpi=80)
+anim = FuncAnimation(fig, frame, frames=40, fargs=(ax,), interval=120)
+plt.close(fig)
+with mpl.rc_context({&quot;savefig.dpi&quot;: 72}):                # keep the saved notebook small
+    html = anim.to_jshtml(default_mode=&quot;loop&quot;)
+HTML(html)</code></pre>
+<div class="output display_data">
+<figure class="anim"><picture><source srcset="ch00-media/anim-still.png" media="(prefers-reduced-motion: reduce)"><img src="ch00-media/anim.gif" width="396" height="330" loading="lazy" alt="The currency board with every unit drifting: edge rates change from frame to frame while the face products stay fixed."></picture><figcaption>In the notebook this is an animation player; here it is a looping image (a still frame if you prefer reduced motion).</figcaption></figure>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">h:V\to\mathbb R_{&gt;0}</annotation></semantics></math>
+changes the unit of every currency, and acts by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(s\to t)\mapsto h(s)U(s\to t)h(t)^{-1}</annotation></semantics></math>.
+Along a walk the middle factors cancel, so round trips are untouched
+(Fact 0.1).</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Japan introduces a new yen worth 100 old yen. A dollar used to buy
+150 yen. What does it buy now?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">JPY</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>100</mn></mrow><annotation encoding="application/x-tex">h(\text{JPY})=100</annotation></semantics></math>,
+so the new rate is
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">USD</mtext><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>150</mn><mo>⋅</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">JPY</mtext><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>150</mn><mn>100</mn></mfrac></mstyle><mo>=</mo><mn>1.5</mn></mrow><annotation encoding="application/x-tex">h(\text{USD})\cdot150\cdot h(\text{JPY})^{-1}=\tfrac{150}{100}=1.5</annotation></semantics></math></span>
+new yen.</p>
+</details>
+<ol start="2">
+<li>Which rates change when only the shekel is redenominated?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Exactly the three edges touching ILS: USD–ILS, JPY–ILS and ILS–EUR.
+An edge feels only the reframing at its two ends.</p>
+</details>
+<ol start="3">
+<li>Every currency is redenominated by the <em>same</em> factor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>.
+What happens to the rates?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Nothing:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mspace width="0.167em"></mspace><mi>U</mi><mspace width="0.167em"></mspace><msup><mi>c</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">c\,U\,c^{-1}=U</annotation></semantics></math>.
+A reframing that is the same everywhere does nothing at all, at least
+when the labels commute.</p>
+</details>
+</div>
+<section
+id="05-same-market-different-units-classes-and-the-numbers-that-are-real"
+class="cell markdown">
+<h2>0.5 Same market, different units: classes and the numbers that are
+real</h2>
+<p>Two traders quote the same market, one in 1984 shekels and one in
+1986 shekels. Every shekel rate on their screens differs, yet they are
+looking at the <em>same</em> market. We make this precise.</p>
+<p>The <strong>class</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>U</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[U]</annotation></semantics></math>
+of a labeling (glossary 3.3) is the set of all labelings you can reach
+from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+by some reframing: "the same market, up to the choice of units." An
+<strong>invariant</strong> (glossary 3.4) is a function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+from labelings to numbers that no reframing can change, so it is really
+a function of the class. Fact 0.1 says loop products are invariants. The
+individual rates are not.</p>
+<p><strong>How many of a market's numbers are real?</strong> There are 8
+rates and 5 currencies whose units you may choose. But one of those 5
+choices is useless: scaling every unit by the same factor does nothing
+(question 3 above). So reframings can adjust 5 − 1 = 4 things, which
+leaves 8 − 4 = 4 numbers that units cannot touch. In general, for a
+connected board:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>#</mi><mtext mathvariant="normal">independent invariants</mtext><mo>=</mo><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\#\text{independent invariants}=|E|-|V|+1.
+</annotation></semantics></math></span></p>
+<p>This is exactly the number of independent cycles of the graph. In our
+market it is 8 − 5 + 1 = 4, one for each triangle.</p>
+<p><strong>Seeing them: the tree normal form</strong> (glossary 3.8).
+Pick a spanning tree, say the four spokes out of the dollar. Now choose
+the units so that every tree edge reads exactly 1: define the new unit
+of each currency to be "what one dollar buys." The tree edges now carry
+no information at all, and whatever is left on the other edges is real.
+For a non-tree edge it equals the loop product of the round trip "dollar
+→ along the tree → across the edge → back along the tree."</p>
+</section>
+<div class="cell code" data-execution_count="10">
+<pre class="python"><code>Un, h, tree = tree_normal_form(G, market, U, root=0)       # root 0 = USD
+print(&quot;tree edges:&quot;, [f&quot;{NAMES[s]}-{NAMES[t]}&quot; for s, t in market.edges[tree]])
+print(&quot;reframing used (old units per new unit):&quot;,
+      {n: round(float(x), 4) for n, x in zip(NAMES, h)})
+
+fig, ax = plt.subplots(figsize=(6, 5))
+draw_market(ax, market, Un, tree_edges=tree, title=&quot;Tree normal form (tree in grey)&quot;)
+plt.show()</code></pre>
+<div class="output stream stdout">
+<pre><code>tree edges: [&#39;USD-EUR&#39;, &#39;USD-GBP&#39;, &#39;USD-JPY&#39;, &#39;USD-ILS&#39;]
+reframing used (old units per new unit): {&#39;USD&#39;: 1.0, &#39;EUR&#39;: 0.92, &#39;GBP&#39;: 0.79, &#39;JPY&#39;: 150.0, &#39;ILS&#39;: 3.7}
+</code></pre>
+</div>
+<div class="output display_data">
+<figure><a href="ch00-media/fig4.png"><img src="ch00-media/fig4.png" width="527" height="468" loading="lazy" alt="Tree normal form: the four spokes from USD (the spanning tree, in grey) carry the rate 1, and only the EUR to GBP edge carries a number other than 1, namely 1.002."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Look at the grey spokes: all 1. Each ring edge now carries exactly
+the round-trip factor of the triangle next to it. The arbitrage was
+<em>spread</em> over the rates. The tree normal form <em>collects</em>
+it onto the edges outside the tree.</p>
+<blockquote>
+<p><strong>Fact 0.2 (tree normal form is a complete invariant).</strong>
+Fix a spanning tree and a root. Every class contains exactly one
+labeling that is 1 on all tree edges. So two labelings describe the same
+market up to units if and only if they have the same tree normal
+form.</p>
+</blockquote>
+<p>Let's check. Our three redenominated markets have the same tree
+normal form. A market with a genuinely different quote does not.</p>
+</div>
+<div class="cell code" data-execution_count="11">
+<pre class="python"><code>same = [tree_normal_form(G, market, V_)[0] for V_, _, _ in stages]
+print(&quot;same class:&quot;, all(np.allclose(same[0], x) for x in same))
+U_other = U.copy(); U_other[5] *= 1.01                   # change the GBP-&gt;JPY quote by 1%
+print(&quot;different market, same class?&quot;,
+      np.allclose(same[0], tree_normal_form(G, market, U_other)[0]))</code></pre>
+<div class="output stream stdout">
+<pre><code>same class: True
+different market, same class? False
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A class is "the same market up to units".
+Invariants such as loop products are the real numbers, and there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1</annotation></semantics></math>
+independent ones. The tree normal form sets a spanning tree to 1 and
+leaves exactly those numbers on the remaining edges.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>A connected market has 6 currencies and 9 trading pairs. How many
+numbers can no change of units affect?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn><mo>=</mo><mn>9</mn><mo>−</mo><mn>6</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1=9-6+1=4</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>One trader quotes in dollars, the other in euros, and every rate on
+their screens differs. How can they check they see the same market?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Compare invariants. Either compare the loop products of a set of
+independent cycles, or put both labelings in tree normal form with the
+same tree and root and compare those (Fact 0.2).</p>
+</details>
+<ol start="3">
+<li>Why does the tree normal form not need to choose a unit for the root
+currency?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Scaling every unit by the same factor changes nothing, so the root's
+unit is a free "global" choice that affects no rate. Fixing it at 1 just
+removes that redundancy.</p>
+</details>
+</div>
+<section id="06-no-arbitrage-means-prices-exist" class="cell markdown">
+<h2>0.6 No arbitrage means prices exist</h2>
+<p>When is a market consistent? Suppose every currency has a "price"
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">p(v)\in\mathbb R_{&gt;0}</annotation></semantics></math>,
+its value in some common yardstick such as grams of gold. If rates are
+fair,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(s\to t)=p(s)/p(t)</annotation></semantics></math>:
+one unit of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+is worth
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(s)</annotation></semantics></math>
+grams, which buys
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">p(s)/p(t)</annotation></semantics></math>
+units of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
+Then every round trip telescopes to 1. The converse is the interesting
+part.</p>
+<blockquote>
+<p><strong>Fact 0.3 (no arbitrage ⟺ prices).</strong> A labeling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">U:\vec E\to\mathbb R_{&gt;0}</annotation></semantics></math>
+on a connected board is consistent if and only if there is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>:</mo><mi>V</mi><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">p:V\to\mathbb R_{&gt;0}</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(s\to t)=p(s)/p(t)</annotation></semantics></math>
+for every edge. Equivalently,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is a reframing of the all-ones labeling:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>1</mn><mo>⋅</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(s\to t)=h(s)\cdot1\cdot h(t)^{-1}</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mi>p</mi></mrow><annotation encoding="application/x-tex">h=p</annotation></semantics></math>.</p>
+</blockquote>
+<p><em>Why:</em> if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is consistent, put it in tree normal form. Every non-tree edge carries a
+loop product, which is 1, so the normal form is the all-ones labeling.
+Undo the reframing, and you have expressed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+as a reframing of all-ones.</p>
+<p>Let's build a fair market from prices, check that it is consistent,
+and recover the prices from the rates alone.</p>
+</section>
+<div class="cell code" data-execution_count="12">
+<pre class="python"><code>p = np.array([1.0, 1.087, 1.266, 0.00667, 0.270])            # USD per unit: USD EUR GBP JPY ILS
+fair = reframe(G, market, np.ones(market.n_edges), p)        # U(s-&gt;t) = p(s) / p(t)
+print(&quot;consistent?&quot;, is_consistent(G, market, fair), &quot;| our market?&quot;, is_consistent(G, market, U))
+_, h_fair, _ = tree_normal_form(G, market, fair)
+print(&quot;recovered prices:&quot;, np.round(1 / h_fair, 5))           # p = 1/h, with p(USD) = 1</code></pre>
+<div class="output stream stdout">
+<pre><code>consistent? True | our market? False
+recovered prices: [1.      1.087   1.266   0.00667 0.27   ]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>The prices come back exactly. Prices are unique only up to one common
+factor (the yardstick: dollars, gold, anything), which is once more the
+"global" reframing that does nothing.</p>
+<p>In logarithms the statement becomes familiar. Write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a(d)=\log U(d)</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">a:\vec E\to\mathbb R</annotation></semantics></math>.
+Consistency says that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+is a <em>difference of heights</em>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">a(s\to t)=\log p(s)-\log p(t)</annotation></semantics></math>.
+A consistent market is a landscape, and a rate tells you how far you
+step down. An inconsistent one is an impossible staircase, where walking
+in a circle you keep going down.</p>
+<blockquote>
+<p><strong>Recap.</strong> No arbitrage on any loop means the rates come
+from prices,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(s\to t)=p(s)/p(t)</annotation></semantics></math>.
+The prices are recovered by the tree normal form and are unique up to a
+common factor.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Prices in dollars are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">USD</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">p(\text{USD})=1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">EUR</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1.087</mn></mrow><annotation encoding="application/x-tex">p(\text{EUR})=1.087</annotation></semantics></math>.
+What is the fair
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">USD</mtext><mo>→</mo><mtext mathvariant="normal">EUR</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(\text{USD}\to\text{EUR})</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">USD</mtext><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">EUR</mtext><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mi>/</mi><mn>1.087</mn><mo>≈</mo><mn>0.92</mn></mrow><annotation encoding="application/x-tex">p(\text{USD})/p(\text{EUR})=1/1.087\approx0.92</annotation></semantics></math>
+euros per dollar.</p>
+</details>
+<ol start="2">
+<li>Is the market of section 0.2 a reframing of the all-ones
+labeling?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. It has a defect (the top triangle's factor is 1.0021, not 1), and
+reframings never change loop products.</p>
+</details>
+</div>
+<section id="07-finding-arbitrage-is-finding-a-negative-cycle"
+class="cell markdown">
+<h2>0.7 Finding arbitrage is finding a negative cycle</h2>
+<p>Real markets have dozens of currencies and thousands of loops.
+Checking them one by one is hopeless. Logarithms turn the search into a
+classic graph problem. Give each direction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>
+the weight
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">w(d)=-\log U(d)</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">w:\vec E\to\mathbb R</annotation></semantics></math>.
+Then a round trip is profitable exactly when its total weight is
+negative:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo>&gt;</mo><mn>1</mn><mo>⇔</mo><munder><mo>∑</mo><mrow><mi>d</mi><mo>∈</mo><mi>γ</mi></mrow></munder><mi>w</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mn>0</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U(\gamma)&gt;1\iff \sum_{d\in\gamma}w(d)&lt;0.
+</annotation></semantics></math></span></p>
+<p>So <strong>an arbitrage loop is a negative-weight cycle</strong>, and
+the Bellman–Ford algorithm finds one in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>⋅</mi><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O(|V|\cdot|E|)</annotation></semantics></math>
+time. (The usual trick of starting every vertex at distance 0 stands in
+for a virtual source connected to everyone.)</p>
+</section>
+<div class="cell code" data-execution_count="13">
+<pre class="python"><code>def bellman_ford_cycle(board, U):
+    &quot;&quot;&quot;A closed walk with loop product &gt; 1, as (e, sign) steps, or None.&quot;&quot;&quot;
+    steps = [(e, s) for e in range(board.n_edges) for s in (1, -1)]
+    dist, pred = np.zeros(board.n_vertices), [None] * board.n_vertices
+    for _ in range(board.n_vertices):
+        last = None
+        for e, s in steps:
+            a, b = board.step_endpoints(e, s)
+            w = -s * np.log(U[e])                       # weight of the direction (e, s)
+            if dist[a] + w &lt; dist[b] - 1e-12:
+                dist[b], pred[b], last = dist[a] + w, (e, s), b
+        if last is None:
+            return None                                 # no negative cycle: consistent
+    return trace_cycle(board, pred, last)</code></pre>
+</div>
+<div class="cell code" data-execution_count="14">
+<pre class="python"><code>def trace_cycle(board, pred, v):
+    for _ in range(board.n_vertices):                   # step back until we are on the cycle
+        v = board.step_endpoints(*pred[v])[0]
+    cycle, u = [], v
+    while True:
+        cycle.append(pred[u])
+        u = board.step_endpoints(*pred[u])[0]
+        if u == v:
+            return cycle[::-1]</code></pre>
+</div>
+<div class="cell markdown">
+<p>A bigger market: seven currencies, every pair traded
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>21</mn></mrow><annotation encoding="application/x-tex">|E|=21</annotation></semantics></math>).
+We start from fair prices and add small quoting errors of about 0.1% to
+every rate. We use a random number generator <em>only</em> to fake those
+messy quotes. Nothing else in this chapter involves probability.</p>
+</div>
+<div class="cell code" data-execution_count="15">
+<pre class="python"><code>names7 = [&quot;USD&quot;, &quot;EUR&quot;, &quot;GBP&quot;, &quot;JPY&quot;, &quot;ILS&quot;, &quot;CHF&quot;, &quot;CAD&quot;]
+p7 = np.array([1.0, 1.087, 1.266, 0.00667, 0.270, 1.13, 0.72])
+K7 = Board.complete(7, names=names7)
+noise = np.exp(np.random.default_rng(7).normal(0, 0.001, K7.n_edges))
+quotes = reframe(G, K7, np.ones(K7.n_edges), p7) * noise
+cyc = bellman_ford_cycle(K7, quotes)
+route = [names7[v] for v in K7.walk_vertices(cyc)]
+print(&quot; -&gt; &quot;.join(route), f&quot;| gain per round trip: {walk_product(G, K7, quotes, cyc):.5f}&quot;)
+print(&quot;Bellman-Ford on the fair market:&quot;, bellman_ford_cycle(K7, reframe(G, K7, np.ones(21), p7)))</code></pre>
+<div class="output stream stdout">
+<pre><code>CAD -&gt; CHF -&gt; EUR -&gt; CAD | gain per round trip: 1.00296
+Bellman-Ford on the fair market: None
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="16">
+<pre class="python"><code>fig, ax = plt.subplots(figsize=(6, 6))
+lab = {e: f&quot;{(quotes[e] if s &gt; 0 else 1 / quotes[e]):.4g}&quot; for e, s in cyc}
+others = [e for e in range(K7.n_edges) if e not in lab]      # drawn faint, like a tree
+viz.draw_board(ax, K7, quotes, G, faces=False, edge_style=&quot;none&quot;, edge_labels=lab,
+               tree_edges=others, highlight_walk=cyc, vertex_labels=names7, pad=0.45,
+               title=&quot;An arbitrage loop found by Bellman-Ford&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch00-media/fig5.png"><img src="ch00-media/fig5.png" width="533" height="547" loading="lazy" alt="A seven-currency market with every pair traded. The arbitrage loop CAD to CHF to EUR to CAD, found by Bellman-Ford, is drawn in teal."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>The teal loop is a profitable round trip, with each rate printed in
+the direction you walk it. On the fair market, Bellman–Ford finds
+nothing, as Fact 0.3 says it must. (In real markets, spreads and fees
+eat such tiny gains, and fast traders remove what's left within moments.
+Markets stay <em>nearly</em> consistent because arbitrage is
+hunted.)</p>
+<blockquote>
+<p><strong>Recap.</strong> With weights
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-\log U(d)</annotation></semantics></math>,
+arbitrage loops are exactly negative cycles, and Bellman–Ford finds one
+or certifies that none exists.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Why
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">-\log U</annotation></semantics></math>
+and not
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">\log U</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Bellman–Ford hunts for <em>negative</em> cycles. A profitable loop
+has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∏</mo><mi>U</mi><mo>&gt;</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\prod U&gt;1</annotation></semantics></math>,
+i.e.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∑</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\sum\log U&gt;0</annotation></semantics></math>,
+i.e.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∑</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\sum(-\log U)&lt;0</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>If Bellman–Ford finds no negative cycle, what does Fact 0.3 tell you
+about the quotes?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>There is no negative cycle in either direction of any loop, so every
+loop product is exactly 1. The market is consistent, and the rates come
+from prices.</p>
+</details>
+</div>
+<section id="08-why-there-is-no-randomness-here-yet"
+class="cell markdown">
+<h2>0.8 Why there is no randomness here (yet)</h2>
+<p>The rest of the course puts <em>probability distributions</em> on
+labelings: "pick a labeling at random, but favor ones with few defects."
+That needs a starting point of pure ignorance, a
+<strong>uniform</strong> way of picking a label, one that looks the same
+after you change units (glossary 4.1).</p>
+<p>For exchange rates that is impossible. A uniform choice of a positive
+number, unchanged by every rescaling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>↦</mo><mi>c</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">x\mapsto cx</annotation></semantics></math>,
+would have to give the intervals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>1</mn><mo>,</mo><mn>10</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[1,10)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>10</mn><mo>,</mo><mn>100</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[10,100)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>100</mn><mo>,</mo><mn>1000</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[100,1000)</annotation></semantics></math>,
+… (and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0.1</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[0.1,1)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0.01</mn><mo>,</mo><mn>0.1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[0.01,0.1)</annotation></semantics></math>,
+…) all the same probability. These infinitely many intervals cover all
+of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">\mathbb R_{&gt;0}</annotation></semantics></math>,
+so the total probability would be either 0 (if each gets 0) or infinite,
+never 1. It is the same reason there is no uniform distribution on all
+the integers. Chapter 2 calls the groups that <em>do</em> have a uniform
+distribution <strong>compact</strong>.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mo>,</mo><mi>×</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\mathbb R_{&gt;0},\times)</annotation></semantics></math>
+is not one of them, and the library refuses to build a random labeling
+on it:</p>
+</section>
+<div class="cell code" data-execution_count="17">
+<pre class="python"><code>try:
+    Model(market, G)
+except ValueError as err:
+    print(&quot;ValueError:&quot;, err)</code></pre>
+<div class="output stream stdout">
+<pre><code>ValueError: R&gt;0 is not compact, so there is no uniform distribution to build a model on (see chapter 2).
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Groups such as the circle of angles, or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>+</mi><mn>1</mn><mo>,</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\lbrace +1,-1\rbrace</annotation></semantics></math>,
+<em>do</em> have a uniform distribution, and chapter 2 builds random
+labelings on them.</p>
+<h2 id="chapter-recap">Chapter recap</h2>
+<ul>
+<li>A <strong>board</strong> is a graph plus chosen closed walks
+(<strong>faces</strong>). A <strong>labeling</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">U:\vec E\to G</annotation></semantics></math>
+puts a group element on each direction, with reverse = inverse. Here
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mo>,</mo><mi>×</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G=(\mathbb R_{&gt;0},\times)</annotation></semantics></math>
+and labels are exchange rates.</li>
+<li><strong>Walk products</strong> multiply labels along a route.
+<strong>Loop products</strong> are round trips, and a face with a
+nontrivial loop product is a <strong>defect</strong> (a triangle
+arbitrage).</li>
+<li>A <strong>reframing</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">h:V\to G</annotation></semantics></math>
+changes units,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(s\to t)\mapsto h(s)U(s\to t)h(t)^{-1}</annotation></semantics></math>.
+Middle factors telescope, so loop products are
+<strong>invariants</strong>.</li>
+<li>A <strong>class</strong> is "the same market up to units". It is
+pinned down by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1</annotation></semantics></math>
+numbers, which the <strong>tree normal form</strong> displays on the
+non-tree edges.</li>
+<li><strong>Consistent</strong> (no arbitrage) ⟺ rates come from prices
+⟺ a reframing of the all-ones labeling.</li>
+<li>With weights
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>U</mi></mrow><annotation encoding="application/x-tex">-\log U</annotation></semantics></math>,
+arbitrage is a negative cycle, which Bellman–Ford finds.</li>
+<li><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mo>,</mo><mi>×</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\mathbb R_{&gt;0},\times)</annotation></semantics></math>
+has no uniform distribution, so randomness waits for compact
+groups.</li>
+</ul>
+<h2 id="dictionary">Dictionary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Our term</th>
+<th>Other names</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>board</td>
+<td>lattice (physics); 2-complex (topology)</td>
+</tr>
+<tr>
+<td>face</td>
+<td>plaquette (physics); 2-cell (topology)</td>
+</tr>
+<tr>
+<td>label group</td>
+<td>gauge group (physics); gain group (gain graphs)</td>
+</tr>
+<tr>
+<td>labeling</td>
+<td>exchange rates; gauge field, link variables (physics); connection
+(geometry); gain function (gain graphs)</td>
+</tr>
+<tr>
+<td>walk product</td>
+<td>conversion along a route; parallel transport, Wilson line
+(physics)</td>
+</tr>
+<tr>
+<td>loop product</td>
+<td>round-trip factor; holonomy (geometry, physics)</td>
+</tr>
+<tr>
+<td>defect</td>
+<td>triangle arbitrage; nonzero curvature / field strength
+(physics)</td>
+</tr>
+<tr>
+<td>reframing</td>
+<td>redenomination, change of numeraire; gauge transformation (physics);
+switching (gain graphs)</td>
+</tr>
+<tr>
+<td>consistent</td>
+<td>no-arbitrage; flat, pure gauge (physics); balanced (gain
+graphs)</td>
+</tr>
+<tr>
+<td>class</td>
+<td>gauge orbit (physics); switching class (gain graphs)</td>
+</tr>
+<tr>
+<td>invariant</td>
+<td>(gauge-invariant) observable (physics)</td>
+</tr>
+<tr>
+<td>tree normal form</td>
+<td>gauge fixing, maximal-tree gauge (physics)</td>
+</tr>
+</tbody>
+</table>
+<p><em>Prior art:</em> the physicist Kirill Ilinski built exactly this
+dictionary between arbitrage and gauge theory in <em>Physics of
+Finance</em> (1997, arXiv:hep-th/9710148).</p>
+<h2 id="whats-next">What's next</h2>
+<p>Exchange rates commute:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mi>b</mi><mo>=</mo><mi>b</mi><mi>a</mi></mrow><annotation encoding="application/x-tex">ab=ba</annotation></semantics></math>.
+Chapter 1 allows labels that don't, such as rotations of 3D space, where
+turning about one axis and then another is not the same as the reverse
+order. Loop products then <em>do</em> change under reframing, but only
+by a conjugation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(v)\,U(\gamma)\,h(v)^{-1}</annotation></semantics></math>,
+and finding the true invariants becomes more interesting.</p>
+</div>
+
+  <nav class="pager pager-bottom" aria-label="Chapters"><a href="./">← Course overview</a><a rel="next" href="ch01.html">Chapter 1<span class="t">: Labelings, reframings and classes</span> →</a></nav>
+</main>
+</body>
+</html>

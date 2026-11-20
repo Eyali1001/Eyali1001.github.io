@@ -1,0 +1,1568 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter 1: Labelings, reframings and classes — Eyal Merhavi</title>
+<meta name="description" content="Chapter 1 of the course Labelings, models, and gauge theory, rendered from the executed notebook.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="../../style.css?v=b18eafc744">
+<style>
+  .crumbs { margin-top: 0; }
+  .pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1.5rem; font-size: 0.95rem; }
+  .pager a[rel="next"] { margin-left: auto; text-align: right; }
+  .pager-top .t { display: none; }
+  @media (max-width: 40rem) { .pager-bottom { flex-direction: column; } .pager-bottom a[rel="next"] { margin-left: 0; text-align: left; } }
+  .pager-bottom { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .rendered-note { font-size: 0.9rem; color: var(--muted); }
+  .actions { margin-top: -0.25rem; }
+  .cell.code pre { font-size: 0.8rem; line-height: 1.4; }
+  .output pre { background: #fff; border: 0; border-left: 3px solid #e4e4e4; margin-top: -0.5rem; }
+  pre { max-width: 100%; box-sizing: border-box; }
+  figure { margin: 1rem 0; }
+  figure img, .anim img { display: block; max-width: 100%; height: auto; }
+  figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
+  .math-block { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+  .math-wide { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; vertical-align: middle; }
+  th, td { border: 1px solid var(--rule); padding: 0.2rem 0.5rem; }
+  blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--rule); }
+  details { margin: 0.25rem 0 0.75rem 1.25rem; }
+  summary { cursor: pointer; color: var(--muted); }
+  .cell.markdown h1 { margin-top: 1.25rem; }
+  .cell.markdown h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
+</style>
+</head>
+<body>
+<main>
+  <p class="crumbs"><a href="../../">← Eyal Merhavi</a> · <a href="./">Labelings, models, and gauge theory</a></p>
+  <nav class="pager pager-top" aria-label="Chapters"><a rel="prev" href="ch00.html">← Chapter 0<span class="t">: A market of currencies</span></a><a rel="next" href="ch01b.html">Interlude<span class="t">: Why the labels are forced: charged fields</span> →</a></nav>
+  <p class="rendered-note">Chapter 1 of <a href="./"><i>Labelings, models, and gauge theory</i></a>, rendered from the executed notebook. Code cells and their outputs are shown as they ran.</p>
+  <p class="actions"><a href="lab/notebooks/index.html?path=ch01_labelings_and_reframings.ipynb" target="_blank" rel="noopener">Run this chapter in your browser ↗</a> · <a href="https://github.com/Eyali1001/lattice-gauge-course/blob/main/chapters/ch01_labelings_and_reframings.py" target="_blank" rel="noopener">Source on GitHub ↗</a><br><span class="rendered-note">Runs on JupyterLite. The first time, it downloads Python and its libraries (about 40 MB).</span></p>
+<section id="chapter-1--labelings-reframings-and-classes"
+class="cell markdown">
+<h1>Chapter 1 — Labelings, reframings and classes</h1>
+<p>In Chapter 0 every edge of a currency market carried an exchange
+rate. When a country redenominated its currency, many rates changed at
+once, but no arbitrage opportunity appeared or disappeared. The rates
+were a <em>description</em>; the arbitrage was the <em>content</em>.</p>
+<p>This chapter takes that idea and strips it down to its skeleton, so
+that it works for <strong>any group</strong> of labels, not just
+exchange rates. The labels might be coin flips
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">\pm1</annotation></semantics></math>),
+clock hands (angles), shuffles of three cards (permutations), or the
+relative orientations of cameras (3D rotations). In every case the same
+three ingredients appear:</p>
+<ol>
+<li>labels on the edges of a graph,</li>
+<li>products of labels around loops,</li>
+<li>a freedom to change conventions at each vertex, which changes the
+labels but not the loop products (up to a twist we'll meet for
+non-commuting groups).</li>
+</ol>
+<p>Nothing in this chapter is random. Probability arrives in Chapter
+2.</p>
+<p><strong>What you'll learn</strong></p>
+<ul>
+<li>the precise definitions of <em>board</em>, <em>labeling</em>,
+<em>walk product</em>, <em>reframing</em> and <em>class</em>;</li>
+<li>which functions of a labeling survive every reframing, and why
+traces appear for non-commuting groups;</li>
+<li>how to count classes, and how to pick one canonical representative
+of each (<em>tree normal form</em>).</li>
+</ul>
+<p><strong>Prerequisites:</strong> Chapter 0 (helpful, not required);
+basic group theory (groups, conjugation, conjugacy classes).</p>
+</section>
+<div class="cell code" data-execution_count="1">
+<pre class="python"><code>import itertools
+import numpy as np
+import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+from IPython.display import HTML
+
+from lgt import *
+from lgt import viz
+
+viz.use_style()
+rng = np.random.default_rng(1)</code></pre>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="1-boards">1. Boards</h2>
+<p>We need a place to put labels. A graph alone is almost enough, but we
+will also want to single out some short loops as "elementary" (the
+little squares of a grid, for instance). So we bundle a graph with a
+chosen list of closed walks.</p>
+<p><strong>Definition (board, glossary 1.1–1.3).</strong> A
+<strong>board</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+consists of</p>
+<ul>
+<li>a finite connected graph with vertex set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>V</mi><annotation encoding="application/x-tex">V</annotation></semantics></math>
+and edge set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>E</mi><annotation encoding="application/x-tex">E</annotation></semantics></math>;</li>
+<li>a list
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+of closed walks in that graph, called <strong>faces</strong>.</li>
+</ul>
+<p>Every edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>s</mi><mo>,</mo><mi>t</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\lbrace s,t\rbrace</annotation></semantics></math>
+can be walked in two <strong>directions</strong>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>→</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">s\to t</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>→</mo><mi>s</mi></mrow><annotation encoding="application/x-tex">t\to s</annotation></semantics></math>.
+We write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>E</mi><mo accent="true">→</mo></mover><annotation encoding="application/x-tex">\vec E</annotation></semantics></math>
+for the set of all directions
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>2</mn><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\vec E| = 2|E|</annotation></semantics></math>),
+and for a direction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>
+we write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>d</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar d</annotation></semantics></math>
+for the same edge walked the other way.</p>
+<p>Which closed walks count as faces is a choice we make when we build
+the board, much like choosing which pixels count as "neighbours" in an
+image model. On a grid the natural choice is the unit squares.</p>
+<p>In code (and in the pictures) each edge is stored with one
+<strong>reference direction</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>→</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">s\to t</annotation></semantics></math>,
+drawn as a small arrow. This is pure bookkeeping: the other direction is
+always available too. A walk is stored as a list of <em>steps</em>
+<code>(e, sign)</code>, where <code>sign = +1</code> walks edge
+<code>e</code> along its arrow and <code>sign = -1</code> walks it
+against the arrow.</p>
+</div>
+<div class="cell code" data-execution_count="2">
+<pre class="python"><code>tri = Board.triangle()
+grid = Board.grid(4, 3)
+torus = Board.grid(3, 3, periodic=True)
+for X in (tri, grid, torus):
+    print(X)</code></pre>
+<div class="output stream stdout">
+<pre><code>Board(&#39;triangle&#39;: 3 vertices, 3 edges, 1 faces)
+Board(&#39;4x3 grid&#39;: 12 vertices, 17 edges, 6 faces)
+Board(&#39;3x3 periodic grid&#39;: 9 vertices, 18 edges, 9 faces)
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Three boards we'll use throughout. The right-hand picture is a window
+cut through the middle of the wrap-around edges. Look at its borders: an
+edge that leaves through the right side comes back in through the left
+side, and one that leaves through the top comes back in at the bottom.
+The partial squares along the borders are pieces of the same wrapped
+faces. Gluing left to right and top to bottom turns the grid into the
+surface of a doughnut, so we call it a <strong>torus</strong>.</p>
+</div>
+<div class="cell code" data-execution_count="3">
+<pre class="python"><code>fig, axs = plt.subplots(1, 3, figsize=(13, 4.3))
+viz.draw_board(axs[0], tri, vertex_labels=[&quot;0&quot;, &quot;1&quot;, &quot;2&quot;], title=&quot;triangle: 3 edges, 1 face&quot;)
+viz.draw_board(axs[1], grid, title=&quot;4×3 grid: 17 edges, 6 faces&quot;)
+viz.draw_board(axs[2], torus, title=&quot;3×3 periodic grid (torus): 18 edges, 9 faces&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01-media/fig1.png"><img src="ch01-media/fig1.png" width="1161" height="371" loading="lazy" alt="Three boards: a triangle with vertices 0, 1, 2 (3 edges, 1 face); a 4 by 3 grid (17 edges, 6 faces); and a 3 by 3 periodic grid, a torus, whose edges leave one side and come back on the opposite side (18 edges, 9 faces)."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>A face is a list of steps. Notice the two <code>-1</code> signs in
+the grid's first face: going counter-clockwise around a unit square, the
+top and left edges are walked against their arrows.</p>
+</div>
+<div class="cell code" data-execution_count="4">
+<pre class="python"><code>print(&quot;triangle face (steps):  &quot;, tri.faces[0], &quot;  vertices:&quot;, tri.walk_vertices(tri.faces[0]))
+print(&quot;first grid face (steps):&quot;, grid.faces[0], &quot;  vertices:&quot;, grid.walk_vertices(grid.faces[0]))</code></pre>
+<div class="output stream stdout">
+<pre><code>triangle face (steps):   [(0, 1), (1, 1), (2, 1)]   vertices: [0, 1, 2, 0]
+first grid face (steps): [(0, 1), (3, 1), (7, -1), (1, -1)]   vertices: [0, 1, 5, 4, 0]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A board is a connected graph plus a list of
+designated closed walks (faces). Each edge has two directions; code
+stores one reference direction per edge and records walks as
+<code>(edge, ±1)</code> steps.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>How many vertices, edges and faces does an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>×</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">L\times L</annotation></semantics></math>
+grid (no wrap-around) have?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>L</mi><mn>2</mn></msup><annotation encoding="application/x-tex">L^2</annotation></semantics></math>
+vertices;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>L</mi><mo stretchy="false" form="prefix">(</mo><mi>L</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">2L(L-1)</annotation></semantics></math>
+edges
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">L-1</annotation></semantics></math>
+horizontal edges in each of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+rows, same for columns);
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>L</mi><mo>−</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">(L-1)^2</annotation></semantics></math>
+faces.</p>
+</details>
+<ol start="2">
+<li>And an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>×</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">L\times L</annotation></semantics></math>
+torus (with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>≥</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">L\ge 3</annotation></semantics></math>)?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>L</mi><mn>2</mn></msup><annotation encoding="application/x-tex">L^2</annotation></semantics></math>
+vertices;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><msup><mi>L</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">2L^2</annotation></semantics></math>
+edges (every vertex has one edge going right and one going up);
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>L</mi><mn>2</mn></msup><annotation encoding="application/x-tex">L^2</annotation></semantics></math>
+faces.</p>
+</details>
+<ol start="3">
+<li>Why do we store a face as a list of steps rather than as a set of
+vertices?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>A face is a <em>closed walk</em>: it has an order, a direction, and a
+starting point, and all three will matter once labels are multiplied
+around it. Also, on a small torus two different edges can join the same
+pair of vertices, so a list of vertices would not even say which edges
+are used.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="2-labelings-and-their-products">2. Labelings and their
+products</h2>
+<h3 id="21-label-groups">2.1 Label groups</h3>
+<p><strong>Definition (label group, glossary 2.1).</strong> A
+<strong>label group</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is any group. Its elements are the labels we will put on edges. Our
+running examples:</p>
+<table>
+<colgroup>
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+<col style="width: 25%" />
+</colgroup>
+<thead>
+<tr>
+<th>group</th>
+<th>elements</th>
+<th>multiplication</th>
+<th>how we draw a label</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math>
+("coins")</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mi>+</mi><mn>1</mn><mo>,</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\lbrace +1,-1\rbrace</annotation></semantics></math></td>
+<td>ordinary product</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>
+edges are thick and gold</td>
+</tr>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>3</mn></msub><annotation encoding="application/x-tex">\mathbb Z_3</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\lbrace 0,1,2\rbrace</annotation></semantics></math></td>
+<td>addition mod 3</td>
+<td>clock hand at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>0</mn><mo>∘</mo></msup><mo>,</mo><msup><mn>120</mn><mo>∘</mo></msup><mo>,</mo><msup><mn>240</mn><mo>∘</mo></msup></mrow><annotation encoding="application/x-tex">0^\circ, 120^\circ, 240^\circ</annotation></semantics></math></td>
+</tr>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+("clocks")</td>
+<td>angles
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>2</mn><mi>π</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\theta\in[0,2\pi)</annotation></semantics></math></td>
+<td>addition mod
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">2\pi</annotation></semantics></math></td>
+<td>clock hand at angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math></td>
+</tr>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>
+("shuffles")</td>
+<td>permutations of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>3</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\lbrace 1,2,3\rbrace</annotation></semantics></math></td>
+<td>composition</td>
+<td>cycle notation, e.g.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>12</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(12)</annotation></semantics></math></td>
+</tr>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>
+("cameras")</td>
+<td>rotations of 3D space</td>
+<td>composition</td>
+<td>rotation angle</td>
+</tr>
+</tbody>
+</table>
+<p>The first three are <strong>abelian</strong> (the order of
+multiplication doesn't matter); the last two are not. For permutations
+we compose like functions:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mi>y</mi></mrow><annotation encoding="application/x-tex">xy</annotation></semantics></math>
+means "apply
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+first, then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>".</p>
+</div>
+<div class="cell code" data-execution_count="5">
+<pre class="python"><code>S = S3()
+fmt = lambda x: viz.format_label(S, x)          # S3 element -&gt; cycle notation
+x, y = 2, 1                                      # x = (12), y = (23)
+print(f&quot;x = {fmt(x)},  y = {fmt(y)}&quot;)
+print(f&quot;xy = {fmt(S.mul(x, y))},  yx = {fmt(S.mul(y, x))}   &lt;- different: S3 is not abelian&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>x = (12),  y = (23)
+xy = (123),  yx = (132)   &lt;- different: S3 is not abelian
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<h3 id="22-labelings">2.2 Labelings</h3>
+<p><strong>Definition (labeling, glossary 2.2).</strong> A
+<strong>labeling</strong> is a function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">U:\vec E\to G</annotation></semantics></math>
+with</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>d</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>d</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mspace width="1.0em"></mspace><mrow><mtext mathvariant="normal">for every direction </mtext><mspace width="0.333em"></mspace></mrow><mi>d</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U(\bar d) = U(d)^{-1}\quad\text{for every direction } d.
+</annotation></semantics></math></span></p>
+<p>Read
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(s\to t)</annotation></semantics></math>
+as <em>a converter from the conventions at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+to the conventions at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math></em>.
+Walking the edge backwards must undo the conversion, which is what the
+rule says. (In Chapter 0: if a dollar buys 3.7 shekels, a shekel buys
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mn>3.7</mn></mrow><annotation encoding="application/x-tex">1/3.7</annotation></semantics></math>
+dollars.)</p>
+<p>Because the reverse label is forced, a labeling is the same thing as
+one label per edge, so the set of all labelings is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mi>E</mi></msup><annotation encoding="application/x-tex">G^E</annotation></semantics></math>.
+In code, a labeling is an array with one entry per edge (for its
+reference direction).</p>
+<h3 id="23-walk-products-loop-products-face-products">2.3 Walk products,
+loop products, face products</h3>
+<p><strong>Definition (walk product, glossary 2.3).</strong> For a walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+that takes the directions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>d</mi><mn>1</mn></msub><mo>,</mo><msub><mi>d</mi><mn>2</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>d</mi><mi>k</mi></msub></mrow><annotation encoding="application/x-tex">d_1, d_2, \dots, d_k</annotation></semantics></math>
+in order, its <strong>walk product</strong> is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo><mi>⋯</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.222em"></mspace><mo>∈</mo><mi>G</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U(\gamma) = U(d_1)\,U(d_2)\cdots U(d_k)\ \in G .
+</annotation></semantics></math></span></p>
+<p><strong>Definition (loop product, face product, defect; glossary
+2.4–2.5).</strong> If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+is closed and starts and ends at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(\gamma)</annotation></semantics></math>
+is a <strong>loop product at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math></strong>.
+The loop product of a face
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+is its <strong>face product</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>∈</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">U_f\in G</annotation></semantics></math>.
+A face with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>≠</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">U_f \neq 1</annotation></semantics></math>
+(not the identity) is a <strong>defect</strong>.</p>
+<p>Here is a random
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+labeling of the 4×3 grid. Each clock hand is a label. Each face is
+coloured by its face product: pale means identity (angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>),
+and as the angle goes around the circle the colour runs through blues
+and purples to dark, then through reds and tans back to pale. The teal
+loop goes around a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times 2</annotation></semantics></math>
+block of faces.</p>
+</div>
+<div class="cell code" data-execution_count="6">
+<pre class="python"><code>G = U1()
+U = random_labeling(G, grid, rng)      # U: one angle per edge, an array of shape (|E|,)
+block = grid.walk([0, 1, 2, 6, 10, 9, 8, 4, 0])   # vertex list -&gt; list of steps
+
+fig, ax = plt.subplots(figsize=(6.5, 4.8))
+viz.draw_board(ax, grid, U, G, highlight_walk=block, title=&quot;a U(1) labeling and a loop&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01-media/fig2.png"><img src="ch01-media/fig2.png" width="576" height="449" loading="lazy" alt="A random U(1) labeling of the 4 by 3 grid. Every edge carries a small clock whose hand is its label, and every face is coloured by its face product. A teal loop runs around a 2 by 2 block of faces."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>For an abelian group, the product around the block equals the product
+of the four face products inside it: every interior edge is walked once
+in each direction and cancels. Let's check.</p>
+</div>
+<div class="cell code" data-execution_count="7">
+<pre class="python"><code>inside = [i for i, (c, mu, nu) in enumerate(grid.meta[&quot;face_anchor&quot;]) if c[0] &lt; 2 and c[1] &lt; 2]
+fp = face_products(G, grid, U)                       # one angle per face
+print(&quot;loop product around the block:   &quot;, round(float(walk_product(G, grid, U, block)), 4))
+print(&quot;product of the 4 faces inside it:&quot;, round(float(G.prod(fp[inside])), 4))</code></pre>
+<div class="output stream stdout">
+<pre><code>loop product around the block:    0.9569
+product of the 4 faces inside it: 0.9569
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>For a non-abelian group, order matters, and two more facts are worth
+seeing at work.</p>
+<blockquote>
+<p><strong>Fact 1.1 (reversal).</strong> Walking a walk backwards
+inverts its product: if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>γ</mi><mo accent="true">‾</mo></mover><annotation encoding="application/x-tex">\bar\gamma</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+walked backwards, then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mover><mi>γ</mi><mo accent="true">‾</mo></mover><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(\bar\gamma) = U(\gamma)^{-1}</annotation></semantics></math>.</p>
+</blockquote>
+<p><em>Why:</em>
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>⋯</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mover><mi>d</mi><mo accent="true">‾</mo></mover><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mi>k</mi></msub><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>⋯</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mn>1</mn></msub><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mi>⋯</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>d</mi><mi>k</mi></msub><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(\bar d_k)\cdots U(\bar d_1) = U(d_k)^{-1}\cdots U(d_1)^{-1} = (U(d_1)\cdots U(d_k))^{-1}</annotation></semantics></math></span>.</p>
+<p>Moving the <strong>starting point</strong> of a loop changes its
+product by a conjugation: if the loop is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>γ</mi><mo>=</mo><msub><mi>γ</mi><mn>1</mn></msub><msub><mi>γ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">\gamma = \gamma_1\gamma_2</annotation></semantics></math>
+(first a walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mn>1</mn></msub><annotation encoding="application/x-tex">\gamma_1</annotation></semantics></math>
+from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>w</mi><annotation encoding="application/x-tex">w</annotation></semantics></math>,
+then a walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>γ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\gamma_2</annotation></semantics></math>
+back to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>),
+then starting at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>w</mi><annotation encoding="application/x-tex">w</annotation></semantics></math>
+gives
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>γ</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>γ</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>γ</mi><mn>1</mn></msub><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mspace width="0.167em"></mspace><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>γ</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>γ</mi><mn>2</mn></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>γ</mi><mn>1</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(\gamma_2)U(\gamma_1) = U(\gamma_1)^{-1}\,\big(U(\gamma_1)U(\gamma_2)\big)\,U(\gamma_1)</annotation></semantics></math></span>.</p>
+</div>
+<div class="cell code" data-execution_count="8">
+<pre class="python"><code>US = random_labeling(S, grid, rng)                 # an S3 labeling of the same grid
+while S.chi(walk_product(S, grid, US, block)) != 0:  # redraw until the product is a 3-cycle
+    US = random_labeling(S, grid, rng)              # (a swap is its own inverse: less instructive)
+fwd = walk_product(S, grid, US, block)
+bwd = walk_product(S, grid, US, grid.reverse_walk(block))
+shifted = walk_product(S, grid, US, block[1:] + block[:1])      # same loop, starting at vertex 1
+print(f&quot;around the block from 0:    {fmt(fwd)}&quot;)
+print(f&quot;backwards:                  {fmt(bwd)}   (inverse of {fmt(fwd)} is {fmt(S.inv(fwd))})&quot;)
+print(f&quot;same loop, starting at 1:   {fmt(shifted)}   (a conjugate of {fmt(fwd)})&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>around the block from 0:    (132)
+backwards:                  (123)   (inverse of (132) is (123))
+same loop, starting at 1:   (123)   (a conjugate of (132))
+</code></pre>
+</div>
+</div>
+<section id="24-consistent-labelings" class="cell markdown">
+<h3>2.4 Consistent labelings</h3>
+<p><strong>Definition (consistent, glossary 2.6).</strong> A labeling is
+<strong>consistent</strong> if <em>every</em> loop product is the
+identity. In Chapter 0 this was "no arbitrage".</p>
+<p>Checking every loop sounds expensive, but on a plain grid it's enough
+to check the faces:</p>
+<blockquote>
+<p><strong>Fact 1.2 (faces suffice on a grid).</strong> On a grid
+without wrap-around, a labeling is consistent if and only if it has no
+defects.</p>
+</blockquote>
+<p><em>Why, roughly:</em> every loop on a flat grid can be shrunk across
+faces one at a time, and each step changes the loop product only by a
+face product (and conjugations). Section 7 shows that this fails on a
+torus.</p>
+<p>Let's check it by brute force: all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>12</mn></msup><mo>=</mo><mn>4096</mn></mrow><annotation encoding="application/x-tex">2^{12}=4096</annotation></semantics></math>
+coin labelings of the 3×3 grid.</p>
+</section>
+<div class="cell code" data-execution_count="9">
+<pre class="python"><code>Z = Z2()
+small = Board.grid(3, 3)
+Us = all_labelings(Z, small)                          # shape (4096, 12)
+no_defects = ~defects(Z, small, Us).any(axis=1)
+consistent = is_consistent(Z, small, Us)
+print(f&quot;{len(Us)} labelings, {no_defects.sum()} with no defects, &quot;
+      f&quot;{consistent.sum()} consistent; the two lists agree: {(no_defects == consistent).all()}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>4096 labelings, 256 with no defects, 256 consistent; the two lists agree: True
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p><strong>An application: cameras.</strong> Suppose each vertex is a
+camera with an unknown orientation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>O</mi><mi>v</mi></msub><mo>∈</mo><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">O_v\in SO(3)</annotation></semantics></math>,
+and for each pair of cameras we measure their relative rotation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>O</mi><mi>s</mi></msub><msubsup><mi>O</mi><mi>t</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">U(s\to t) = O_s O_t^{-1}</annotation></semantics></math>.
+Exact measurements give a consistent labeling: around any loop the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>O</mi><annotation encoding="application/x-tex">O</annotation></semantics></math>'s
+cancel. Real measurements are noisy, so the loop products become small
+non-identity rotations. Recovering the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>O</mi><mi>v</mi></msub><annotation encoding="application/x-tex">O_v</annotation></semantics></math>
+from noisy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>'s
+is called <strong>synchronization</strong>, and it is used in 3D
+reconstruction from photos and in cryo-electron microscopy.</p>
+</div>
+<div class="cell code" data-execution_count="10">
+<pre class="python"><code>R = SO3()
+cams = Board.complete(4)                                   # 4 cameras, all pairs compared
+O = R.uniform(rng, cams.n_vertices)                        # true orientations, unknown in practice
+s, t = cams.edges[:, 0], cams.edges[:, 1]
+U_exact = R.mul(O[s], R.inv(O[t]))                         # U(s-&gt;t) = O_s O_t^{-1}
+noise = np.array([R.about_axis(rng.normal(size=3), rng.normal(0, 0.03)) for _ in s])
+U_noisy = R.mul(U_exact, noise)
+for name, X in [(&quot;exact&quot;, U_exact), (&quot;noisy&quot;, U_noisy)]:
+    ang = np.degrees(R.rotation_angle(face_products(R, cams, X)))
+    print(f&quot;{name:5}  rotation angle of each triangle&#39;s face product (degrees):&quot;, np.round(ang, 2))</code></pre>
+<div class="output stream stdout">
+<pre><code>exact  rotation angle of each triangle&#39;s face product (degrees): [0. 0. 0. 0.]
+noisy  rotation angle of each triangle&#39;s face product (degrees): [1.6  2.74 1.12 3.48]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A labeling puts a group element on every edge
+direction, with reverse = inverse. Multiplying labels along a walk gives
+its walk product; around a closed walk it's a loop product, around a
+face a face product. Reversing a walk inverts the product; moving a
+loop's start conjugates it. A labeling is consistent when every loop
+product is the identity; on a plain grid, that's the same as having no
+defects.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">G=\mathbb Z_2</annotation></semantics></math>,
+what is a face product in words?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>It is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><msup><mo stretchy="false" form="postfix">)</mo><mi>k</mi></msup></mrow><annotation encoding="application/x-tex">(-1)^k</annotation></semantics></math>
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+is the number of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>
+edges around the face. So a face is a defect exactly when an odd number
+of its edges carry
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>For an abelian group, does the starting point of a loop affect its
+product?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. Moving the start conjugates the product, and in an abelian group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>a</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>x</mi><mi>a</mi><mo>=</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">a^{-1}xa = x</annotation></semantics></math>.</p>
+</details>
+<ol start="3">
+<li>In the camera example, why is the exact labeling consistent?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Around a closed walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>v</mi><mn>0</mn></msub><mo>→</mo><msub><mi>v</mi><mn>1</mn></msub><mo>→</mo><mi>⋯</mi><mo>→</mo><msub><mi>v</mi><mi>k</mi></msub><mo>=</mo><msub><mi>v</mi><mn>0</mn></msub></mrow><annotation encoding="application/x-tex">v_0\to v_1\to\cdots\to v_k=v_0</annotation></semantics></math>
+the product is
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>O</mi><msub><mi>v</mi><mn>0</mn></msub></msub><msubsup><mi>O</mi><msub><mi>v</mi><mn>1</mn></msub><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><msub><mi>O</mi><msub><mi>v</mi><mn>1</mn></msub></msub><msubsup><mi>O</mi><msub><mi>v</mi><mn>2</mn></msub><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><mi>⋯</mi><msub><mi>O</mi><msub><mi>v</mi><mrow><mi>k</mi><mo>−</mo><mn>1</mn></mrow></msub></msub><msubsup><mi>O</mi><msub><mi>v</mi><mn>0</mn></msub><mrow><mi>−</mi><mn>1</mn></mrow></msubsup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">O_{v_0}O_{v_1}^{-1}O_{v_1}O_{v_2}^{-1}\cdots O_{v_{k-1}}O_{v_0}^{-1} = 1</annotation></semantics></math></span>:
+every inner pair cancels.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="3-reframings">3. Reframings</h2>
+<p>The camera example already contains the key idea. The labels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>O</mi><mi>s</mi></msub><msubsup><mi>O</mi><mi>t</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">O_sO_t^{-1}</annotation></semantics></math>
+were built from one choice per <strong>vertex</strong>. If you rotated
+all your notes about camera
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+(you decided "up" means something else for that camera), every label
+touching
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+would change, yet nothing physical about the cameras would.</p>
+<p><strong>Definition (reframing, glossary 3.1–3.2).</strong> A
+<strong>reframing</strong> is a function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">h:V\to G</annotation></semantics></math>.
+It acts on a labeling by</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.222em"></mspace><mo>↦</mo><mspace width="0.222em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U(s\to t)\ \longmapsto\ h(s)\,U(s\to t)\,h(t)^{-1}.
+</annotation></semantics></math></span></p>
+<p>The set of all reframings,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mi>V</mi></msup><annotation encoding="application/x-tex">G^V</annotation></semantics></math>,
+is a group under vertex-by-vertex multiplication; we call it the
+<strong>reframing group</strong>.</p>
+<p>Each label is a converter between the conventions at its two
+endpoints, so a change of convention at either endpoint enters it:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)</annotation></semantics></math>
+on the left,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(t)^{-1}</annotation></semantics></math>
+on the right. (Check that the reverse direction stays the inverse:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(t)U(s\to t)^{-1}h(s)^{-1}</annotation></semantics></math>
+is indeed the inverse of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(s)U(s\to t)h(t)^{-1}</annotation></semantics></math>.)</p>
+<p>The payoff of this exact shape is that along a walk the inner factors
+<strong>telescope</strong>:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>U</mi><mn>1</mn></msub><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>U</mi><mn>2</mn></msub><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>U</mi><mn>1</mn></msub><msub><mi>U</mi><mn>2</mn></msub><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\big(h(a)\,U_1\,h(v)^{-1}\big)\big(h(v)\,U_2\,h(b)^{-1}\big) = h(a)\,U_1U_2\,h(b)^{-1}.
+</annotation></semantics></math></span></p>
+<p>Here
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>1</mn></msub><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo>→</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U_1 = U(a\to v)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>2</mn></msub><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo>→</mo><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U_2 = U(v\to b)</annotation></semantics></math>
+are the labels of two consecutive steps.</p>
+<blockquote>
+<p><strong>Fact 1.3 (how reframing moves products; glossary
+3.5).</strong> If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+is a walk from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>a</mi><annotation encoding="application/x-tex">a</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>,
+a reframing changes its product to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(a)\,U(\gamma)\,h(b)^{-1}</annotation></semantics></math>.
+In particular a loop product at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+becomes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(v)\,U(\gamma)\,h(v)^{-1}</annotation></semantics></math>:
+it is <strong>conjugated</strong>.</p>
+</blockquote>
+<p>For an abelian group, conjugation does nothing, so <em>loop products
+are untouched</em>. For a non-abelian group the loop product can change,
+but only within its conjugacy class. Here is an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>
+labeling of the triangle, before and after a reframing:</p>
+</div>
+<div class="cell code" data-execution_count="11">
+<pre class="python"><code>U = np.array([2, 1, 1])                 # labels (12), (23), (23) on 0-&gt;1, 1-&gt;2, 2-&gt;0
+h = np.array([1, 3, 0])                 # reframing: h(0)=(23), h(1)=(123), h(2)=e
+U2 = reframe(S, tri, U, h)
+for name, X in [(&quot;before&quot;, U), (&quot;after &quot;, U2)]:
+    w = face_products(S, tri, X)[0]
+    print(f&quot;{name}: labels {[fmt(x) for x in X]}   loop product {fmt(w):5}   &quot;
+          f&quot;fixed points of loop product: {S.chi(w):.0f}&quot;)
+print(f&quot;check: h(0) w h(0)^-1 = {fmt(S.conj(h[0], face_products(S, tri, U)[0]))}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>before: labels [&#39;(12)&#39;, &#39;(23)&#39;, &#39;(23)&#39;]   loop product (12)    fixed points of loop product: 1
+after : labels [&#39;(123)&#39;, &#39;(12)&#39;, &#39;e&#39;]   loop product (13)    fixed points of loop product: 1
+check: h(0) w h(0)^-1 = (13)
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Every label changed and the loop product changed from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>12</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(12)</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>13</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(13)</annotation></semantics></math>.
+But both are swaps of two cards: same conjugacy class, same number of
+fixed points.</p>
+<h3 id="frozen-faces-spinning-edges">Frozen faces, spinning edges</h3>
+<p>For an abelian group the effect is striking. Below, a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+labeling of a 3×3 grid is hit by a smoothly varying reframing: every
+vertex slowly turns its own "zero direction". <strong>Watch the clock
+hands spin while the face colours do not move at all.</strong> The faces
+are what the labeling <em>means</em>; the hands are how it is
+<em>written down</em>.</p>
+</div>
+<div class="cell code" data-execution_count="12">
+<pre class="python"><code>G = U1()
+U = random_labeling(G, small, np.random.default_rng(7))
+anim = viz.animate_reframing(small, G, U, n_frames=36, figsize=(4.2, 4.2), interval=110)
+HTML(anim.to_jshtml())</code></pre>
+<div class="output display_data">
+<figure class="anim"><picture><source srcset="ch01-media/anim-still.png" media="(prefers-reduced-motion: reduce)"><img src="ch01-media/anim.gif" width="630" height="630" loading="lazy" alt="A clock labeling of a small grid of four faces under a slowly changing reframing: every clock hand on the edges turns, while the face colours do not change at all."></picture><figcaption>In the notebook this is an animation player; here it is a looping image (a still frame if you prefer reduced motion).</figcaption></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Reframings compose the way you'd hope: doing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mn>1</mn></msub><annotation encoding="application/x-tex">h_1</annotation></semantics></math>
+and then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>h</mi><mn>2</mn></msub><annotation encoding="application/x-tex">h_2</annotation></semantics></math>
+is the same as doing the single reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>h</mi><mn>2</mn></msub><msub><mi>h</mi><mn>1</mn></msub></mrow><annotation encoding="application/x-tex">h_2h_1</annotation></semantics></math>
+(multiply vertex by vertex). This is what it means for the reframing
+group to <em>act</em> on labelings.</p>
+</div>
+<div class="cell code" data-execution_count="13">
+<pre class="python"><code>h1, h2 = random_reframing(S, grid, rng), random_reframing(S, grid, rng)
+one_by_one = reframe(S, grid, reframe(S, grid, US, h1), h2)
+combined = reframe(S, grid, US, S.mul(h2, h1))
+print(&quot;h1 then h2  ==  h2·h1 :&quot;, np.array_equal(one_by_one, combined))</code></pre>
+<div class="output stream stdout">
+<pre><code>h1 then h2  ==  h2·h1 : True
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">h:V\to G</annotation></semantics></math>
+changes conventions vertex by vertex and acts by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(s\to t)\mapsto h(s)U(s\to t)h(t)^{-1}</annotation></semantics></math>.
+Along a walk the inner factors cancel, so only the endpoints feel it; a
+loop product at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+gets conjugated by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(v)</annotation></semantics></math>.
+For abelian groups, loop products don't change at all.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+be constant,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>g</mi></mrow><annotation encoding="application/x-tex">h(v)=g</annotation></semantics></math>
+for every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>.
+What does it do to a labeling when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is abelian? When it isn't?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Abelian:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mi>U</mi><msup><mi>g</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mi>U</mi></mrow><annotation encoding="application/x-tex">gUg^{-1}=U</annotation></semantics></math>,
+so nothing at all. Non-abelian: it conjugates <em>every</em> label by
+the same
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>Write out the telescoping for a three-step walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mo>→</mo><mi>v</mi><mo>→</mo><mi>w</mi><mo>→</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">a\to v\to w\to b</annotation></semantics></math>.</li>
+</ol>
+<details><summary>Answer</summary>
+<p><span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>U</mi><mn>1</mn></msub><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>⋅</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>U</mi><mn>2</mn></msub><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>w</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>⋅</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>w</mi><mo stretchy="false" form="postfix">)</mo><msub><mi>U</mi><mn>3</mn></msub><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>U</mi><mn>1</mn></msub><msub><mi>U</mi><mn>2</mn></msub><msub><mi>U</mi><mn>3</mn></msub><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>b</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(a)U_1h(v)^{-1}\cdot h(v)U_2h(w)^{-1}\cdot h(w)U_3h(b)^{-1} = h(a)\,U_1U_2U_3\,h(b)^{-1}</annotation></semantics></math></span>.</p>
+</details>
+<ol start="3">
+<li>In the camera example, the exact labeling was
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>O</mi><mi>s</mi></msub><msubsup><mi>O</mi><mi>t</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">U(s\to t) = O_sO_t^{-1}</annotation></semantics></math>.
+Express it as a reframing of something.</li>
+</ol>
+<details><summary>Answer</summary>
+<p>It is the reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>=</mo><mi>O</mi></mrow><annotation encoding="application/x-tex">h=O</annotation></semantics></math>
+applied to the identity labeling (every label
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">=1</annotation></semantics></math>):
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>O</mi><mi>s</mi></msub><mo>⋅</mo><mn>1</mn><mo>⋅</mo><msubsup><mi>O</mi><mi>t</mi><mrow><mi>−</mi><mn>1</mn></mrow></msubsup></mrow><annotation encoding="application/x-tex">O_s\cdot 1\cdot O_t^{-1}</annotation></semantics></math>.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="4-invariants-and-loop-observables">4. Invariants and loop
+observables</h2>
+<p>Since reframings only change the <em>description</em>, the
+interesting functions of a labeling are the ones that ignore them.</p>
+<p><strong>Definition (invariant, glossary 3.4).</strong> An
+<strong>invariant</strong> is a function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>:</mo><msup><mi>G</mi><mi>E</mi></msup><mo>→</mo><mi mathvariant="double-struck">ℂ</mi></mrow><annotation encoding="application/x-tex">f: G^E\to\mathbb C</annotation></semantics></math>
+such that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f(U&#39;) = f(U)</annotation></semantics></math>
+whenever
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>U</mi><mo>′</mo></msup><annotation encoding="application/x-tex">U&#39;</annotation></semantics></math>
+is a reframing of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>.</p>
+<p>For abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+Fact 1.3 hands us invariants for free: every loop product. For
+non-abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+a loop product only survives up to conjugation, so we need a way to read
+off a number that doesn't notice conjugation.</p>
+<p><strong>Definition (class function, glossary 3.6).</strong> A
+<strong>class function</strong> is a function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo>:</mo><mi>G</mi><mo>→</mo><mi mathvariant="double-struck">ℂ</mi></mrow><annotation encoding="application/x-tex">\chi: G\to\mathbb C</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mi>h</mi><mi>x</mi><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\chi(hxh^{-1}) = \chi(x)</annotation></semantics></math>
+for all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>,</mo><mi>x</mi><mo>∈</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">h, x\in G</annotation></semantics></math>.</p>
+<p>The most useful class function is the <strong>trace</strong> of a
+matrix, since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>h</mi><mi>x</mi><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{tr}(hxh^{-1}) = \operatorname{tr}(x)</annotation></semantics></math>.
+Each of our groups comes with one, available as <code>G.chi</code>:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math></th>
+<th><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\chi(x)</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+itself</td>
+</tr>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mi>N</mi></msub><annotation encoding="application/x-tex">\mathbb Z_N</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">angle</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\cos(\text{angle})</annotation></semantics></math></td>
+</tr>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math></td>
+<td>number of fixed points (the trace of the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>
+permutation matrix)</td>
+</tr>
+<tr>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math></td>
+<td>trace
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>1</mn><mo>+</mo><mn>2</mn><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">rotation angle</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">= 1 + 2\cos(\text{rotation angle})</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Definition (loop observable, glossary 3.7).</strong> For a
+closed walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+and a class function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>χ</mi><annotation encoding="application/x-tex">\chi</annotation></semantics></math>,
+the <strong>loop observable</strong> is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>γ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>χ</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>∈</mo><mi mathvariant="double-struck">ℂ</mi></mrow><annotation encoding="application/x-tex">W_\gamma(U) = \chi\big(U(\gamma)\big)\in\mathbb C</annotation></semantics></math>.</p>
+<blockquote>
+<p><strong>Fact 1.4.</strong> Every loop observable is an invariant.</p>
+</blockquote>
+<p><em>Why:</em> the loop product gets conjugated (Fact 1.3) and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>χ</mi><annotation encoding="application/x-tex">\chi</annotation></semantics></math>
+doesn't notice conjugation. Let's test it with random rotations on the
+3×3 grid: the face products change, their traces don't. A walk that is
+<em>not</em> closed gives no invariant.</p>
+</div>
+<div class="cell code" data-execution_count="14">
+<pre class="python"><code>U = random_labeling(R, small, rng)
+h = random_reframing(R, small, rng)
+U2 = reframe(R, small, U, h)
+fp, fp2 = face_products(R, small, U), face_products(R, small, U2)
+boundary = small.walk([0, 1, 2, 5, 8, 7, 6, 3, 0])
+open_walk = small.walk([0, 1, 2])
+print(&quot;face products unchanged?        &quot;, np.allclose(fp, fp2))
+print(&quot;traces of face products unchanged?&quot;, np.allclose(R.chi(fp), R.chi(fp2)))
+print(&quot;trace around the boundary:  before %.4f  after %.4f&quot; % (
+    R.chi(loop_product(R, small, U, boundary)), R.chi(loop_product(R, small, U2, boundary))))
+print(&quot;trace along an open walk:   before %.4f  after %.4f&quot; % (
+    R.chi(walk_product(R, small, U, open_walk)), R.chi(walk_product(R, small, U2, open_walk))))</code></pre>
+<div class="output stream stdout">
+<pre><code>face products unchanged?         False
+traces of face products unchanged? True
+trace around the boundary:  before -0.8745  after -0.8745
+trace along an open walk:   before -0.2796  after -0.8780
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> An invariant is a function of a labeling that
+every reframing leaves alone. Loop products are invariants for abelian
+groups; for non-abelian groups we apply a class function such as the
+trace, giving loop observables
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>W</mi><mi>γ</mi></msub><mo>=</mo><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W_\gamma = \chi(U(\gamma))</annotation></semantics></math>.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Is "the label on edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>"
+an invariant?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. Reframing at either endpoint of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>
+changes it (unless
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is trivial).</p>
+</details>
+<ol start="2">
+<li>Is "the number of defects" an invariant?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Yes. Each face product is conjugated, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">x = 1</annotation></semantics></math>
+if and only if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mi>x</mi><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">hxh^{-1}=1</annotation></semantics></math>,
+so a face is a defect before the reframing exactly when it is one
+after.</p>
+</details>
+<ol start="3">
+<li>Is the rotation angle of an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>
+loop product an invariant?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Yes: it is a function of the trace
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">angle</mtext><mo>=</mo><mrow><mi mathvariant="normal">arccos</mi><mo>&#8289;</mo></mrow><mfrac><mrow><mi>χ</mi><mo>−</mo><mn>1</mn></mrow><mn>2</mn></mfrac></mrow><annotation encoding="application/x-tex">\text{angle} = \arccos\frac{\chi-1}{2}</annotation></semantics></math>),
+hence a class function of the loop product.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="5-classes-and-how-many-there-are">5. Classes, and how many there
+are</h2>
+<p><strong>Definition (class, glossary 3.3).</strong> The
+<strong>class</strong> of a labeling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>U</mi><mo stretchy="false" form="postfix">]</mo><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mrow><mtext mathvariant="normal">all labelings obtained from </mtext><mspace width="0.333em"></mspace></mrow><mi>U</mi><mrow><mspace width="0.333em"></mspace><mtext mathvariant="normal"> by some reframing</mtext></mrow><mo stretchy="false" form="postfix">}</mo><mo>⊆</mo><msup><mi>G</mi><mi>E</mi></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+[U] = \lbrace \text{all labelings obtained from } U \text{ by some reframing}\rbrace \subseteq G^E.
+</annotation></semantics></math></span></p>
+<p>Two labelings are in the same class exactly when they describe the
+same thing in different conventions. Invariants are precisely the
+functions of the class.</p>
+<p>How many classes are there? For a finite group, there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|E|}</annotation></semantics></math>
+labelings and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|V|}</annotation></semantics></math>
+reframings. If the only reframing that fixed a labeling were the trivial
+one
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h(v)=1</annotation></semantics></math>
+for all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>),
+each class would have
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|V|}</annotation></semantics></math>
+members. But for an abelian group the constant reframings
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>g</mi></mrow><annotation encoding="application/x-tex">h(v) = g</annotation></semantics></math>
+for all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>)
+do nothing, and on a connected board they are the only reframings that
+fix a labeling. That gives:</p>
+<blockquote>
+<p><strong>Fact 1.5 (counting classes, abelian).</strong> For a finite
+abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+on a connected board, every class has exactly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|V|-1}</annotation></semantics></math>
+members, so there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo></mrow></msup><mi>/</mi><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|E|}/|G|^{|V|-1} = |G|^{|E|-|V|+1}</annotation></semantics></math>
+classes. The exponent
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1</annotation></semantics></math>
+is the number of independent cycles of the graph.</p>
+</blockquote>
+<p>We check this by brute force: list every labeling, sort them into
+classes, count.</p>
+</div>
+<div class="cell code" data-execution_count="15">
+<pre class="python"><code>def count_classes(G, X):
+    Us = all_labelings(G, X)
+    return len(Us), class_ids(G, X, Us).max() + 1
+
+for G in (Z2(), ZN(3)):
+    for X in (Board.triangle(), Board.grid(2, 2), Board.grid(3, 2), Board.grid(2, 2, periodic=True)):
+        n, k = count_classes(G, X)
+        print(f&quot;{G.name:3} {X.name:18}  labelings {n:5}   classes {k:4}   &quot;
+              f&quot;|G|^(E-V+1) = {G.order ** X.cycle_rank}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>Z2  triangle            labelings     8   classes    2   |G|^(E-V+1) = 2
+Z2  2x2 grid            labelings    16   classes    2   |G|^(E-V+1) = 2
+Z2  3x2 grid            labelings   128   classes    4   |G|^(E-V+1) = 4
+Z2  2x2 periodic grid   labelings   256   classes   32   |G|^(E-V+1) = 32
+Z3  triangle            labelings    27   classes    3   |G|^(E-V+1) = 3
+Z3  2x2 grid            labelings    81   classes    3   |G|^(E-V+1) = 3
+Z3  3x2 grid            labelings  2187   classes    9   |G|^(E-V+1) = 9
+Z3  2x2 periodic grid   labelings  6561   classes  243   |G|^(E-V+1) = 243
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>For a non-abelian group, some labelings are fixed by more reframings
+than others (for instance the identity labeling is fixed by every
+constant reframing), so classes have different sizes and the simple
+division fails. A standard counting argument (Burnside's lemma) gives
+the answer:</p>
+<blockquote>
+<p><strong>Fact 1.6 (counting classes, any finite
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>).</strong>
+With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">b = |E|-|V|+1</annotation></semantics></math>,
+the number of classes is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>1</mn><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo stretchy="false" form="prefix">|</mo></mrow></mfrac><msub><mo>∑</mo><mrow><mi>g</mi><mo>∈</mo><mi>G</mi></mrow></msub><mo stretchy="false" form="prefix">|</mo><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="prefix">|</mo><mi>b</mi></msup></mrow><annotation encoding="application/x-tex">\frac{1}{|G|}\sum_{g\in G} |C(g)|^{b}</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>x</mi><mo>∈</mo><mi>G</mi><mo>:</mo><mi>x</mi><mi>g</mi><mo>=</mo><mi>g</mi><mi>x</mi><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">C(g) = \lbrace x\in G : xg = gx\rbrace</annotation></semantics></math>
+is the set of elements commuting with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>.</p>
+</blockquote>
+<p>For abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">C(g)</annotation></semantics></math>
+is all of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+and this collapses to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mi>b</mi></msup></mrow><annotation encoding="application/x-tex">|G|^b</annotation></semantics></math>.</p>
+</div>
+<div class="cell code" data-execution_count="16">
+<pre class="python"><code>def burnside(G, b):
+    els = G.elements()
+    commuting = [sum(bool(G.equal(G.mul(g, x), G.mul(x, g))) for x in els) for g in els]
+    return sum(c ** b for c in commuting) // len(els)
+
+for X in (Board.triangle(), Board.grid(2, 2), Board.grid(3, 2)):
+    n, k = count_classes(S, X)
+    print(f&quot;S3 {X.name:10}  labelings {n:6}   classes {k:3}   Burnside formula {burnside(S, X.cycle_rank)}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>S3 triangle    labelings    216   classes   3   Burnside formula 3
+S3 2x2 grid    labelings   1296   classes   3   Burnside formula 3
+S3 3x2 grid    labelings 279936   classes  11   Burnside formula 11
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>On the triangle,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>
+has 3 classes: one per conjugacy class of the loop product (identity,
+swaps, 3-cycles). Here are the class sizes on the 3×2 grid, which are
+indeed unequal:</p>
+</div>
+<div class="cell code" data-execution_count="17">
+<pre class="python"><code>ids = class_ids(S, Board.grid(3, 2), all_labelings(S, Board.grid(3, 2)))
+sizes, how_many = np.unique(np.bincount(ids), return_counts=True)
+for sz, m in zip(sizes, how_many):
+    print(f&quot;{m:3} classes of size {sz}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>  1 classes of size 7776
+  4 classes of size 15552
+  3 classes of size 23328
+  3 classes of size 46656
+</code></pre>
+</div>
+</div>
+<section id="seeing-classes-the-triangle-with-clock-labels"
+class="cell markdown">
+<h3>Seeing classes: the triangle with clock labels</h3>
+<p>For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+there are infinitely many labelings, but on the triangle we can
+<em>see</em> all of them. A labeling is three angles
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>θ</mi><mn>01</mn></msub><mo>,</mo><msub><mi>θ</mi><mn>12</mn></msub><mo>,</mo><msub><mi>θ</mi><mn>20</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\theta_{01},\theta_{12},\theta_{20})</annotation></semantics></math>,
+one per edge, so the set of labelings is a cube
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>2</mn><mi>π</mi><msup><mo stretchy="false" form="postfix">)</mo><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">[0,2\pi)^3</annotation></semantics></math>
+whose opposite sides are glued together (an angle of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">2\pi</annotation></semantics></math>
+is an angle of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>).
+Every invariant is a function of the loop product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>θ</mi><mn>01</mn></msub><mo>+</mo><msub><mi>θ</mi><mn>12</mn></msub><mo>+</mo><msub><mi>θ</mi><mn>20</mn></msub><mrow><mspace width="0.222em"></mspace><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">mod</mi><mo>&#8289;</mo></mrow><mspace width="0.222em"></mspace><mrow><mn>2</mn><mi>π</mi></mrow><mo stretchy="false" form="postfix">)</mo></mrow></mrow><annotation encoding="application/x-tex">\theta_{01}+\theta_{12}+\theta_{20} \pmod{2\pi}</annotation></semantics></math>,
+so each class is a level set of that sum: a flat sheet that gets cut
+into pieces where it hits the cube's walls.</p>
+<p>The figure shows three classes, coloured by their loop product,
+together with 600 random reframings of one labeling (black dots).
+<strong>Look at where the dots land: all on one colour, spread over all
+of its pieces.</strong> One labeling's reframings fill out its entire
+sheet, and never leave it. Collapsing each sheet to a single point
+leaves one number, the loop product: the space of classes is a
+circle.</p>
+</section>
+<div class="cell code" data-execution_count="18">
+<pre class="python"><code>def plane_in_cube(s):
+    &quot;&quot;&quot;Corners of the polygon where the plane x+y+z = s cuts the cube [0, 2π]^3.&quot;&quot;&quot;
+    corners = [np.array(c, float) for c in itertools.product([0, TAU], repeat=3)]
+    pts = []
+    for a, b in itertools.combinations(corners, 2):
+        sa, sb = a.sum(), b.sum()
+        if np.sum(a != b) == 1 and sa != sb and (sa - s) * (sb - s) &lt;= 0:
+            pts.append(a + (s - sa) / (sb - sa) * (b - a))
+    pts = np.unique(np.round(pts, 9), axis=0)
+    u, v = np.array([1, -1, 0]) / 2**0.5, np.array([1, 1, -2]) / 6**0.5   # axes in the plane
+    d = pts - pts.mean(axis=0)
+    return pts[np.argsort(np.arctan2(d @ v, d @ u))]
+
+def sheet_traces(c, color, name):
+    &quot;&quot;&quot;All pieces of the class &#39;loop product = c&#39; as Plotly meshes.&quot;&quot;&quot;
+    out = []
+    for k in range(3):                                   # the sum can be c, c+2π or c+4π
+        P = plane_in_cube(c + k * TAU)
+        if len(P) &lt; 3:
+            continue
+        n = len(P)
+        out.append(go.Mesh3d(x=P[:, 0], y=P[:, 1], z=P[:, 2], i=[0] * (n - 2),
+                             j=list(range(1, n - 1)), k=list(range(2, n)), color=color,
+                             opacity=0.45, name=name, showlegend=(k == 0), flatshading=True))
+    return out</code></pre>
+</div>
+<div class="cell code" data-execution_count="19">
+<pre class="python"><code>cmap = plt.get_cmap(&quot;twilight&quot;)
+classes = [0.6, 2.4, 4.4]                                  # three loop products (radians)
+traces = []
+for c in classes:
+    r, g, b, _ = cmap(c / TAU)
+    traces += sheet_traces(c, f&quot;rgb({255*r:.0f},{255*g:.0f},{255*b:.0f})&quot;,
+                           f&quot;class with loop product {c / np.pi:.2f}π&quot;)
+
+theta = np.array([1.0, 2.0, 2.4 - 3.0 + TAU])               # a labeling with loop product 2.4
+hs = rng.uniform(0, TAU, size=(600, 3))                     # 600 random reframings
+orbit = reframe(U1(), tri, theta, hs)                       # shape (600, 3)
+traces.append(go.Scatter3d(x=orbit[:, 0], y=orbit[:, 1], z=orbit[:, 2], mode=&quot;markers&quot;,
+                           marker=dict(size=2, color=&quot;#2b2d42&quot;), name=&quot;reframings of one labeling&quot;))</code></pre>
+</div>
+<div class="cell code" data-execution_count="20">
+<pre class="python"><code>edges = [(a, b) for a, b in itertools.combinations(itertools.product([0, TAU], repeat=3), 2)
+         if sum(x != y for x, y in zip(a, b)) == 1]
+for a, b in edges:                                          # wireframe of the cube
+    traces.append(go.Scatter3d(x=[a[0], b[0]], y=[a[1], b[1]], z=[a[2], b[2]], mode=&quot;lines&quot;,
+                               line=dict(color=&quot;#8d99ae&quot;, width=2), showlegend=False, hoverinfo=&quot;skip&quot;))
+ax = dict(range=[0, TAU], tickvals=[0, np.pi, TAU], ticktext=[&quot;0&quot;, &quot;π&quot;, &quot;2π&quot;])
+fig = go.Figure(traces)
+fig.update_layout(height=620, margin=dict(l=0, r=0, t=30, b=0), legend=dict(x=0, y=1),
+                  scene=dict(xaxis=dict(title=&quot;θ(0→1)&quot;, **ax), yaxis=dict(title=&quot;θ(1→2)&quot;, **ax),
+                             zaxis=dict(title=&quot;θ(2→0)&quot;, **ax), aspectmode=&quot;cube&quot;))
+fig.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01-media/fig-3d.png"><img src="ch01-media/fig-3d.png" width="1230" height="930" loading="lazy" alt="Three classes of clock labelings of the triangle, drawn as flat sheets cutting through the cube of three edge angles, each from 0 to 2 pi: pale, purple and pink, by loop product. The black dots, 600 reframings of one labeling, all lie on the purple sheets, spread over every piece of them."></a><figcaption>In the notebook this is an interactive 3D figure you can rotate; here it is one still view, looking along the sheets.</figcaption></figure>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> The class of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is everything reframings can turn it into; invariants are functions of
+the class. For a finite abelian group there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|E|-|V|+1}</annotation></semantics></math>
+classes, all the same size. For non-abelian groups the sizes differ and
+Burnside's formula counts them. For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+on the triangle, classes are sheets in a glued cube, labelled by one
+angle.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>How many classes does
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math>
+have on the 3×3 grid (no wrap-around)? What determines a class?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn><mo>=</mo><mn>12</mn><mo>−</mo><mn>9</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1 = 12-9+1 = 4</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>4</mn></msup><mo>=</mo><mn>16</mn></mrow><annotation encoding="application/x-tex">2^4 = 16</annotation></semantics></math>
+classes. There are exactly 4 faces, and by Facts 1.2 and 1.5 a class is
+pinned down by which of the 4 faces are defects
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>4</mn></msup><annotation encoding="application/x-tex">2^4</annotation></semantics></math>
+possibilities, all of which occur).</p>
+</details>
+<ol start="2">
+<li>For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>
+on the triangle, name a representative labeling of each of the 3
+classes.</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Put labels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>,</mo><mi>e</mi><mo>,</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(x, e, e)</annotation></semantics></math>
+on the three edges with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mi>e</mi></mrow><annotation encoding="application/x-tex">x = e</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>12</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x = (12)</annotation></semantics></math>,
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>x</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>123</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">x = (123)</annotation></semantics></math>.
+Their loop products are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>,
+which lie in the three different conjugacy classes.</p>
+</details>
+<ol start="3">
+<li>In the cube picture, how many dimensions does a class have, and
+why?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Two. A reframing has 3 angles, but adding the same angle at all three
+vertices does nothing (abelian group), leaving
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">3-1=2</annotation></semantics></math>
+directions of motion. That is the same count,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|V|-1</annotation></semantics></math>,
+as in Fact 1.5.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="6-tree-normal-form-one-representative-per-class">6. Tree normal
+form: one representative per class</h2>
+<p>A class is a large set. It would be convenient to pick one canonical
+member, the way you'd reduce a fraction to lowest terms. Chapter 0 did
+this for currencies by quoting every rate in dollars along a tree of
+exchanges.</p>
+<p><strong>Construction.</strong> Fix a spanning tree
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>
+and a root vertex
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>.
+For each vertex
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>,
+let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(v)</annotation></semantics></math>
+be the walk product from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+along the tree. Reframing by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+makes every tree edge carry the identity: for a tree edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo>→</mo><mi>v</mi></mrow><annotation encoding="application/x-tex">p\to v</annotation></semantics></math>
+we have
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>→</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(v) = h(p)U(p\to v)</annotation></semantics></math>,
+so the new label is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>p</mi><mo>→</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">h(p)\,U(p\to v)\,h(v)^{-1} = 1</annotation></semantics></math>.</p>
+<blockquote>
+<p><strong>Fact 1.7 (tree normal form; glossary 3.8).</strong> Every
+class contains a labeling that is the identity on every edge of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>T</mi><annotation encoding="application/x-tex">T</annotation></semantics></math>.
+On each of the other
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1</annotation></semantics></math>
+edges, its label is the loop product of that edge's <strong>fundamental
+cycle</strong>: go from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+in the tree, cross the edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>s</mi><mo>→</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">s\to t</annotation></semantics></math>,
+return from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>r</mi><annotation encoding="application/x-tex">r</annotation></semantics></math>
+in the tree. For abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+this representative is unique; for non-abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+it is unique up to conjugating all labels by one common element.</p>
+</blockquote>
+<p>The free labels are exactly the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1</annotation></semantics></math>
+numbers that Fact 1.5 counted.</p>
+</div>
+<div class="cell code" data-execution_count="21">
+<pre class="python"><code>G = U1()
+U = random_labeling(G, grid, rng)
+Un, h, tree = tree_normal_form(G, grid, U)        # Un = reframe(G, grid, U, h)
+cycles = grid.fundamental_cycles()                # {non-tree edge: its fundamental cycle}
+e0 = sorted(cycles, key=lambda e: len(cycles[e]))[len(cycles) // 2]
+ok = all(G.equal(Un[e], loop_product(G, grid, U, cycles[e])) for e in cycles)
+print(f&quot;{len(tree)} tree edges, {len(cycles)} free edges; &quot;
+      f&quot;free labels = fundamental loop products: {ok}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>11 tree edges, 6 free edges; free labels = fundamental loop products: True
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Left: the random labeling. Right: its tree normal form. The grey tree
+edges all point their hands at angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>
+(the identity). <strong>The face colours are identical in the two
+pictures</strong>, because it's the same class. The teal walk is the
+fundamental cycle of one free edge, and that edge's clock shows its loop
+product.</p>
+</div>
+<div class="cell code" data-execution_count="22">
+<pre class="python"><code>fig, axs = plt.subplots(1, 2, figsize=(12, 4.6))
+viz.draw_board(axs[0], grid, U, G, title=&quot;a labeling U&quot;)
+viz.draw_board(axs[1], grid, Un, G, tree_edges=tree, highlight_walk=cycles[e0],
+               title=&quot;its tree normal form (tree in grey)&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01-media/fig3.png"><img src="ch01-media/fig3.png" width="1045" height="384" loading="lazy" alt="Two copies of the same grid. Left: a random clock labeling. Right: its tree normal form, where the grey tree edges all point at angle 0 and a teal fundamental cycle is highlighted. The face colours are identical in both."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> Choosing a spanning tree and pushing all
+labels off it gives a canonical representative of each class: identity
+on the tree, fundamental loop products on the remaining
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1</annotation></semantics></math>
+edges.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Two labelings have the same tree normal form (same tree and root,
+abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>).
+What can you conclude?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>They are in the same class: each is a reframing of the common normal
+form, and reframings can be undone and composed.</p>
+</details>
+<ol start="2">
+<li>Why is the non-abelian normal form only unique up to a common
+conjugation?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The reframings that keep the tree at the identity are exactly the
+constant ones,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>g</mi></mrow><annotation encoding="application/x-tex">h(v)=g</annotation></semantics></math>.
+They conjugate every free label by the same
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="7-the-torus-when-faces-dont-tell-the-whole-story">7. The torus:
+when faces don't tell the whole story</h2>
+<p>Fact 1.2 said that on a plain grid, "no defects" means "consistent".
+On a torus it doesn't. Take the coin group on the 3×3 torus and flip the
+three horizontal edges that cross one vertical line (a "seam"). Each
+face either misses the seam or crosses it twice, so no face is a defect.
+But a loop that goes once around the torus horizontally crosses the seam
+exactly once.</p>
+</div>
+<div class="cell code" data-execution_count="23">
+<pre class="python"><code>T, Z = Board.grid(3, 3, periodic=True), Z2()
+U = identity_labeling(Z, T)
+seam = [T.meta[&quot;edge_index&quot;][(v, 0)] for v in (0, 3, 6)]   # horizontal edges from column 0 to 1
+U[seam] = -1
+row = T.walk([0, 1, 2, 0])                                  # once around, horizontally
+col = T.walk([0, 3, 6, 0])                                  # once around, vertically
+print(&quot;defects:&quot;, int(defects(Z, T, U).sum()),
+      &quot;  | around a row:&quot;, int(loop_product(Z, T, U, row)),
+      &quot;  | around a column:&quot;, int(loop_product(Z, T, U, col)),
+      &quot;  | consistent?&quot;, bool(is_consistent(Z, T, U)))</code></pre>
+<div class="output stream stdout">
+<pre><code>defects: 0   | around a row: -1   | around a column: 1   | consistent? False
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Left: the seam (gold edges are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>);
+every face is pale, so there are no defects. Right: the same labeling
+with the bottom row's loop (once around the torus) in teal. It uses
+exactly one seam edge, so its loop product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>.</p>
+</div>
+<div class="cell code" data-execution_count="24">
+<pre class="python"><code>fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+viz.draw_board(axs[0], T, U, Z, title=&quot;a seam: no defects&quot;)
+viz.draw_board(axs[1], T, U, Z, highlight_walk=row, title=&quot;...but this loop has product −1&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01-media/fig4.png"><img src="ch01-media/fig4.png" width="874" height="432" loading="lazy" alt="Two copies of a coin labeling on the 3 by 3 torus. Left: a seam of gold minus-one edges, with every face pale, so there are no defects. Right: the same labeling with the bottom row&#x27;s loop in teal; it crosses one seam edge, so its loop product is minus one."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Counting confirms there's room for exactly this kind of thing. The
+3×3 torus has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn><mo>=</mo><mn>18</mn><mo>−</mo><mn>9</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1 = 18-9+1 = 10</annotation></semantics></math>
+independent cycles but only 9 faces, and the faces aren't even
+independent:</p>
+<blockquote>
+<p><strong>Fact 1.8 (faces on a torus).</strong> For abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+on a periodic grid, the product of all face products is the identity. So
+the faces carry only
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>F</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|F|-1</annotation></semantics></math>
+independent pieces of information, and the remaining
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">(|E|-|V|+1) - (|F|-1) = 2</annotation></semantics></math>
+are the loop products around the two directions of the torus. In
+particular there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">|G|^2</annotation></semantics></math>
+classes with no defects at all.</p>
+</blockquote>
+<p><em>Why the first part:</em> every edge borders exactly two faces and
+is walked once in each direction, so in an abelian group every label
+cancels against its inverse.</p>
+</div>
+<div class="cell code" data-execution_count="25">
+<pre class="python"><code>T4 = Board.grid(4, 4, periodic=True)
+U = random_labeling(U1(), T4, rng)
+everything = U1().prod(face_products(U1(), T4, U))
+print(&quot;4×4 torus, random U(1) labeling: product of all 16 face products is the identity?&quot;,
+      bool(U1().is_identity(everything)))
+Us = all_labelings(Z, T)                                   # all 2^18 coin labelings
+ids = class_ids(Z, T, Us)
+clean = ~defects(Z, T, Us).any(axis=1)
+print(f&quot;{len(Us)} labelings, {ids.max() + 1} classes, &quot;
+      f&quot;{len(np.unique(ids[clean]))} classes with no defects (Fact 1.8 predicts 2^2 = 4)&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>4×4 torus, random U(1) labeling: product of all 16 face products is the identity? True
+</code></pre>
+</div>
+<div class="output stream stdout">
+<pre><code>262144 labelings, 1024 classes, 4 classes with no defects (Fact 1.8 predicts 2^2 = 4)
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> On a torus, a labeling can be defect-free and
+still have non-identity loop products around the holes. For abelian
+groups the faces carry
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>F</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|F|-1</annotation></semantics></math>
+independent pieces of information and the two winding loops carry the
+rest.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>On an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>×</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">L\times L</annotation></semantics></math>
+torus with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><msub><mi mathvariant="double-struck">ℤ</mi><mi>N</mi></msub></mrow><annotation encoding="application/x-tex">G=\mathbb Z_N</annotation></semantics></math>,
+how many classes have no defects?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>N</mi><mn>2</mn></msup><annotation encoding="application/x-tex">N^2</annotation></semantics></math>:
+one for each choice of the two winding loop products.</p>
+</details>
+<ol start="2">
+<li>Where does the argument "product of all face products
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">=1</annotation></semantics></math>"
+use that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is abelian?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>To cancel a label against its inverse, the two must be brought next
+to each other in the product. That reordering is only allowed when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is abelian; for non-abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+the faces' products start at different vertices and come in different
+orders.</p>
+</details>
+<ol start="3">
+<li>On the 3×3 torus, describe a coin labeling whose loop product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>
+around <em>both</em> a row and a column but which has no defects.</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Combine two seams: flip the three horizontal edges crossing one
+vertical line <em>and</em> the three vertical edges crossing one
+horizontal line. Each face still crosses each seam zero or two
+times.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="chapter-recap">Chapter recap</h2>
+<ul>
+<li>A <strong>board</strong> is a connected graph with a chosen list of
+closed walks called <strong>faces</strong>.</li>
+<li>A <strong>labeling</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>:</mo><mover><mi>E</mi><mo accent="true">→</mo></mover><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">U:\vec E\to G</annotation></semantics></math>
+puts a group element on every direction, with reverse = inverse.
+Multiplying along a walk gives its <strong>walk product</strong>; around
+closed walks, <strong>loop products</strong>; around faces, <strong>face
+products</strong>.</li>
+<li>A <strong>reframing</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">h:V\to G</annotation></semantics></math>
+acts by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(s\to t)\mapsto h(s)U(s\to t)h(t)^{-1}</annotation></semantics></math>.
+Walk products only feel it at their endpoints; loop products are
+conjugated.</li>
+<li><strong>Invariants</strong> are the functions that every reframing
+leaves alone. Loop products for abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+and <strong>loop observables</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\chi(U(\gamma))</annotation></semantics></math>
+for any class function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>χ</mi><annotation encoding="application/x-tex">\chi</annotation></semantics></math>,
+are invariants.</li>
+<li>The <strong>class</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>U</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[U]</annotation></semantics></math>
+is the set of all reframings of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>.
+For finite abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|E|-|V|+1}</annotation></semantics></math>
+classes.</li>
+<li><strong>Tree normal form</strong> picks one representative per
+class: identity on a spanning tree, fundamental loop products
+elsewhere.</li>
+<li>On a torus, faces don't see everything: the loops around the holes
+carry two extra invariants.</li>
+</ul>
+<h2 id="dictionary">Dictionary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Our term</th>
+<th>Other names you'll meet</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>board</td>
+<td>lattice, 2-complex; "spacetime" in physics</td>
+</tr>
+<tr>
+<td>face</td>
+<td>plaquette (physics), 2-cell (topology)</td>
+</tr>
+<tr>
+<td>label group</td>
+<td>gauge group (physics), gain group (gain graphs), structure group
+(geometry)</td>
+</tr>
+<tr>
+<td>labeling</td>
+<td>gauge field, configuration, link variables (physics); gain function
+(gain graphs); connection (geometry, synchronization)</td>
+</tr>
+<tr>
+<td>walk product</td>
+<td>parallel transport, Wilson line (physics); gain of a walk</td>
+</tr>
+<tr>
+<td>loop product</td>
+<td>holonomy, monodromy</td>
+</tr>
+<tr>
+<td>face product</td>
+<td>plaquette variable (physics); curvature, field strength
+(geometry)</td>
+</tr>
+<tr>
+<td>defect</td>
+<td>vortex, frustrated plaquette (spin glasses)</td>
+</tr>
+<tr>
+<td>consistent</td>
+<td>flat, pure gauge (physics); balanced (gain graphs); cycle-consistent
+(vision)</td>
+</tr>
+<tr>
+<td>reframing</td>
+<td>gauge transformation (physics); switching (gain graphs)</td>
+</tr>
+<tr>
+<td>reframing group</td>
+<td>gauge group (in mathematics)</td>
+</tr>
+<tr>
+<td>class</td>
+<td>gauge orbit, physical configuration (physics); switching class (gain
+graphs)</td>
+</tr>
+<tr>
+<td>invariant</td>
+<td>gauge-invariant observable</td>
+</tr>
+<tr>
+<td>loop observable</td>
+<td>Wilson loop</td>
+</tr>
+<tr>
+<td>tree normal form</td>
+<td>gauge fixing, maximal-tree or axial gauge</td>
+</tr>
+</tbody>
+</table>
+<h2 id="whats-next">What's next</h2>
+<p><strong>Interlude (optional, recommended).</strong> Why should edges
+carry labels at all? The interlude <em>Why the labels are forced</em>
+puts values on vertices and shows that comparing neighbors requires a
+label on the edge between them. For the circle group, that is
+electromagnetism.</p>
+<p>So far a labeling was just <em>given</em> to us. In Chapter 2 we
+choose labelings <strong>at random</strong>, with a distribution that
+prefers few and mild defects. That raises an immediate question: if the
+labels are random, but only their class has meaning, does the redundancy
+we found here distort the probabilities? (It doesn't. The class counts
+of Section 5 and the tree normal form of Section 6 are both part of the
+reason.)</p>
+</div>
+
+  <nav class="pager pager-bottom" aria-label="Chapters"><a rel="prev" href="ch00.html">← Chapter 0<span class="t">: A market of currencies</span></a><a rel="next" href="ch01b.html">Interlude<span class="t">: Why the labels are forced: charged fields</span> →</a></nav>
+</main>
+</body>
+</html>

@@ -1,0 +1,1015 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter 4: Sampling: averages without enumeration — Eyal Merhavi</title>
+<meta name="description" content="Chapter 4 of the course Labelings, models, and gauge theory, rendered from the executed notebook.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="../../style.css?v=b18eafc744">
+<style>
+  .crumbs { margin-top: 0; }
+  .pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1.5rem; font-size: 0.95rem; }
+  .pager a[rel="next"] { margin-left: auto; text-align: right; }
+  .pager-top .t { display: none; }
+  @media (max-width: 40rem) { .pager-bottom { flex-direction: column; } .pager-bottom a[rel="next"] { margin-left: 0; text-align: left; } }
+  .pager-bottom { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .rendered-note { font-size: 0.9rem; color: var(--muted); }
+  .actions { margin-top: -0.25rem; }
+  .cell.code pre { font-size: 0.8rem; line-height: 1.4; }
+  .output pre { background: #fff; border: 0; border-left: 3px solid #e4e4e4; margin-top: -0.5rem; }
+  pre { max-width: 100%; box-sizing: border-box; }
+  figure { margin: 1rem 0; }
+  figure img, .anim img { display: block; max-width: 100%; height: auto; }
+  figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
+  .math-block { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+  .math-wide { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; vertical-align: middle; }
+  th, td { border: 1px solid var(--rule); padding: 0.2rem 0.5rem; }
+  blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--rule); }
+  details { margin: 0.25rem 0 0.75rem 1.25rem; }
+  summary { cursor: pointer; color: var(--muted); }
+  .cell.markdown h1 { margin-top: 1.25rem; }
+  .cell.markdown h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
+</style>
+</head>
+<body>
+<main>
+  <p class="crumbs"><a href="../../">← Eyal Merhavi</a> · <a href="./">Labelings, models, and gauge theory</a></p>
+  <nav class="pager pager-top" aria-label="Chapters"><a rel="prev" href="ch03.html">← Chapter 3<span class="t">: What a model can tell you</span></a><a rel="next" href="ch05.html">Chapter 5<span class="t">: Layers and the transfer matrix</span> →</a></nav>
+  <p class="rendered-note">Chapter 4 of <a href="./"><i>Labelings, models, and gauge theory</i></a>, rendered from the executed notebook. Code cells and their outputs are shown as they ran.</p>
+  <p class="actions"><a href="lab/notebooks/index.html?path=ch04_sampling.ipynb" target="_blank" rel="noopener">Run this chapter in your browser ↗</a> · <a href="https://github.com/Eyali1001/lattice-gauge-course/blob/main/chapters/ch04_sampling.py" target="_blank" rel="noopener">Source on GitHub ↗</a><br><span class="rendered-note">Runs on JupyterLite. The first time, it downloads Python and its libraries (about 40 MB).</span></p>
+<section id="chapter-4--sampling-averages-without-enumeration"
+class="cell markdown">
+<h1>Chapter 4 — Sampling: averages without enumeration</h1>
+<p>Chapter 3 computed every average by brute force: list every labeling,
+weigh it, add up. That worked because our boards were tiny. The coin
+model on a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+torus has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>8</mn></msup><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">2^8=256</annotation></semantics></math>
+labelings. On a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4\times4</annotation></semantics></math>
+torus it has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>32</mn></msup><annotation encoding="application/x-tex">2^{32}</annotation></semantics></math>,
+about four billion. On a four-dimensional grid with 8 vertices per side
+it has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>16384</mn></msup><annotation encoding="application/x-tex">2^{16384}</annotation></semantics></math>,
+a number with almost five thousand digits.</p>
+<p>Yet a single average such as "how calm is a typical face?" is just
+<em>one number</em>. Pollsters estimate what millions of people think by
+asking a thousand of them. This chapter does the same for models: we
+learn to <strong>draw random labelings</strong> from a model and average
+over the draws. At the end, the method finds something we did not put
+in: in four dimensions, the coin model makes a sudden jump at a very
+particular stiffness.</p>
+<p><strong>What you'll learn</strong></p>
+<ul>
+<li>Why averages over random samples work, and how to put an error bar
+on them.</li>
+<li>How to build a Markov chain whose long-run behavior is exactly a
+given model, using only <em>local</em> information.</li>
+<li>How to tell when a chain has run long enough, and how fast array
+code makes it.</li>
+</ul>
+<p><strong>Prerequisites:</strong> chapters 2 and 3 (models, averages,
+invariants). From probability, we use Markov chains and their stationary
+distributions.</p>
+</section>
+<div class="cell code" data-execution_count="1">
+<pre class="python"><code>import time
+import numpy as np
+import matplotlib.pyplot as plt
+
+from lgt import *
+from lgt import viz
+from lgt.grid import GridModel
+
+viz.use_style()
+rng = np.random.default_rng(4)</code></pre>
+</div>
+<div class="cell markdown">
+<p><strong>Helpers for this chapter.</strong> <code>mean_face</code> is
+the invariant we will estimate throughout: the average over faces of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>f</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\chi(U_f)</annotation></semantics></math>.
+For the coin model it equals
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mn>2</mn><mo>×</mo><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">fraction of faces that are defects</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">1-2\times(\text{fraction of faces that are defects})</annotation></semantics></math></span>,
+so 1 means "all calm" and 0 means "half the faces are defects".</p>
+</div>
+<div class="cell code" data-execution_count="2">
+<pre class="python"><code>def mean_face(G, board, U):
+    &quot;&quot;&quot;Average over faces of chi(face product). Works on a batch of labelings.&quot;&quot;&quot;
+    return G.chi(face_products(G, board, U)).mean(axis=-1)
+
+def running_mean(x):
+    return np.cumsum(x) / np.arange(1, len(x) + 1)</code></pre>
+</div>
+<section id="41-averages-from-samples" class="cell markdown">
+<h2>4.1 Averages from samples</h2>
+<p>Fix a model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+and an invariant
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>:</mo><msup><mi>G</mi><mi>E</mi></msup><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">f:G^E\to\mathbb R</annotation></semantics></math>.
+Suppose we could draw labelings
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mn>1</mn></msub><mo>,</mo><msub><mi>U</mi><mn>2</mn></msub><mo>,</mo><mi>…</mi><mo>,</mo><msub><mi>U</mi><mi>n</mi></msub></mrow><annotation encoding="application/x-tex">U_1,U_2,\dots,U_n</annotation></semantics></math>
+independently from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>.
+The <strong>sample average</strong></p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>n</mi></msub><mo>=</mo><mfrac><mn>1</mn><mi>n</mi></mfrac><munderover><mo>∑</mo><mrow><mi>i</mi><mo>=</mo><mn>1</mn></mrow><mi>n</mi></munderover><mi>f</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>i</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">
+\bar f_n=\frac1n\sum_{i=1}^n f(U_i)\in\mathbb R
+</annotation></semantics></math></span></p>
+<p>is a random number. The law of large numbers says
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mover><mi>f</mi><mo accent="true">‾</mo></mover><mi>n</mi></msub><mo>→</mo><mo stretchy="false" form="prefix">⟨</mo><mi>f</mi><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub></mrow><annotation encoding="application/x-tex">\bar f_n\to\langle f\rangle_\beta</annotation></semantics></math>,
+and the central limit theorem says how fast: the typical error is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mi>/</mi><msqrt><mi>n</mi></msqrt></mrow><annotation encoding="application/x-tex">\sigma/\sqrt n</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\sigma^2</annotation></semantics></math>
+is the variance of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+under the model. <strong>The error does not depend on how many labelings
+exist.</strong> Four billion or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>16384</mn></msup><annotation encoding="application/x-tex">2^{16384}</annotation></semantics></math>,
+a thousand samples give about three correct digits.</p>
+<p>Let's watch it happen where we still know the exact answer: the coin
+model on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>
+torus
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>18</mn></msup><mo>=</mo><mn>262</mn><mo>,</mo><mn>144</mn></mrow><annotation encoding="application/x-tex">2^{18}=262{,}144</annotation></semantics></math>
+labelings), at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.5</mn></mrow><annotation encoding="application/x-tex">\beta=0.5</annotation></semantics></math>.
+We draw independent samples straight from the exact distribution
+(cheating, for now) and track the running average.</p>
+</section>
+<div class="cell code" data-execution_count="3">
+<pre class="python"><code>T3 = Board.grid(3, 3, periodic=True)
+M3 = Model(T3, Z2(), beta=0.5)
+ex = M3.exact()
+f_all = mean_face(Z2(), T3, ex.U)                       # f for every labeling
+exact = float(np.sum(ex.p * f_all))
+sigma = float(np.sqrt(np.sum(ex.p * (f_all - exact) ** 2)))
+draws = f_all[rng.choice(len(ex.p), size=4000, p=ex.p)]  # 4000 independent samples
+print(f&quot;exact &lt;mean face&gt; = {exact:.4f},  sigma = {sigma:.3f}&quot;)
+print(f&quot;sample average of 4000 draws = {draws.mean():.4f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>exact &lt;mean face&gt; = 0.4638,  sigma = 0.299
+sample average of 4000 draws = 0.4597
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="4">
+<pre class="python"><code>n = np.arange(1, len(draws) + 1)
+fig, ax = plt.subplots(figsize=(7, 3.6))
+ax.fill_between(n, exact - 2 * sigma / np.sqrt(n), exact + 2 * sigma / np.sqrt(n),
+                color=viz.TEAL, alpha=0.18, label=r&quot;exact $\pm 2\sigma/\sqrt{n}$&quot;)
+ax.plot(n, running_mean(draws), color=viz.INK, lw=1.4, label=&quot;running sample average&quot;)
+ax.axhline(exact, color=viz.CORAL, lw=1.5, ls=&quot;--&quot;, label=&quot;exact average&quot;)
+ax.set(xscale=&quot;log&quot;, xlabel=&quot;number of samples $n$&quot;, ylabel=&quot;mean face&quot;, ylim=(exact - 0.3, exact + 0.3))
+ax.legend(loc=&quot;upper right&quot;, fontsize=9)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig1.png"><img src="ch04-media/fig1.png" width="679" height="380" loading="lazy" alt="Running average of the mean face against the number of samples on a log scale from 1 to several thousand. It wanders at first and then stays inside a teal funnel of plus or minus two standard errors that narrows around the dashed exact value."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>The black curve wanders early and then stays inside the shaded
+funnel, which narrows like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msqrt><mi>n</mi></msqrt></mrow><annotation encoding="application/x-tex">1/\sqrt n</annotation></semantics></math>.
+That funnel is the whole promise of sampling.</p>
+<blockquote>
+<p><strong>Recap.</strong> If we can draw independent samples from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>,
+the sample average of an invariant converges to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><mi>f</mi><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub></mrow><annotation encoding="application/x-tex">\langle f\rangle_\beta</annotation></semantics></math>
+with error about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mi>/</mi><msqrt><mi>n</mi></msqrt></mrow><annotation encoding="application/x-tex">\sigma/\sqrt n</annotation></semantics></math>,
+no matter how many labelings there are.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>How many samples do you need to cut the error by a factor of
+10?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>100 times as many, because the error shrinks like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msqrt><mi>n</mi></msqrt></mrow><annotation encoding="application/x-tex">1/\sqrt n</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>We just drew samples using <code>ex.p</code>, the list of all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>18</mn></msup><annotation encoding="application/x-tex">2^{18}</annotation></semantics></math>
+probabilities. Why can't we do that on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4\times4</annotation></semantics></math>
+torus?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Computing those probabilities needs the normalizer
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>,
+a sum over all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>2</mn><mn>32</mn></msup><annotation encoding="application/x-tex">2^{32}</annotation></semantics></math>
+labelings, and storing them needs one number per labeling. The next
+section avoids both.</p>
+</details>
+</div>
+<section id="42-a-random-walk-that-settles-into-the-model"
+class="cell markdown">
+<h2>4.2 A random walk that settles into the model</h2>
+<p>We cannot draw independent samples without knowing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>.
+But we <em>can</em> compare two labelings: the ratio</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">
+\frac{\mu_\beta(U&#39;)}{\mu_\beta(U)}=e^{-\beta\,(S(U&#39;)-S(U))}
+</annotation></semantics></math></span></p>
+<p>needs no
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>,
+only the difference in total cost. The idea of <strong>Markov chain
+Monte Carlo</strong> is to take a random walk on the set of labelings
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mi>E</mi></msup><annotation encoding="application/x-tex">G^E</annotation></semantics></math>,
+moving from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>U</mi><mo>′</mo></msup><annotation encoding="application/x-tex">U&#39;</annotation></semantics></math>
+with probabilities
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo>→</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(U\to U&#39;)</annotation></semantics></math>
+chosen so that, in the long run, the walk spends a fraction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_\beta(U)</annotation></semantics></math>
+of its time at each
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>.</p>
+<blockquote>
+<p><strong>Fact 4.1 (detailed balance).</strong> If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo>→</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo>→</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu(U)\,P(U\to U&#39;)=\mu(U&#39;)\,P(U&#39;\to U)</annotation></semantics></math>
+for all pairs of labelings, then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>
+is a stationary distribution of the chain. If moreover the chain can
+reach every labeling from every other one, and is not periodic, then the
+distribution of the walk after
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+steps converges to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>
+from any starting point.</p>
+</blockquote>
+<p><em>Why the first part:</em> sum both sides over
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>.
+The left side is the probability of being at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>U</mi><mo>′</mo></msup><annotation encoding="application/x-tex">U&#39;</annotation></semantics></math>
+after one step when starting from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>;
+the right side is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu(U&#39;)</annotation></semantics></math>.
+The second part is the convergence theorem for finite Markov chains.</p>
+<p><strong>The Metropolis rule.</strong> One step of the walk:</p>
+<ol>
+<li>pick an edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>
+(for example, in random order);</li>
+<li>propose a new label for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>,
+drawn uniformly from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>;</li>
+<li>compute the change in total cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>S</mi></mrow><annotation encoding="application/x-tex">\Delta S</annotation></semantics></math>;</li>
+<li>accept the proposal with probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">min</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi mathvariant="normal">Δ</mi><mi>S</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\min(1,e^{-\beta\Delta S})</annotation></semantics></math>;
+otherwise keep the old label.</li>
+</ol>
+<p>Moves that lower the cost are always accepted, and moves that raise
+it are accepted sometimes. You can check detailed balance in one line:
+for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>S</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta S&gt;0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi mathvariant="normal">Δ</mi><mi>S</mi></mrow></msup><mo>=</mo><mi>μ</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\mu(U)\cdot e^{-\beta\Delta S}=\mu(U&#39;)\cdot 1</annotation></semantics></math>.</p>
+<p>The crucial practical point is that step 3 is cheap.</p>
+<blockquote>
+<p><strong>Fact 4.2 (locality).</strong> Changing the label of one edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>
+changes only the face products of the faces that use
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>.
+So
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>S</mi></mrow><annotation encoding="application/x-tex">\Delta S</annotation></semantics></math>
+is a sum over those faces alone: 2 faces on a square grid,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">2(d-1)</annotation></semantics></math>
+on a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>-dimensional
+grid, no matter how big the board is.</p>
+</blockquote>
+</section>
+<div class="cell code" data-execution_count="5">
+<pre class="python"><code>P4 = Board.grid(4, 4)
+e = P4.meta[&quot;edge_index&quot;][(5, 0)]                      # an interior horizontal edge
+touch = [1.0 if e in [e2 for e2, _ in f] else 0.0 for f in P4.faces]
+fig, ax = plt.subplots(figsize=(4, 4))
+viz.draw_board(ax, P4, face_values=touch, face_cmap=&quot;Greys&quot;, highlight_walk=[(e, 1)],
+               title=&quot;one edge, and the only faces it touches&quot;)
+ax.collections[0].set_alpha(0.35)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig2.png"><img src="ch04-media/fig2.png" width="376" height="383" loading="lazy" alt="A 4 by 4 grid with one interior edge in teal and the only two faces that use it shaded grey."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>The teal edge appears in exactly two faces (shaded). To decide
+whether to change its label, the walk looks at nothing else.</p>
+<p>Let's test the whole recipe against exact enumeration. The library's
+<code>Model.metropolis</code> implements it. On the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+torus the exact distribution of the total cost is known, so we
+compare.</p>
+</div>
+<div class="cell code" data-execution_count="6">
+<pre class="python"><code>T2 = Board.grid(2, 2, periodic=True)
+M2 = Model(T2, Z2(), beta=0.5)
+ex2 = M2.exact()
+chain = M2.metropolis(rng, n_samples=6000, burn_in=200)
+for S in np.unique(ex2.cost):
+    exact_p = ex2.p[ex2.cost == S].sum()
+    chain_p = np.mean(np.isclose(M2.cost(chain), S))
+    print(f&quot;total cost {S:&gt;4.0f}: exact {exact_p:.3f}   Metropolis {chain_p:.3f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>total cost    0: exact 0.546   Metropolis 0.547
+total cost    4: exact 0.444   Metropolis 0.442
+total cost    8: exact 0.010   Metropolis 0.011
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>The frequencies agree to about two decimals, which is what 6000
+(correlated) samples can deliver.</p>
+<blockquote>
+<p><strong>Recap.</strong> A Markov chain that satisfies detailed
+balance with respect to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+and can reach every labeling eventually samples from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>.
+The Metropolis rule achieves this using only cost <em>differences</em>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+is never needed, and each step only looks at the faces through one
+edge.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>,
+what does the Metropolis chain do?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Every proposal is accepted
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mn>0</mn></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">e^{0}=1</annotation></semantics></math>),
+so each visited edge gets a fresh uniform label. After one sweep the
+labeling is uniform, matching the model at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>On a 4-dimensional grid, how many faces must be examined to update
+one edge?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">2(d-1)=6</annotation></semantics></math>.
+Each of the 3 other directions gives one face "on each side" of the
+edge.</p>
+</details>
+<ol start="3">
+<li>Does the chain care that the model is unchanged by reframings?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. It wanders through labelings, including many in the same class,
+and that is harmless: the class probabilities come out right because the
+labeling probabilities do. Invariant averages are all we read off.</p>
+</details>
+</div>
+<section id="43-face-remainders-and-the-heat-bath"
+class="cell markdown">
+<h2>4.3 Face remainders and the heat bath</h2>
+<p>For one edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>,
+walk any face
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+through it starting with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>
+in its stored direction. The face product splits as</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>r</mi><mi>f</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+U_f=U(e)\,r_f(e),
+</annotation></semantics></math></span></p>
+<p>where the <strong>face remainder</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>f</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">r_f(e)\in G</annotation></semantics></math>
+is the product of the face's other labels (glossary 4.8). With
+everything except
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(e)</annotation></semantics></math>
+held fixed, the cost of the edge is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>f</mi></msub><mi>φ</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><msub><mi>r</mi><mi>f</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sum_f\varphi\big(U(e)\,r_f(e)\big)</annotation></semantics></math>,
+a function of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(e)</annotation></semantics></math>
+alone.</p>
+<p>For the coin model this is especially simple. With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>1</mn><mo>−</mo><mi>x</mi></mrow><annotation encoding="application/x-tex">\varphi(x)=1-x</annotation></semantics></math>,
+the part of the total cost that involves
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">const</mtext><mo>−</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\text{const}-U(e)\,A(e)</annotation></semantics></math>,
+where</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>f</mi><mo>∋</mo><mi>e</mi></mrow></munder><msub><mi>r</mi><mi>f</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mi>−</mi><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>…</mi><mo>,</mo><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">
+A(e)=\sum_{f\ni e} r_f(e)\in\lbrace -2(d-1),\dots,2(d-1)\rbrace
+</annotation></semantics></math></span></p>
+<p>is the sum of the remainders. So instead of <em>proposing</em> and
+maybe rejecting, we can draw the new label directly from its exact
+conditional distribution:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Pr</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>+</mi><mn>1</mn><mo>∣</mo><mtext mathvariant="normal">all other labels</mtext><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>=</mo><mfrac><msup><mi>e</mi><mrow><mi>β</mi><mi>A</mi></mrow></msup><mrow><msup><mi>e</mi><mrow><mi>β</mi><mi>A</mi></mrow></msup><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>A</mi></mrow></msup></mrow></mfrac><mo>=</mo><mfrac><mn>1</mn><mrow><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi><mi>A</mi></mrow></msup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Pr\big(U(e)=+1\mid\text{all other labels}\big)=\frac{e^{\beta A}}{e^{\beta A}+e^{-\beta A}}=\frac{1}{1+e^{-2\beta A}}.
+</annotation></semantics></math></span></p>
+<p>This is the <strong>heat bath</strong> update (statisticians call it
+Gibbs sampling). The conditional probability is a logistic curve in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>:
+the faces around the edge "vote", and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+sets how much the edge listens.</p>
+</section>
+<div class="cell code" data-execution_count="7">
+<pre class="python"><code>fig, ax = plt.subplots(figsize=(6, 3.4))
+A = np.linspace(-2.2, 2.2, 200)
+for beta, c in zip([0.25, 0.5, 1.0], [viz.MUTED, viz.TEAL, viz.CORAL]):
+    ax.plot(A, 1 / (1 + np.exp(-2 * beta * A)), color=c, label=fr&quot;$\beta={beta}$&quot;)
+    ax.plot([-2, 0, 2], 1 / (1 + np.exp(-2 * beta * np.array([-2, 0, 2]))), &quot;o&quot;, color=c)
+ax.set(xlabel=&quot;sum of face remainders $A(e)$ (2D: one of $-2,0,2$)&quot;,
+       ylabel=r&quot;$\Pr(U(e)=+1)$&quot;)
+ax.legend()
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig3.png"><img src="ch04-media/fig3.png" width="594" height="360" loading="lazy" alt="Logistic curves of the probability that an edge is set to plus one, against the sum of face remainders from minus 2 to 2, for stiffness 0.25, 0.5 and 1. Dots mark the only possible values minus 2, 0 and 2; at 0 every curve passes through one half."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>On a square grid
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">A(e)</annotation></semantics></math>
+can only be
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">-2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>
+(the dots). When both faces "want"
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>,
+a stiff model obeys almost surely; when they disagree
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">A=0</annotation></semantics></math>),
+the edge flips a fair coin at every stiffness.</p>
+<p>A heat-bath sweep on a board takes a few lines. For the coin model
+inverses are trivial, so a remainder is just the product of the other
+labels on the face.</p>
+</div>
+<div class="cell code" data-execution_count="8">
+<pre class="python"><code>def heat_bath_sweep(board, U, beta, rng, faces_of=None):
+    faces_of = faces_of or board.faces_of_edge()
+    for e in rng.permutation(board.n_edges):
+        A = sum(np.prod([U[e2] for e2, _ in board.faces[f] if e2 != e]) for f in faces_of[e])
+        U[e] = 1 if rng.random() &lt; 1 / (1 + np.exp(-2 * beta * A)) else -1
+    return U
+
+U = random_labeling(Z2(), T2, rng)
+vals = [mean_face(Z2(), T2, heat_bath_sweep(T2, U, 0.5, rng)) for _ in range(4000)]
+print(f&quot;heat bath: {np.mean(vals[200:]):.4f}   exact: {ex2.average(lambda X: mean_face(Z2(), T2, X)):.4f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>heat bath: 0.5318   exact: 0.5363
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> The face remainder
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>f</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r_f(e)</annotation></semantics></math>
+is "the rest of the face" seen from edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>.
+The cost of one edge depends only on the remainders of its faces. For
+the coin model the conditional distribution of a label is logistic in
+their sum, and the heat bath samples from it directly.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>On a 3D grid, which values can
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">A(e)</annotation></semantics></math>
+take?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Each edge lies on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">2(d-1)=4</annotation></semantics></math>
+faces, each remainder is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>±</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">\pm1</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mi>−</mi><mn>4</mn><mo>,</mo><mi>−</mi><mn>2</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">A\in\lbrace -4,-2,0,2,4\rbrace</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>Does a heat-bath update ever "reject"?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. It always draws a new label, but the new label may well equal the
+old one. Its long-run behavior is the same model; it is often a little
+more efficient than Metropolis.</p>
+</details>
+</div>
+<section id="44-many-edges-at-once" class="cell markdown">
+<h2>4.4 Many edges at once</h2>
+<p>The Python loop above visits edges one by one. Fact 4.2 suggests
+something better: <strong>two edges that share no face can be updated at
+the same time</strong>, because neither one's update depends on the
+other's label. On a grid we can split the edges into groups of this
+kind:</p>
+<ul>
+<li>edges pointing in the same direction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>
+never share a face if they are not neighbors "sideways";</li>
+<li>so group the
+direction-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>
+edges by the parity (even/odd) of the sum of their <em>other</em>
+coordinates.</li>
+</ul>
+<p>That gives
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>d</mi></mrow><annotation encoding="application/x-tex">2d</annotation></semantics></math>
+groups, each updated in one shot with array arithmetic. (On a torus this
+needs even side lengths, so the parity pattern wraps around
+consistently.)</p>
+</section>
+<div class="cell code" data-execution_count="9">
+<pre class="python"><code>B6 = Board.grid(6, 6)
+cols = {(0, 0): viz.TEAL, (0, 1): viz.GOLD, (1, 0): viz.CORAL, (1, 1): viz.INK}
+fig, ax = plt.subplots(figsize=(4.6, 4.6))
+viz.draw_board(ax, B6, faces=False, show_arrows=False, edge_labels=None)
+for (v, mu), e2 in B6.meta[&quot;edge_index&quot;].items():
+    par = sum(B6.meta[&quot;coord&quot;][v][nu] for nu in range(2) if nu != mu) % 2
+    (x0, y0), (x1, y1) = B6.pos[B6.edges[e2]]
+    ax.plot([x0, x1], [y0, y1], color=cols[(mu, par)], lw=4, solid_capstyle=&quot;round&quot;, zorder=5)
+ax.set_title(&quot;4 update groups: same colour = no shared face&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig4.png"><img src="ch04-media/fig4.png" width="447" height="434" loading="lazy" alt="A 6 by 6 grid with its edges in four colours: horizontal edges alternate teal and gold by row, vertical edges alternate coral and dark by column. Every face has four edges of four different colours."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Check any face: its four edges have four different colors. So all
+teal edges can be redrawn at once, then all gold, and so on.</p>
+<p>The library's <code>GridModel</code> (in <code>lgt.grid</code>)
+stores a labeling of a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>-dimensional
+torus as an array and runs exactly this scheme: heat bath for the coin
+model, Metropolis for the circle. First, it gives the right answer:</p>
+</div>
+<div class="cell code" data-execution_count="10">
+<pre class="python"><code>G2 = GridModel((2, 2), Z2(), beta=0.5).hot_start(rng)
+G2.sweep(rng, 200)
+fast = [(G2.sweep(rng), G2.mean_face())[1] for _ in range(8000)]
+print(f&quot;GridModel: {np.mean(fast):.4f}   exact: {ex2.average(lambda X: mean_face(Z2(), T2, X)):.4f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>GridModel: 0.5384   exact: 0.5363
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Second, it is fast. Here is the time per sweep (every edge updated
+once) on an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>×</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">8\times8</annotation></semantics></math>
+torus:</p>
+</div>
+<div class="cell code" data-execution_count="11">
+<pre class="python"><code>T8 = Board.grid(8, 8, periodic=True)
+t = time.perf_counter(); Model(T8, Z2(), 0.5).metropolis(rng, 5, burn_in=0); slow = (time.perf_counter() - t) / 5
+G8 = GridModel((8, 8), Z2(), 0.5).hot_start(rng)
+t = time.perf_counter(); G8.sweep(rng, 200); quick = (time.perf_counter() - t) / 200
+print(f&quot;edge-by-edge Python: {1e3 * slow:.1f} ms/sweep   arrays: {1e3 * quick:.2f} ms/sweep   &quot;
+      f&quot;speed-up ~{slow / quick:.0f}x&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>edge-by-edge Python: 2.8 ms/sweep   arrays: 0.10 ms/sweep   speed-up ~27x
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> Edges that share no face can be updated
+simultaneously. On a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>-dimensional
+torus with even sides,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>d</mi></mrow><annotation encoding="application/x-tex">2d</annotation></semantics></math>
+parity groups suffice, which turns a sweep into a handful of array
+operations. <code>GridModel</code> does this and agrees with exact
+enumeration.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Why can't a horizontal and a vertical edge be in the same group in
+general?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>They can lie on a common face (every face has two horizontal and two
+vertical edges), and then updating one changes the remainder seen by the
+other.</p>
+</details>
+<ol start="2">
+<li>On a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>
+torus the parity trick breaks. Why?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Going around an odd cycle of length 3 returns you to the start after
+an odd number of parity flips, so some pair of neighbors gets the same
+parity and shares a face.</p>
+</details>
+</div>
+<section id="45-how-long-is-long-enough" class="cell markdown">
+<h2>4.5 How long is long enough?</h2>
+<p>A Markov chain has two weaknesses that independent samples do not
+have.</p>
+<p><strong>It starts somewhere.</strong> Early samples remember the
+starting labeling. We throw away a <strong>burn-in</strong> period. A
+good test: start two chains far apart, one from the identity labeling
+(every face calm, "cold") and one from a uniform random labeling
+("hot"), and watch them meet. Below: the coin model on an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mo>×</mo><mn>8</mn><mo>×</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">8\times8\times8</annotation></semantics></math>
+torus at two stiffnesses.</p>
+</section>
+<div class="cell code" data-execution_count="12">
+<pre class="python"><code>fig, ax = plt.subplots(figsize=(7, 3.4))
+for beta, ls in [(0.6, &quot;-&quot;), (0.74, &quot;--&quot;)]:
+    for start, c in [(&quot;cold&quot;, viz.TEAL), (&quot;hot&quot;, viz.CORAL)]:
+        M = GridModel((8, 8, 8), Z2(), beta)
+        M.cold_start() if start == &quot;cold&quot; else M.hot_start(rng)
+        trace = [(M.sweep(rng), M.mean_face())[1] for _ in range(150)]
+        ax.plot(trace, color=c, ls=ls, lw=1.4, label=f&quot;{start} start, β={beta}&quot;)
+ax.set(xlabel=&quot;sweeps&quot;, ylabel=&quot;mean face&quot;)
+ax.legend(fontsize=8, ncol=2)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig5.png"><img src="ch04-media/fig5.png" width="679" height="361" loading="lazy" alt="Mean face over 150 sweeps for chains started cold and hot, at stiffness 0.6 (solid) and 0.74 (dashed). At 0.6 the two starts meet within a few sweeps; at 0.74 the hot start takes about 40 sweeps to climb up to the cold one."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.6</mn></mrow><annotation encoding="application/x-tex">\beta=0.6</annotation></semantics></math>
+the two chains meet within a few sweeps. At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.74</mn></mrow><annotation encoding="application/x-tex">\beta=0.74</annotation></semantics></math>
+they take much longer: the model is near a point where it changes
+character (section 4.6), and the chain moves sluggishly there.</p>
+<p><strong>It remembers.</strong> Consecutive samples are correlated, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+chain samples are worth fewer than
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+independent ones. The <strong>autocorrelation</strong> of the series
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>f</mi><mi>t</mi></msub><annotation encoding="application/x-tex">f_t</annotation></semantics></math>
+at lag
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ρ</mi><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">corr</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>f</mi><mi>t</mi></msub><mo>,</mo><msub><mi>f</mi><mrow><mi>t</mi><mo>+</mo><mi>k</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\rho(k)=\operatorname{corr}(f_t,f_{t+k})</annotation></semantics></math>,
+and the <strong>integrated autocorrelation time</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mo>+</mo><msub><mo>∑</mo><mrow><mi>k</mi><mo>≥</mo><mn>1</mn></mrow></msub><mi>ρ</mi><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\tau=\tfrac12+\sum_{k\ge1}\rho(k)</annotation></semantics></math>
+measures how many sweeps one effective sample costs:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+correlated samples carry about as much information as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>n</mi><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mi>τ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">n/(2\tau)</annotation></semantics></math>
+independent ones.</p>
+</div>
+<div class="cell code" data-execution_count="13">
+<pre class="python"><code>def autocorr(x, kmax):
+    x = np.asarray(x) - np.mean(x)
+    return np.array([np.mean(x[: len(x) - k] * x[k:]) for k in range(kmax)]) / np.var(x)
+
+def tau_int(rho):
+    s = 0.5
+    for k in range(1, len(rho)):
+        if rho[k] &lt; 0.05: break
+        s += rho[k]
+    return s</code></pre>
+</div>
+<div class="cell code" data-execution_count="14">
+<pre class="python"><code>fig, ax = plt.subplots(figsize=(6.5, 3.4))
+series = {}
+for beta, c in [(0.6, viz.TEAL), (0.70, viz.CORAL)]:
+    M = GridModel((8, 8, 8), Z2(), beta).hot_start(rng); M.sweep(rng, 300)
+    series[beta] = np.array([(M.sweep(rng), M.mean_face())[1] for _ in range(8000)])
+    rho = autocorr(series[beta], 80)
+    ax.plot(rho, color=c, lw=2, label=fr&quot;$\beta={beta}$:  $\tau\approx{tau_int(rho):.1f}$ sweeps&quot;)
+ax.axhline(0, color=viz.MUTED, lw=0.8)
+ax.set(xlabel=&quot;lag $k$ (sweeps)&quot;, ylabel=r&quot;$\rho(k)$&quot;)
+ax.legend()
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig6.png"><img src="ch04-media/fig6.png" width="636" height="360" loading="lazy" alt="Autocorrelation against lag in sweeps. At stiffness 0.6 it drops to zero within about 10 sweeps (tau about 1.7); at 0.7 it decays much more slowly (tau about 7.8)."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Closer to the special stiffness the memory is longer: about four
+times longer at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.70</mn></mrow><annotation encoding="application/x-tex">\beta=0.70</annotation></semantics></math>
+than at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.6</mn><annotation encoding="application/x-tex">0.6</annotation></semantics></math>.
+It keeps growing as you approach
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>≈</mo><mn>0.76</mn></mrow><annotation encoding="application/x-tex">\beta\approx0.76</annotation></semantics></math>.
+At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0.74</mn></mrow><annotation encoding="application/x-tex">\beta=0.74</annotation></semantics></math>
+even 16,000 sweeps are not enough for the estimates below to settle.
+This slowdown is a real obstacle in practice, and whole families of
+cleverer algorithms exist to fight it.</p>
+<p><strong>Error bars that respect memory: binning.</strong> Chop the
+series into blocks of length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
+and average each block. Once
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>≫</mo><mi>τ</mi></mrow><annotation encoding="application/x-tex">b\gg\tau</annotation></semantics></math>
+the block averages are nearly independent, and the ordinary formula
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mtext mathvariant="normal">sd</mtext><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">blocks</mtext><mo stretchy="false" form="postfix">)</mo><mi>/</mi><msqrt><mrow><mi>#</mi><mtext mathvariant="normal">blocks</mtext></mrow></msqrt></mrow><annotation encoding="application/x-tex">\text{sd}(\text{blocks})/\sqrt{\#\text{blocks}}</annotation></semantics></math>
+is honest. Plotting that estimate against
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>,
+it grows and then levels off at the true error.</p>
+</div>
+<div class="cell code" data-execution_count="15">
+<pre class="python"><code>def binned_error(x, b):
+    m = len(x) // b
+    blocks = np.asarray(x[: m * b]).reshape(m, b).mean(axis=1)
+    return blocks.std(ddof=1) / np.sqrt(m)
+
+bs = 2 ** np.arange(0, 10)
+fig, ax = plt.subplots(figsize=(6.5, 3.4))
+for beta, c in [(0.6, viz.TEAL), (0.70, viz.CORAL)]:
+    ax.plot(bs, [binned_error(series[beta], b) for b in bs], &quot;o-&quot;, color=c, label=fr&quot;$\beta={beta}$&quot;)
+ax.set(xscale=&quot;log&quot;, yscale=&quot;log&quot;, xlabel=&quot;block length $b$&quot;, ylabel=&quot;estimated error of the mean&quot;)
+ax.legend()
+plt.show()
+for beta in series:
+    print(f&quot;beta={beta}: mean face = {series[beta].mean():.4f} ± {binned_error(series[beta], 256):.4f}&quot;)</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig7.png"><img src="ch04-media/fig7.png" width="678" height="363" loading="lazy" alt="Estimated error of the mean against block length on log-log axes. At stiffness 0.6 the curve rises a little and levels off; at 0.7 it keeps rising, to several times the naive value at block length 1."></a></figure>
+</div>
+<div class="output stream stdout">
+<pre><code>beta=0.6: mean face = 0.6277 ± 0.0006
+beta=0.7: mean face = 0.7900 ± 0.0020
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Reading the plateau gives an honest error bar. The naive estimate
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">b=1</annotation></semantics></math>)
+understates the error, and the closer you are to the special stiffness,
+the worse it gets. If the curve never levels off, the honest conclusion
+is that the run is too short.</p>
+<blockquote>
+<p><strong>Recap.</strong> Discard a burn-in (start hot and cold; wait
+until they agree). Consecutive samples are correlated; the integrated
+autocorrelation time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>
+says how many sweeps one effective sample costs. Binning gives error
+bars that account for the correlation.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>A run of 10,000 sweeps has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>τ</mi><mo>=</mo><mn>25</mn></mrow><annotation encoding="application/x-tex">\tau=25</annotation></semantics></math>.
+About how many independent samples is it worth?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10000</mn><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>⋅</mo><mn>25</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>200</mn></mrow><annotation encoding="application/x-tex">10000/(2\cdot25)=200</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>Why does the binned error estimate <em>grow</em> with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
+before it levels off?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>For small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>,
+neighboring blocks are still correlated, so their spread underestimates
+how much the overall mean can wander. As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>b</mi><annotation encoding="application/x-tex">b</annotation></semantics></math>
+passes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>
+the blocks decorrelate and the estimate reaches the true error.</p>
+</details>
+</div>
+<section id="46-a-first-experiment-and-a-puzzle" class="cell markdown">
+<h2>4.6 A first experiment, and a puzzle</h2>
+<p>We now have a tool that works on boards far too large to enumerate.
+Let's use it to ask a simple question in three settings: <strong>how
+does the mean face change as we turn the stiffness dial?</strong> We use
+the coin model on tori of dimension 2, 3 and 4.</p>
+<p>To look for surprises we sweep
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+slowly <em>up</em>, carrying the chain's labeling from one
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+to the next, and then slowly back <em>down</em>. If the model behaves
+smoothly, the two passes agree.</p>
+</section>
+<div class="cell code" data-execution_count="16">
+<pre class="python"><code>def scan(dims, betas, equil, measure, rng):
+    M = GridModel(dims, Z2(), betas[0]).hot_start(rng)
+    out = {}
+    for name, bs in [(&quot;up&quot;, betas), (&quot;down&quot;, betas[::-1])]:
+        vals = []
+        for b in bs:
+            M.beta = b
+            M.sweep(rng, equil)
+            vals.append(np.mean([(M.sweep(rng), M.mean_face())[1] for _ in range(measure)]))
+        out[name] = np.array(vals if name == &quot;up&quot; else vals[::-1])
+    return out</code></pre>
+</div>
+<div class="cell code" data-execution_count="17">
+<pre class="python"><code>runs = {2: ((32, 32), np.linspace(0.1, 1.2, 12)),
+        3: ((12, 12, 12), np.linspace(0.55, 0.95, 9)),
+        4: ((8, 8, 8, 8), np.linspace(0.38, 0.50, 13))}
+results = {d: scan(dims, bs, equil=150, measure=40, rng=rng) for d, (dims, bs) in runs.items()}</code></pre>
+</div>
+<div class="cell code" data-execution_count="18">
+<pre class="python"><code>fig, axs = plt.subplots(1, 3, figsize=(14, 3.9))
+for ax, (d, (dims, bs)) in zip(axs, runs.items()):
+    ax.plot(bs, results[d][&quot;up&quot;], &quot;o-&quot;, color=viz.TEAL, label=r&quot;$\beta$ going up&quot;)
+    ax.plot(bs, results[d][&quot;down&quot;], &quot;s--&quot;, color=viz.CORAL, mfc=&quot;none&quot;, label=r&quot;$\beta$ going down&quot;)
+    ax.set(title=f&quot;{d} dimensions, &quot; + &quot;×&quot;.join(map(str, dims)), xlabel=r&quot;stiffness $\beta$&quot;)
+axs[0].plot(runs[2][1], np.tanh(runs[2][1]), color=viz.INK, lw=1, label=r&quot;$\tanh\beta$ (chapter 2)&quot;)
+axs[0].set_ylabel(&quot;mean face&quot;)
+axs[2].axvline(0.5 * np.log(1 + np.sqrt(2)), color=viz.INK, ls=&quot;:&quot;, lw=1.2)
+axs[2].text(0.5 * np.log(1 + np.sqrt(2)) + 0.002, 0.6, &quot;  ?&quot;, fontsize=14)
+for ax in axs: ax.legend(fontsize=8, loc=&quot;lower right&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch04-media/fig8.png"><img src="ch04-media/fig8.png" width="1284" height="426" loading="lazy" alt="Mean face against stiffness, swept up and then down, on tori of dimension 2, 3 and 4. In 2D the two passes agree and follow tanh beta; in 3D they agree with a steep smooth rise; in 4D they disagree and form a hysteresis loop near stiffness 0.44, marked with a question mark."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Three very different pictures.</p>
+<ul>
+<li><strong>2 dimensions:</strong> a smooth curve, exactly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\tanh\beta</annotation></semantics></math>,
+as chapter 2 predicted (faces are nearly independent on a large
+torus).</li>
+<li><strong>3 dimensions:</strong> a smooth but steep rise near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>≈</mo><mn>0.76</mn></mrow><annotation encoding="application/x-tex">\beta\approx0.76</annotation></semantics></math>.
+Up and down agree.</li>
+<li><strong>4 dimensions:</strong> the two passes
+<strong>disagree</strong>. Going up, the model stays "rough" until about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>≈</mo><mn>0.46</mn></mrow><annotation encoding="application/x-tex">\beta\approx0.46</annotation></semantics></math>,
+then jumps; going down, it stays "calm" until about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.43</mn><annotation encoding="application/x-tex">0.43</annotation></semantics></math>,
+then falls. In between, where the model ends up depends on where it came
+from. This memory effect is called <em>hysteresis</em>, and it is the
+fingerprint of an abrupt change: two very different typical behaviors,
+each stable enough that a local chain cannot cross from one to the
+other.</li>
+</ul>
+<p><strong>The puzzle.</strong> The dotted line is at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>β</mi><mo>*</mo></msup><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msqrt><mn>2</mn></msqrt><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.4407</mn></mrow><annotation encoding="application/x-tex">\beta^*=\tfrac12\ln(1+\sqrt2)\approx0.4407</annotation></semantics></math>,
+right where the two branches separate. Where would such a number come
+from? Nothing in our definitions mentions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msqrt><mn>2</mn></msqrt><annotation encoding="application/x-tex">\sqrt2</annotation></semantics></math>.
+Chapter 9 shows that it can be <em>derived</em>, without any simulation:
+a short exact argument (a Fourier transform on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math>)
+shows that the 4D coin model at stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+is secretly the same as the 4D coin model at another stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mover><mi>β</mi><mo accent="true">̃</mo></mover><annotation encoding="application/x-tex">\tilde\beta</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mover><mi>β</mi><mo accent="true">̃</mo></mover><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\tanh\tilde\beta=e^{-2\beta}</annotation></semantics></math>.
+The only stiffness that is its own partner is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>β</mi><mo>*</mo></msup><annotation encoding="application/x-tex">\beta^*</annotation></semantics></math>,
+and that is where the jump must be. The 3D steep rise has a similar
+exact explanation, with a different partner model.</p>
+<blockquote>
+<p><strong>Recap.</strong> The array sampler lets us study big tori.
+Turning the stiffness up and down reveals that dimension matters: smooth
+in 2D, steep in 3D, and an abrupt, hysteretic jump in 4D, located at a
+number we will derive exactly.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Why do we carry the labeling from one
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+to the next instead of restarting each time?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>To make memory visible. Restarting would hide which branch the chain
+was on. (For accurate averages away from the jump, either way works once
+burn-in is done.)</p>
+</details>
+<ol start="2">
+<li>Would a longer run make the 4D loop disappear?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>It shrinks slowly, but on a large board crossing between the two
+behaviors requires the whole board to reorganize, which a local chain
+essentially never does. The 3D curve, in contrast, already agrees in
+both directions.</p>
+</details>
+<ol start="3">
+<li>Check the self-partner claim: solve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mi>β</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\tanh\beta=e^{-2\beta}</annotation></semantics></math>.</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi></mrow></msup></mrow><annotation encoding="application/x-tex">t=e^{-2\beta}</annotation></semantics></math>.
+Then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mi>β</mi><mo>=</mo><mfrac><mrow><mn>1</mn><mo>−</mo><mi>t</mi></mrow><mrow><mn>1</mn><mo>+</mo><mi>t</mi></mrow></mfrac></mrow><annotation encoding="application/x-tex">\tanh\beta=\frac{1-t}{1+t}</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mn>1</mn><mo>−</mo><mi>t</mi></mrow><mrow><mn>1</mn><mo>+</mo><mi>t</mi></mrow></mfrac><mo>=</mo><mi>t</mi></mrow><annotation encoding="application/x-tex">\frac{1-t}{1+t}=t</annotation></semantics></math>,
+i.e.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>t</mi><mn>2</mn></msup><mo>+</mo><mn>2</mn><mi>t</mi><mo>−</mo><mn>1</mn><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">t^2+2t-1=0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>t</mi><mo>=</mo><msqrt><mn>2</mn></msqrt><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">t=\sqrt2-1</annotation></semantics></math>.
+So
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mi>−</mi><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msqrt><mn>2</mn></msqrt><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msqrt><mn>2</mn></msqrt><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mn>0.4407</mn></mrow><annotation encoding="application/x-tex">\beta=-\tfrac12\ln(\sqrt2-1)=\tfrac12\ln(1+\sqrt2)\approx0.4407</annotation></semantics></math></span>.</p>
+</details>
+</div>
+<div class="cell markdown">
+<h2 id="chapter-recap">Chapter recap</h2>
+<ul>
+<li>Averages of invariants can be estimated from random samples, with
+error
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mi>σ</mi><mi>/</mi><msqrt><mi>n</mi></msqrt></mrow><annotation encoding="application/x-tex">\approx\sigma/\sqrt n</annotation></semantics></math>
+independent of the number of labelings.</li>
+<li>A Markov chain obeying <strong>detailed balance</strong> samples a
+model without ever computing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>.
+<strong>Metropolis</strong> proposes and accepts with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">min</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi mathvariant="normal">Δ</mi><mi>S</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\min(1,e^{-\beta\Delta S})</annotation></semantics></math>;
+the <strong>heat bath</strong> draws from the exact conditional
+distribution.</li>
+<li><strong>Locality:</strong> one edge's update needs only its
+<strong>face remainders</strong>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mo>−</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">2(d-1)</annotation></semantics></math>
+of them on a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>-dimensional
+grid. Edges sharing no face can be updated together, which makes array
+code fast.</li>
+<li>Chains need a <strong>burn-in</strong> and have
+<strong>memory</strong>: the autocorrelation time
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>τ</mi><annotation encoding="application/x-tex">\tau</annotation></semantics></math>
+sets the cost of an effective sample, and binning gives honest error
+bars.</li>
+<li>In 4D the coin model shows hysteresis at a stiffness near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.44</mn><annotation encoding="application/x-tex">0.44</annotation></semantics></math>,
+a number chapter 9 derives exactly.</li>
+</ul>
+<h2 id="dictionary">Dictionary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Our term</th>
+<th>Other names</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Markov chain Monte Carlo</td>
+<td>MCMC; "Monte Carlo simulation" (physics)</td>
+</tr>
+<tr>
+<td>Metropolis rule</td>
+<td>Metropolis(–Hastings) algorithm</td>
+</tr>
+<tr>
+<td>heat bath</td>
+<td>Gibbs sampling (statistics)</td>
+</tr>
+<tr>
+<td>face remainder
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>r</mi><mi>f</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">r_f(e)</annotation></semantics></math>,
+sum
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">A(e)</annotation></semantics></math></td>
+<td>staple, sum of staples (physics)</td>
+</tr>
+<tr>
+<td>sweep</td>
+<td>one update of every edge; a "lattice sweep"</td>
+</tr>
+<tr>
+<td>burn-in</td>
+<td>thermalization, equilibration</td>
+</tr>
+<tr>
+<td>cold / hot start</td>
+<td>ordered / disordered start</td>
+</tr>
+<tr>
+<td>slow memory near a special
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math></td>
+<td>critical slowing down</td>
+</tr>
+<tr>
+<td>hysteresis, abrupt jump</td>
+<td>first-order phase transition</td>
+</tr>
+<tr>
+<td>partner stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mover><mi>β</mi><mo accent="true">̃</mo></mover><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\tanh\tilde\beta=e^{-2\beta}</annotation></semantics></math></td>
+<td>Kramers–Wannier / Wegner duality; self-dual point</td>
+</tr>
+</tbody>
+</table>
+<p><em>History:</em> the 4D jump was found exactly this way, by Creutz,
+Jacobs and Rebbi (1979), in one of the first computer studies of these
+models.</p>
+<h2 id="whats-next">What's next</h2>
+<p>So far a model has been a static object: a distribution over whole
+labelings. Chapter 5 starts Part II, where we cut a board into
+<strong>layers</strong> and ask how one layer constrains the next. On
+the simplest boards, chains of vertices, a model <em>is</em> a Markov
+chain in disguise, and one matrix, the transfer matrix, holds all of its
+secrets.</p>
+</div>
+
+  <nav class="pager pager-bottom" aria-label="Chapters"><a rel="prev" href="ch03.html">← Chapter 3<span class="t">: What a model can tell you</span></a><a rel="next" href="ch05.html">Chapter 5<span class="t">: Layers and the transfer matrix</span> →</a></nav>
+</main>
+</body>
+</html>

@@ -1,0 +1,1961 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter 6: Yang–Mills and the Millennium problem, in our terms — Eyal Merhavi</title>
+<meta name="description" content="Chapter 6 of the course Labelings, models, and gauge theory, rendered from the executed notebook.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="../../style.css?v=b18eafc744">
+<style>
+  .crumbs { margin-top: 0; }
+  .pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1.5rem; font-size: 0.95rem; }
+  .pager a[rel="next"] { margin-left: auto; text-align: right; }
+  .pager-top .t { display: none; }
+  @media (max-width: 40rem) { .pager-bottom { flex-direction: column; } .pager-bottom a[rel="next"] { margin-left: 0; text-align: left; } }
+  .pager-bottom { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .rendered-note { font-size: 0.9rem; color: var(--muted); }
+  .actions { margin-top: -0.25rem; }
+  .cell.code pre { font-size: 0.8rem; line-height: 1.4; }
+  .output pre { background: #fff; border: 0; border-left: 3px solid #e4e4e4; margin-top: -0.5rem; }
+  pre { max-width: 100%; box-sizing: border-box; }
+  figure { margin: 1rem 0; }
+  figure img, .anim img { display: block; max-width: 100%; height: auto; }
+  figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
+  .math-block { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+  .math-wide { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; vertical-align: middle; }
+  th, td { border: 1px solid var(--rule); padding: 0.2rem 0.5rem; }
+  blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--rule); }
+  details { margin: 0.25rem 0 0.75rem 1.25rem; }
+  summary { cursor: pointer; color: var(--muted); }
+  .cell.markdown h1 { margin-top: 1.25rem; }
+  .cell.markdown h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
+</style>
+</head>
+<body>
+<main>
+  <p class="crumbs"><a href="../../">← Eyal Merhavi</a> · <a href="./">Labelings, models, and gauge theory</a></p>
+  <nav class="pager pager-top" aria-label="Chapters"><a rel="prev" href="ch05.html">← Chapter 5<span class="t">: Layers and the transfer matrix</span></a><a rel="next" href="ch07.html">Chapter 7<span class="t">: A gap you can prove</span> →</a></nav>
+  <p class="rendered-note">Chapter 6 of <a href="./"><i>Labelings, models, and gauge theory</i></a>, rendered from the executed notebook. Code cells and their outputs are shown as they ran.</p>
+  <p class="actions"><a href="lab/notebooks/index.html?path=ch06_yang_mills.ipynb" target="_blank" rel="noopener">Run this chapter in your browser ↗</a> · <a href="https://github.com/Eyali1001/lattice-gauge-course/blob/main/chapters/ch06_yang_mills.py" target="_blank" rel="noopener">Source on GitHub ↗</a><br><span class="rendered-note">Runs on JupyterLite. The first time, it downloads Python and its libraries (about 40 MB).</span></p>
+<section
+id="chapter-6--yangmills-and-the-millennium-problem-in-our-terms"
+class="cell markdown">
+<h1>Chapter 6 — Yang–Mills and the Millennium problem, in our terms</h1>
+<p>In 2000 the Clay Mathematics Institute listed seven problems, each
+with a million-dollar prize. One of them is about physics: <em>prove
+that quantum Yang–Mills theory exists and has a mass gap.</em> It is
+usually stated in the language of quantum field theory: operator-valued
+distributions, Hilbert spaces, the Wightman axioms. That language takes
+years to learn.</p>
+<p>This chapter shows that you already have almost everything you need
+to <em>state</em> the problem precisely. Yang–Mills theory on a grid is
+one of our models: a particular label group, a particular board, the
+standard face cost. The Millennium problem asks what happens to that
+model as the grid is refined. We will see where the physicists' formulas
+come from, run the experiment that first convinced physicists the
+picture is right, and end with a precise statement of what was proved in
+2026 and what is still open.</p>
+<p><strong>What you'll learn</strong></p>
+<ul>
+<li>Why physics uses the groups
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>,
+and that lattice Yang–Mills is our model with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G=SU(N)</annotation></semantics></math>
+on a four-dimensional grid.</li>
+<li>Why the standard face cost is the right one, and how it becomes the
+physicists' "curvature" for smooth labelings, including the term that
+exists only because the labels don't commute.</li>
+<li>Why four dimensions is special, and how a length scale appears out
+of nowhere (asymptotic freedom).</li>
+<li>The Millennium problem, stated in the vocabulary of chapters 0–5,
+and its status as of November 2026.</li>
+<li>What this elementary framework is missing for non-commutative
+physics: Lie algebras, representations, and how charges combine into
+invariants.</li>
+</ul>
+<p><strong>Prerequisites:</strong> chapters 0–5. We use the layering and
+the levels of chapter 5 only in the last sections.</p>
+</section>
+<div class="cell code" data-execution_count="1">
+<pre class="python"><code>import numpy as np
+import matplotlib.pyplot as plt
+from scipy.special import iv
+
+from lgt import *
+from lgt import viz
+from lgt.grid import GridModel
+
+viz.use_style()
+rng = np.random.default_rng(6)
+G = SU2()</code></pre>
+</div>
+<section id="61-the-label-group-of-nature" class="cell markdown">
+<h2>6.1 The label group of nature</h2>
+<p>The groups in physics' Standard Model are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>,
+which we have met as the circle, and the matrix groups</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mo>∈</mo><msup><mi mathvariant="double-struck">ℂ</mi><mrow><mi>N</mi><mo>×</mo><mi>N</mi></mrow></msup><mo>:</mo><msup><mi>g</mi><mo>*</mo></msup><mi>g</mi><mo>=</mo><mi>I</mi><mo>,</mo><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><mi>g</mi><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+SU(N)=\lbrace g\in\mathbb C^{N\times N}: g^{*}g=I,\ \det g=1\rbrace .
+</annotation></semantics></math></span></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>
+is the label group of the strong force, which holds atomic nuclei
+together. We will work with the smallest case,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+because it already has everything that matters: it is compact, so it has
+a uniform distribution (chapter 2), and it is non-abelian, so reframing
+genuinely changes loop products, by conjugation (chapter 1).</p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+has a friendly concrete form. Every element is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>w</mi><mi>I</mi><mo>−</mo><mi>i</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><msub><mi>σ</mi><mn>1</mn></msub><mo>+</mo><mi>y</mi><msub><mi>σ</mi><mn>2</mn></msub><mo>+</mo><mi>z</mi><msub><mi>σ</mi><mn>3</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">wI-i(x\sigma_1+y\sigma_2+z\sigma_3)</annotation></semantics></math>
+for a unit vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>w</mi><mo>,</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">(w,x,y,z)\in\mathbb R^4</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>σ</mi><mn>1</mn></msub><mo>,</mo><msub><mi>σ</mi><mn>2</mn></msub><mo>,</mo><msub><mi>σ</mi><mn>3</mn></msub></mrow><annotation encoding="application/x-tex">\sigma_1,\sigma_2,\sigma_3</annotation></semantics></math>
+are three fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+matrices (the Pauli matrices). So
+<strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+is the 3-sphere</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">{</mo><msup><mi>w</mi><mn>2</mn></msup><mo>+</mo><msup><mi>x</mi><mn>2</mn></msup><mo>+</mo><msup><mi>y</mi><mn>2</mn></msup><mo>+</mo><msup><mi>z</mi><mn>2</mn></msup><mo>=</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\lbrace w^2+x^2+y^2+z^2=1\rbrace</annotation></semantics></math>,
+the matrix product, written in these coordinates, is the multiplication
+rule of the <em>quaternions</em>, and the trace is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>w</mi></mrow><annotation encoding="application/x-tex">2w</annotation></semantics></math>.
+The library stores
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+labels exactly this way.</p>
+</section>
+<div class="cell code" data-execution_count="2">
+<pre class="python"><code>a, b = G.uniform(rng, 2)
+M = G.to_matrix
+print(&quot;a b as matrices equals the matrix of the quaternion product:&quot;,
+      np.allclose(M(G.mul(a, b)), M(a) @ M(b)))
+print(&quot;ab = ba ?&quot;, np.allclose(G.mul(a, b), G.mul(b, a)), &quot;   tr(a) = 2w:&quot;, np.isclose(G.chi(a), 2 * a[0]))</code></pre>
+<div class="output stream stdout">
+<pre><code>a b as matrices equals the matrix of the quaternion product: True
+ab = ba ? False    tr(a) = 2w: True
+</code></pre>
+</div>
+</div>
+<section id="why-these-groups-the-physics-at-a-high-level"
+class="cell markdown">
+<h3>Why these groups? The physics, at a high level</h3>
+<p>The interlude after chapter 1 gave the recipe. If some property of a
+particle can only be described <em>relative to a convention</em>, and
+every point of space may choose its convention independently, then
+comparing neighbors forces labels on edges. The label group is the
+<strong>group of convention changes</strong> for that property. So
+"which label group?" means "which hidden property, and how can its
+conventions be changed?" Physics answers this by experiment, three
+times:</p>
+<table>
+<colgroup>
+<col style="width: 33%" />
+<col style="width: 33%" />
+<col style="width: 33%" />
+</colgroup>
+<thead>
+<tr>
+<th>Force</th>
+<th>Hidden property, and its conventions</th>
+<th>Label group</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>electromagnetism</td>
+<td>the <em>phase</em> of a charged particle's wavefunction: a unit
+complex number, with no preferred zero angle</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>,
+the circle</td>
+</tr>
+<tr>
+<td>weak force</td>
+<td>a two-valued "which partner?" label: the electron and its neutrino
+(and the up and down <em>quarks</em>, the constituents of protons and
+neutrons) behave as two components of one vector in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℂ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\mathbb C^2</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>strong force</td>
+<td><strong>color</strong>: every quark carries a vector in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℂ</mi><mn>3</mn></msup><annotation encoding="application/x-tex">\mathbb C^3</annotation></semantics></math>,
+with no preferred basis ("red, green, blue" is a convention)</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p>A little history shows where non-commuting labels came from. In 1932
+Heisenberg, noting that the proton and the neutron have almost the same
+mass, proposed treating them as two states of one particle. By 1937
+experiments showed that they also feel the nuclear force almost
+identically, and this became a symmetry: the pair is one vector in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℂ</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\mathbb C^2</annotation></semantics></math>,
+and the force is unchanged when it is rotated by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+(physicists call this <em>isospin</em>). In 1954 Yang and Mills asked
+our interlude's question about it: <em>what if every point could choose
+its own convention for which component is the proton?</em> The answer
+was labels in a non-commuting group. That is where the name of this
+chapter comes from. Their own application did not survive: isospin is
+only an approximate symmetry, and their theory predicted massless force
+carriers that nobody had seen. But the structure later described both
+the weak and the strong force.</p>
+<p><strong>Why three colors?</strong> Nobody sees color directly, so the
+evidence is indirect, and it all says 3:</p>
+<ul>
+<li>a particle called the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="normal">Δ</mi><mrow><mi>+</mi><mo>+</mo></mrow></msup><annotation encoding="application/x-tex">\Delta^{++}</annotation></semantics></math>
+is, in the simplest quark picture, three up quarks in the same state.
+Quarks are <em>fermions</em>, particles that quantum mechanics forbids
+from sharing a state with an identical twin (the Pauli exclusion
+principle). The puzzle disappears if the three quarks differ in a hidden
+label with at least three values;</li>
+<li>when an electron and a positron (its antiparticle) collide, they
+sometimes produce <em>hadrons</em> (particles made of quarks) and
+sometimes a pair of muons (heavier cousins of the electron). The ratio
+of the two rates is three times what it would be without color, up to
+small corrections;</li>
+<li>the neutral pion (a light particle made of quarks) decays into two
+photons, the particles of light, at a rate proportional to the square of
+the number of colors, and the measured rate matches 3.</li>
+</ul>
+<p>And no free colored particle has ever been seen: only color-neutral
+combinations. In our language, <strong>only invariants are
+observed</strong>. That is chapter 3's statement that a model knows only
+averages of invariants, now as an experimental fact (physicists call it
+<em>confinement</em> of color).</p>
+<p><strong>Why "S" and "U"?</strong></p>
+<ul>
+<li><strong>U</strong> (unitary,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>g</mi><mo>*</mo></msup><mi>g</mi><mo>=</mo><mi>I</mi></mrow><annotation encoding="application/x-tex">g^*g=I</annotation></semantics></math>):
+a change of color convention must preserve the length of the color
+vector, because the length carries probability. Unitary matrices are
+exactly the length-preserving ones.</li>
+<li><strong>S</strong> (determinant 1): the remaining freedom in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(3)</annotation></semantics></math>,
+an overall phase
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>i</mi><mi>α</mi></mrow></msup><mi>I</mi></mrow><annotation encoding="application/x-tex">e^{i\alpha}I</annotation></semantics></math>,
+changes all three colors alike, so it is not a change of <em>color</em>
+convention at all. Including it would add a ninth force carrier that
+pulls on every quark equally, and no such force is seen; phases are left
+to the separate circle factor. Determinant 1 also has a structural
+consequence, which we will compute in section 6.6: three quarks can
+combine into an invariant. Protons and neutrons are built this way.</li>
+<li><strong>Not real rotations</strong>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>):
+quarks and antiquarks (their antiparticles) carry genuinely different
+kinds of color charge, which needs complex vectors. With real rotations
+they would transform identically, and two quarks could already combine
+into an invariant (their dot product). Such two-quark particles are not
+seen.</li>
+</ul>
+<p>To be honest about the limits of this story: these arguments explain
+<em>what kind</em> of group fits each force, and they simplify. The weak
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+acts on only one "handedness" of each particle and is hidden at everyday
+energies, and the Standard Model's circle factor is not exactly
+electromagnetism's but mixes with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>.
+Nor do the arguments explain why nature chose
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo><mo>×</mo><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>×</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)\times SU(2)\times U(1)</annotation></semantics></math>
+rather than something else. That remains an experimental input.</p>
+</section>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Definition (lattice Yang–Mills).</strong> The <strong>lattice
+Yang–Mills model</strong> with group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G=SU(N)</annotation></semantics></math>
+is the model of chapter 2 with</p>
+<ul>
+<li>board: a four-dimensional torus grid, faces the unit squares;</li>
+<li>label group:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(N)</annotation></semantics></math>;</li>
+<li>face cost: the standard one,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>N</mi><mo>−</mo><mrow><mi mathvariant="normal">Re</mi><mo>&#8289;</mo></mrow><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">\varphi(x)=N-\operatorname{Re}\operatorname{tr}x</annotation></semantics></math>;</li>
+<li>stiffness:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta&gt;0</annotation></semantics></math>.</li>
+</ul>
+</blockquote>
+<p>That is the whole definition. Everything in chapters 1–5 applies:
+classes, invariants, loop observables, sampling, layers and levels.
+Physicists write the same model with the cost
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>f</mi></msub><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">Re</mi><mo>&#8289;</mo></mrow><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><msub><mi>U</mi><mi>f</mi></msub><mi>/</mi><mi>N</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sum_f\big(1-\operatorname{Re}\operatorname{tr}U_f/N\big)</annotation></semantics></math></span>
+and stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>β</mi><mtext mathvariant="normal">phys</mtext></msub><annotation encoding="application/x-tex">\beta_{\text{phys}}</annotation></semantics></math>,
+so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mtext mathvariant="normal">phys</mtext></msub><mo>=</mo><mi>N</mi><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta_{\text{phys}}=N\beta</annotation></semantics></math>.
+For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mtext mathvariant="normal">phys</mtext></msub><mo>=</mo><mn>2</mn><mi>β</mi></mrow><annotation encoding="application/x-tex">\beta_{\text{phys}}=2\beta</annotation></semantics></math>.
+We quote both when comparing with the literature.</p>
+<blockquote>
+<p><strong>Recap.</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+is the 3-sphere of unit quaternions; it is compact and non-abelian.
+Lattice Yang–Mills is our model on a 4D torus with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G=SU(N)</annotation></semantics></math>
+and the standard face cost.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>What is the face cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn><mo>−</mo><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mi>g</mi></mrow><annotation encoding="application/x-tex">\varphi(g)=2-\operatorname{tr}g</annotation></semantics></math>
+of an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+element
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>
+in terms of its quaternion
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>w</mi><mo>,</mo><mi>x</mi><mo>,</mo><mi>y</mi><mo>,</mo><mi>z</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(w,x,y,z)</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>=</mo><mn>2</mn><mo>−</mo><mn>2</mn><mi>w</mi></mrow><annotation encoding="application/x-tex">\varphi=2-2w</annotation></semantics></math>.
+It is 0 exactly at the identity
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(1,0,0,0)</annotation></semantics></math>
+and largest, 4, at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>I</mi><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo>,</mo><mn>0</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-I=(-1,0,0,0)</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>Why can't a model be built with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><mi>G</mi><mi>L</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mi mathvariant="double-struck">ℝ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">G=GL(2,\mathbb R)</annotation></semantics></math>,
+all invertible real
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+matrices?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mi>L</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mi mathvariant="double-struck">ℝ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">GL(2,\mathbb R)</annotation></semantics></math>
+is not compact (matrices can be arbitrarily large), so it has no uniform
+probability distribution to build on, for the same reason as the
+exchange rates of chapter 0.</p>
+</details>
+<ol start="3">
+<li>Why does the label group of color need complex matrices, rather than
+real rotations of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℝ</mi><mn>3</mn></msup><annotation encoding="application/x-tex">\mathbb R^3</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Quarks and antiquarks carry different kinds of color. In
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℂ</mi><mn>3</mn></msup><annotation encoding="application/x-tex">\mathbb C^3</annotation></semantics></math>
+a reframing acts on an antiquark by the complex conjugate of the matrix
+that acts on a quark, and for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>
+that is genuinely different. With real rotations the two would transform
+identically, and two quarks could form an invariant, which is not
+seen.</p>
+</details>
+<ol start="4">
+<li>Color is never observed directly. How does that fit the framework of
+chapter 3?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Color is a convention at each point, so a color vector by itself is
+not an invariant. A model only knows averages of invariants, and
+experiments only ever see color-neutral combinations: the same
+statement, read physically.</p>
+</details>
+</div>
+<section id="62-from-faces-to-curvature" class="cell markdown">
+<h2>6.2 From faces to curvature</h2>
+<p>Physicists do not describe Yang–Mills theory with labels on edges.
+They use a <strong>gauge field</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>:
+at every point of space, in every direction
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>μ</mi><annotation encoding="application/x-tex">\mu</annotation></semantics></math>,
+a small "infinitesimal rotation"
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">A_\mu(x)\in\mathbb R^3</annotation></semantics></math>
+(for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>).
+Our labelings are the discrete version. Put the grid at spacing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+and set</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>→</mo><mi>x</mi><mo>+</mo><mi>ε</mi><msub><mi>e</mi><mi>μ</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>ε</mi><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>∈</mo><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo></mrow><annotation encoding="application/x-tex">
+U(x\to x+\varepsilon e_\mu)=\exp\big(\varepsilon A_\mu(x)\big)\in SU(2),
+</annotation></semantics></math></span></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo>:</mo><msup><mi mathvariant="double-struck">ℝ</mi><mn>3</mn></msup><mo>→</mo><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp:\mathbb R^3\to SU(2)</annotation></semantics></math>
+turns a small rotation vector into a group element
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>↦</mo><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo><mo>,</mo><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">sin</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo><mspace width="0.167em"></mspace><mi>v</mi><mi>/</mi><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">v\mapsto(\cos|v|,\ \sin|v|\,v/|v|)</annotation></semantics></math>
+in quaternions; the library's <code>SU2.exp</code>). The labels are then
+all close to the identity, and change slowly from edge to edge.</p>
+<p>What does our total cost become for such labels? Here is the answer
+first. It uses a field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">F_{\mu\nu}(x)\in\mathbb R^3</annotation></semantics></math>
+built from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+and its derivatives, the <em>curvature</em>, which Step 2 below
+constructs.</p>
+<blockquote>
+<p><strong>Fact 6.1 (faces become curvature).</strong> For slowly
+varying labels on a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>-dimensional
+grid of spacing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>,
+the total cost is
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>ε</mi><mrow><mn>4</mn><mo>−</mo><mi>d</mi></mrow></msup><mo>∫</mo><msub><mo>∑</mo><mrow><mi>μ</mi><mo>&lt;</mo><mi>ν</mi></mrow></msub><mo stretchy="false" form="prefix">|</mo><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mspace width="0.167em"></mspace><mi>d</mi><mi>x</mi><mspace width="0.222em"></mspace><mo>+</mo><mspace width="0.222em"></mspace><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>ε</mi><mrow><mn>6</mn><mo>−</mo><mi>d</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(U)=\varepsilon^{4-d}\displaystyle\int\sum_{\mu&lt;\nu}|F_{\mu\nu}(x)|^2\,dx\ +\ O(\varepsilon^{6-d})</annotation></semantics></math></span>.</p>
+</blockquote>
+<p>We derive it in three steps.</p>
+<h3 id="step-1-the-cost-of-a-label-close-to-the-identity">Step 1: the
+cost of a label close to the identity</h3>
+<p>For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(v)</annotation></semantics></math>
+has quaternion
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo><mo>,</mo><mspace width="0.222em"></mspace><mrow><mi mathvariant="normal">sin</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo><mspace width="0.167em"></mspace><mi>v</mi><mi>/</mi><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(\cos|v|,\ \sin|v|\,v/|v|)</annotation></semantics></math>
+and trace
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">2\cos|v|</annotation></semantics></math>.
+So the standard cost of a label near the identity is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mi>v</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>=</mo><mn>2</mn><mo>−</mo><mn>2</mn><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><mo stretchy="false" form="prefix">|</mo><mo>≈</mo><mo stretchy="false" form="prefix">|</mo><mi>v</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mspace width="2.0em"></mspace><mrow><mtext mathvariant="normal">for small </mtext><mspace width="0.333em"></mspace></mrow><mi>v</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\varphi\big(\exp v\big)=2-2\cos|v|\approx|v|^2\qquad\text{for small }v .
+</annotation></semantics></math></span></p>
+<p>The cost of a face whose product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(v)</annotation></semantics></math>
+is just the squared length of the rotation vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>.</p>
+<h3 id="step-2-the-face-product-of-slowly-varying-labels">Step 2: the
+face product of slowly varying labels</h3>
+<p>Walk around the face at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+in the plane of directions
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>,</mo><mi>ν</mi></mrow><annotation encoding="application/x-tex">\mu,\nu</annotation></semantics></math>.
+Its product is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>ε</mi><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>ε</mi><msub><mi>A</mi><mi>ν</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>+</mo><mi>ε</mi><msub><mi>e</mi><mi>μ</mi></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mo>−</mo><mi>ε</mi><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>+</mo><mi>ε</mi><msub><mi>e</mi><mi>ν</mi></msub><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mspace width="0.167em"></mspace><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mo>−</mo><mi>ε</mi><msub><mi>A</mi><mi>ν</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+U_f=\exp\big(\varepsilon A_\mu(x)\big)\,\exp\big(\varepsilon A_\nu(x+\varepsilon e_\mu)\big)\,\exp\big(-\varepsilon A_\mu(x+\varepsilon e_\nu)\big)\,\exp\big(-\varepsilon A_\nu(x)\big).
+</annotation></semantics></math></span></p>
+<p>Two separate effects make
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>U</mi><mi>f</mi></msub><annotation encoding="application/x-tex">U_f</annotation></semantics></math>
+differ from the identity.</p>
+<p><strong>(a) The field changes from edge to edge.</strong> If the
+labels commuted, multiplying exponentials would just add their vectors.
+The sum is
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><msub><mi>A</mi><mi>ν</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>+</mo><mi>ε</mi><msub><mi>e</mi><mi>μ</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>+</mo><mi>ε</mi><msub><mi>e</mi><mi>ν</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>−</mo><msub><mi>A</mi><mi>ν</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\varepsilon\big(A_\mu(x)+A_\nu(x+\varepsilon e_\mu)-A_\mu(x+\varepsilon e_\nu)-A_\nu(x)\big)</annotation></semantics></math></span>,
+and a first-order Taylor expansion turns it into</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>ε</mi><mn>2</mn></msup><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>∂</mi><mi>μ</mi></msub><msub><mi>A</mi><mi>ν</mi></msub><mo>−</mo><msub><mi>∂</mi><mi>ν</mi></msub><msub><mi>A</mi><mi>μ</mi></msub><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\varepsilon^2\big(\partial_\mu A_\nu-\partial_\nu A_\mu\big).
+</annotation></semantics></math></span></p>
+<p>This is the "circulation around a small square" from vector calculus,
+the curl.</p>
+<p><strong>(b) The labels don't commute.</strong> Even if the field is
+<em>constant</em>, with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>μ</mi></msub><mo>=</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">A_\mu=a</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>ν</mi></msub><mo>=</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">A_\nu=b</annotation></semantics></math>
+everywhere, the face product is
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mi>b</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mi>ε</mi><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mi>ε</mi><mi>b</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(\varepsilon a)\exp(\varepsilon b)\exp(-\varepsilon a)\exp(-\varepsilon b)</annotation></semantics></math></span>.
+For numbers this would be exactly 1. For rotations it is not. Let's
+measure it.</p>
+</section>
+<div class="cell code" data-execution_count="3">
+<pre class="python"><code>def qlog(q):
+    &quot;&quot;&quot;Inverse of SU2.exp: the rotation vector v in R^3 with exp(v) = q.&quot;&quot;&quot;
+    w, v = np.clip(q[..., 0], -1, 1), q[..., 1:]
+    n = np.linalg.norm(v, axis=-1, keepdims=True)
+    return np.arccos(w)[..., None] * v / np.where(n &gt; 0, n, 1)
+
+a_vec, b_vec = np.array([0.3, -0.5, 0.8]), np.array([0.6, 0.2, -0.4])
+print(&quot;2 a x b =&quot;, np.round(2 * np.cross(a_vec, b_vec), 4))
+for eps in [0.2, 0.1, 0.05, 0.025]:
+    ea, eb = G.exp(eps * a_vec), G.exp(eps * b_vec)
+    face = G.mul(G.mul(G.mul(ea, eb), G.inv(ea)), G.inv(eb))        # around one face, constant field
+    print(f&quot;eps = {eps:&lt;6} rotation vector of the face product / eps^2 = {np.round(qlog(face) / eps ** 2, 4)}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>2 a x b = [0.08 1.2  0.72]
+eps = 0.2    rotation vector of the face product / eps^2 = [-0.0585  1.044   0.9121]
+eps = 0.1    rotation vector of the face product / eps^2 = [0.0102 1.1295 0.8239]
+eps = 0.05   rotation vector of the face product / eps^2 = [0.0451 1.1669 0.7737]
+eps = 0.025  rotation vector of the face product / eps^2 = [0.0626 1.184  0.7472]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+shrinks, the face product's rotation vector divided by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\varepsilon^2</annotation></semantics></math>
+approaches
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mspace width="0.167em"></mspace><mi>a</mi><mo>×</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">2\,a\times b</annotation></semantics></math>,
+with an error that halves along with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>:</p>
+<blockquote>
+<p><strong>Fact 6.2 (small loops measure non-commutativity).</strong>
+For small rotation vectors,
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mi>b</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mi>ε</mi><mi>a</mi><mo stretchy="false" form="postfix">)</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mi>ε</mi><mi>b</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msup><mi>ε</mi><mn>2</mn></msup><mo stretchy="false" form="prefix">[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">]</mo><mo>+</mo><mi>O</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>ε</mi><mn>3</mn></msup><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(\varepsilon a)\exp(\varepsilon b)\exp(-\varepsilon a)\exp(-\varepsilon b)=\exp\big(\varepsilon^2[a,b]+O(\varepsilon^3)\big)</annotation></semantics></math></span>,
+where for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+the <strong>bracket</strong> is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">]</mo><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mi>a</mi><mo>×</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">[a,b]=2\,a\times b</annotation></semantics></math>.</p>
+</blockquote>
+<p>The space of small rotation vectors,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℝ</mi><mn>3</mn></msup><annotation encoding="application/x-tex">\mathbb R^3</annotation></semantics></math>
+here, together with this bracket is what mathematicians call the
+<strong>Lie algebra</strong> of the group. The bracket is the
+infinitesimal shadow of non-commutativity. It vanishes for the circle,
+where every two labels commute. (The general tool behind Fact 6.2 is the
+Baker–Campbell–Hausdorff formula.)</p>
+<p>To order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\varepsilon^2</annotation></semantics></math>
+the two effects simply add: the bracket in (b) is already of order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\varepsilon^2</annotation></semantics></math>,
+so evaluating the field at the face's corner
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+instead of at each edge changes it only at order
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mn>3</mn></msup><annotation encoding="application/x-tex">\varepsilon^3</annotation></semantics></math>.
+So the face product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msup><mi>ε</mi><mn>2</mn></msup><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp\big(\varepsilon^2F_{\mu\nu}(x)\big)</annotation></semantics></math>
+up to smaller terms, where</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo>=</mo><msub><mi>∂</mi><mi>μ</mi></msub><msub><mi>A</mi><mi>ν</mi></msub><mo>−</mo><msub><mi>∂</mi><mi>ν</mi></msub><msub><mi>A</mi><mi>μ</mi></msub><mo>+</mo><mn>2</mn><mspace width="0.167em"></mspace><msub><mi>A</mi><mi>μ</mi></msub><mo>×</mo><msub><mi>A</mi><mi>ν</mi></msub><mspace width="0.222em"></mspace><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mn>3</mn></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+F_{\mu\nu}=\partial_\mu A_\nu-\partial_\nu A_\mu+2\,A_\mu\times A_\nu\ \in\mathbb R^3 .
+</annotation></semantics></math></span></p>
+<p>The first two terms are effect (a); the cross product is effect (b),
+and it exists <strong>only because the labels don't commute</strong>.
+Physicists call
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+the <em>curvature</em> or <em>field strength</em>.</p>
+<h3 id="step-3-add-up-the-faces">Step 3: add up the faces</h3>
+<p>By Step 1, each face costs about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msup><mi>ε</mi><mn>2</mn></msup><mi>F</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mo>=</mo><msup><mi>ε</mi><mn>4</mn></msup><mo stretchy="false" form="prefix">|</mo><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">|\varepsilon^2F|^2=\varepsilon^4|F_{\mu\nu}(x)|^2</annotation></semantics></math>.
+A
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>d</mi><annotation encoding="application/x-tex">d</annotation></semantics></math>-dimensional
+region of unit volume contains about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mrow><mi>−</mi><mi>d</mi></mrow></msup><annotation encoding="application/x-tex">\varepsilon^{-d}</annotation></semantics></math>
+grid vertices, and one face per vertex in each plane
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>μ</mi><mo>&lt;</mo><mi>ν</mi></mrow><annotation encoding="application/x-tex">\mu&lt;\nu</annotation></semantics></math>.
+So summing over faces is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mrow><mi>−</mi><mi>d</mi></mrow></msup><annotation encoding="application/x-tex">\varepsilon^{-d}</annotation></semantics></math>
+times integrating:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><munder><mo>∑</mo><mi>x</mi></munder><munder><mo>∑</mo><mrow><mi>μ</mi><mo>&lt;</mo><mi>ν</mi></mrow></munder><msup><mi>ε</mi><mn>4</mn></msup><mo stretchy="false" form="prefix">|</mo><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mo>≈</mo><msup><mi>ε</mi><mrow><mn>4</mn><mo>−</mo><mi>d</mi></mrow></msup><mo>∫</mo><munder><mo>∑</mo><mrow><mi>μ</mi><mo>&lt;</mo><mi>ν</mi></mrow></munder><mo stretchy="false" form="prefix">|</mo><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mspace width="0.167em"></mspace><mi>d</mi><mi>x</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+S(U)\approx\sum_{x}\sum_{\mu&lt;\nu}\varepsilon^4|F_{\mu\nu}(x)|^2\approx\varepsilon^{4-d}\int\sum_{\mu&lt;\nu}|F_{\mu\nu}(x)|^2\,dx .
+</annotation></semantics></math></span></p>
+<p>This is Fact 6.1. The integral is the <strong>Yang–Mills
+energy</strong> (physicists: the Yang–Mills action). Let's verify Fact
+6.1 in two dimensions, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>≈</mo><msup><mi>ε</mi><mn>2</mn></msup><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><msub><mi>F</mi><mn>12</mn></msub><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">S\approx\varepsilon^{2}\int|F_{12}|^2</annotation></semantics></math>,
+using a smooth field of our choosing.</p>
+</div>
+<div class="cell code" data-execution_count="4">
+<pre class="python"><code>def A_field(x, y):
+    &quot;&quot;&quot;A smooth SU(2) gauge field on the unit square: two R^3-valued functions.&quot;&quot;&quot;
+    a1 = np.stack([np.sin(2 * np.pi * y), 0.5 * np.cos(2 * np.pi * x), 0 * x], -1)
+    a2 = np.stack([0 * x, np.sin(2 * np.pi * x) * np.cos(2 * np.pi * y), 0.7 + 0 * x], -1)
+    return a1, a2
+
+def curvature(x, y, with_cross=True, h=1e-5):
+    a1, a2 = A_field(x, y)
+    d1a2 = (A_field(x + h, y)[1] - A_field(x - h, y)[1]) / (2 * h)
+    d2a1 = (A_field(x, y + h)[0] - A_field(x, y - h)[0]) / (2 * h)
+    return d1a2 - d2a1 + (2 * np.cross(a1, a2) if with_cross else 0)</code></pre>
+</div>
+<div class="cell code" data-execution_count="5">
+<pre class="python"><code>def smooth_labeling(n):
+    &quot;&quot;&quot;The labeling U(x -&gt; x + eps e_mu) = exp(eps A_mu(x)) on an n x n torus, eps = 1/n.&quot;&quot;&quot;
+    B = Board.grid(n, n, periodic=True)
+    U = np.empty((B.n_edges, 4))
+    for (v, mu), e in B.meta[&quot;edge_index&quot;].items():
+        x, y = np.array(B.meta[&quot;coord&quot;][v]) / n
+        U[e] = G.exp(A_field(np.array(x), np.array(y))[mu] / n)
+    return B, U
+
+xs = (np.arange(1000) + 0.5) / 1000
+X, Y = np.meshgrid(xs, xs, indexing=&quot;ij&quot;)
+YM = np.mean(np.sum(curvature(X, Y) ** 2, -1))
+YM_no_cross = np.mean(np.sum(curvature(X, Y, with_cross=False) ** 2, -1))
+print(f&quot;Yang-Mills energy: {YM:.3f}    (if labels commuted, it would be {YM_no_cross:.3f})&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>Yang-Mills energy: 31.084    (if labels commuted, it would be 29.609)
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="6">
+<pre class="python"><code>ns = [8, 16, 32, 64, 128]
+ratios = []
+for n in ns:
+    B, U = smooth_labeling(n)
+    S = np.sum(2 - G.chi(face_products(G, B, U)))
+    ratios.append(S * n ** 2 / YM)                       # S / eps^2, relative to the integral
+    print(f&quot;grid {n:&gt;3}x{n:&lt;3}  total cost / eps^2 = {S * n**2:8.4f}   ratio to integral = {ratios[-1]:.4f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>grid   8x8    total cost / eps^2 =  29.0928   ratio to integral = 0.9359
+grid  16x16   total cost / eps^2 =  30.5790   ratio to integral = 0.9838
+</code></pre>
+</div>
+<div class="output stream stdout">
+<pre><code>grid  32x32   total cost / eps^2 =  30.9572   ratio to integral = 0.9959
+</code></pre>
+</div>
+<div class="output stream stdout">
+<pre><code>grid  64x64   total cost / eps^2 =  31.0521   ratio to integral = 0.9990
+</code></pre>
+</div>
+<div class="output stream stdout">
+<pre><code>grid 128x128  total cost / eps^2 =  31.0759   ratio to integral = 0.9997
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="7">
+<pre class="python"><code>B, U = smooth_labeling(16)
+fc = 2 - G.chi(face_products(G, B, U))
+anch = [np.array(a[0]) / 16 + 0.5 / 16 for a in B.meta[&quot;face_anchor&quot;]]
+Fc = np.array([np.sum(curvature(np.array(p[0]), np.array(p[1])) ** 2) for p in anch]) / 16 ** 4
+fig, axs = plt.subplots(1, 3, figsize=(14, 4.2), layout=&quot;constrained&quot;)
+norm = plt.Normalize(0, max(fc.max(), Fc.max()))
+viz.draw_board(axs[0], B, face_values=fc, face_cmap=&quot;magma_r&quot;, face_norm=norm, show_arrows=False,
+               vertex_size=4, title=&quot;face costs of the labeling (16×16)&quot;)
+viz.draw_board(axs[1], B, face_values=Fc, face_cmap=&quot;magma_r&quot;, face_norm=norm, show_arrows=False,
+               vertex_size=4, title=r&quot;$\varepsilon^4|F_{12}|^2$ at each face centre&quot;)
+axs[2].loglog([1 / n for n in ns], np.abs(1 - np.array(ratios)), &quot;o-&quot;, color=viz.TEAL)
+axs[2].loglog([1 / n for n in ns], 4 * np.array([1 / n for n in ns]) ** 2, &quot;--&quot;, color=viz.MUTED, label=r&quot;slope 2: error $\propto\varepsilon^2$&quot;)
+axs[2].set(xlabel=r&quot;grid spacing $\varepsilon$&quot;, ylabel=&quot;relative error of Fact 6.1&quot;, title=&quot;convergence&quot;)
+axs[2].legend()
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch06-media/fig1.png"><img src="ch06-media/fig1.png" width="1499" height="474" loading="lazy" alt="Three panels. Left and middle: two nearly identical 16 by 16 heat maps, the face costs of a labeling and the curvature at each face centre, with the same pattern of dark bands. Right: on log-log axes the relative error falls along a line of slope 2 as the grid spacing shrinks."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>The left two panels are the same picture: the cost of each face
+<em>is</em> the local curvature, face by face. On the right, the
+relative error falls by a factor of 4 each time the grid is refined by
+2, so it shrinks like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\varepsilon^2</annotation></semantics></math>.
+And the limit is the integral <em>with</em> the cross term: the
+non-commutativity of the labels is not a detail, it is visible in the
+total cost.</p>
+<p>The rest of the physicists' dictionary follows the same pattern:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Our term</th>
+<th>Continuum Yang–Mills</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>labeling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>,
+labels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(\varepsilon A_\mu)</annotation></semantics></math></td>
+<td>gauge field (connection)
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(x)=\exp(\lambda(x))</annotation></semantics></math></td>
+<td>gauge transformation</td>
+</tr>
+<tr>
+<td>face product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>≈</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>ε</mi><mn>2</mn></msup><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U_f\approx\exp(\varepsilon^2F_{\mu\nu})</annotation></semantics></math></td>
+<td>curvature, field strength
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>total cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math></td>
+<td>Yang–Mills action
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><msup><mo stretchy="false" form="postfix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\int\lvert F\rvert^2</annotation></semantics></math>
+(times
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mrow><mn>4</mn><mo>−</mo><mi>d</mi></mrow></msup><annotation encoding="application/x-tex">\varepsilon^{4-d}</annotation></semantics></math>)</td>
+</tr>
+<tr>
+<td>loop observable
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\chi(U(\gamma))</annotation></semantics></math></td>
+<td>Wilson loop
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mi mathvariant="script">𝒫</mi><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><msub><mo>∮</mo><mi>γ</mi></msub><mi>A</mi></mrow><annotation encoding="application/x-tex">\operatorname{tr}\mathcal P\exp\oint_\gamma A</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\mu_\beta\propto e^{-\beta S}</annotation></semantics></math></td>
+<td>the Euclidean path integral
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><msub><mi>S</mi><mtext mathvariant="normal">YM</mtext></msub><mi>/</mi><msup><mi>g</mi><mn>2</mn></msup></mrow></msup><mspace width="0.167em"></mspace><mi mathvariant="script">𝒟</mi><mi>A</mi></mrow><annotation encoding="application/x-tex">e^{-S_{\text{YM}}/g^2}\,\mathcal DA</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<h3 id="why-this-face-cost">Why this face cost?</h3>
+<p>The standard face cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>N</mi><mo>−</mo><mrow><mi mathvariant="normal">Re</mi><mo>&#8289;</mo></mrow><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mi>x</mi></mrow><annotation encoding="application/x-tex">\varphi(x)=N-\operatorname{Re}\operatorname{tr}x</annotation></semantics></math>
+can look arbitrary. It isn't. Here are the requirements it meets, each
+one forced by something earlier in the course:</p>
+<ol>
+<li><strong>Reframing-invariant.</strong> A model must not depend on
+conventions (chapter 2). The cost has to be an invariant, and the most
+local building blocks are face products. (Locality is what makes
+sampling cheap in chapter 4 and gives the transfer matrix of chapter 5;
+costs that couple distant faces lose both.)</li>
+<li><strong>A class function.</strong> Reframing changes a face product
+by conjugation,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>↦</mo><mi>h</mi><mspace width="0.167em"></mspace><msub><mi>U</mi><mi>f</mi></msub><mspace width="0.167em"></mspace><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U_f\mapsto h\,U_f\,h^{-1}</annotation></semantics></math>
+(chapter 1). So
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>
+must satisfy
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>h</mi><mi>x</mi><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\varphi(hxh^{-1})=\varphi(x)</annotation></semantics></math>.
+For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+this means
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>
+depends only on the rotation <em>angle</em> of the face product, not on
+its axis. The trace is the simplest class function there is.</li>
+<li><strong>Smallest at the identity, and only there.</strong> Calm
+faces should be preferred, so consistent labelings are the most
+likely.</li>
+<li><strong>The right behavior near the identity.</strong> Step 1 of
+section 6.2 used
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><mo stretchy="false" form="prefix">|</mo><mi>v</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\varphi(\exp v)\approx|v|^2</annotation></semantics></math>.
+That is what makes the total cost become the Yang–Mills energy.</li>
+<li><strong>Flip-positive.</strong> Its weight
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>φ</mi></mrow></msup><annotation encoding="application/x-tex">e^{-\beta\varphi}</annotation></semantics></math>
+expands in characters with nonnegative coefficients (chapter 5, section
+5.6), so the derived system exists.</li>
+</ol>
+<p>Requirement 4 hides the deepest point: <strong>only the bottom of the
+bowl matters.</strong> For smooth labelings, every face product is near
+the identity, and there any cost meeting requirements 2–4 looks like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">|v|^2</annotation></semantics></math>.
+Far from the identity, different costs disagree, but the continuum limit
+is believed not to care. The picture below compares candidates for the
+circle group, where a face product is an angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>.</p>
+</div>
+<div class="cell code" data-execution_count="8">
+<pre class="python"><code>th = np.linspace(-np.pi, np.pi, 400)
+n_hk = np.arange(-20, 21)
+heat = np.exp(-n_hk ** 2 / 2) @ np.cos(np.outer(n_hk, th))           # heat kernel on the circle at time 1
+costs = {r&quot;standard: $1-\cos\theta$&quot;: 1 - np.cos(th),
+         r&quot;quadratic: $\theta^2/2$&quot;: th ** 2 / 2,
+         r&quot;heat kernel: $-\log K(\theta)/K(0)$&quot;: -np.log(heat / heat.max()),
+         r&quot;bad: $\frac{1}{4}(1-\cos 2\theta)$&quot;: (1 - np.cos(2 * th)) / 4}
+fig, ax = plt.subplots(figsize=(8, 4))
+ax.axvspan(-0.5, 0.5, color=viz.PALE, zorder=0)
+for (lab, c), col in zip(costs.items(), [viz.INK, viz.TEAL, viz.GOLD, viz.CORAL]):
+    ax.plot(th, c, color=col, lw=2.5 if &quot;quadratic&quot; in lab else 2,
+            ls=&quot;--&quot; if &quot;bad&quot; in lab else &quot;:&quot; if &quot;quadratic&quot; in lab else &quot;-&quot;, label=lab, zorder=3 if &quot;quadratic&quot; in lab else 2)
+ax.text(0, 2.6, &quot;smooth labelings\nlive here&quot;, ha=&quot;center&quot;, fontsize=9, color=viz.MUTED)
+ax.set(xlabel=r&quot;face product angle $\theta$&quot;, ylabel=r&quot;cost $\varphi$&quot;, ylim=(0, 3.2))
+ax.legend(fontsize=9, loc=&quot;upper right&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch06-media/fig2.png"><img src="ch06-media/fig2.png" width="764" height="411" loading="lazy" alt="Four face costs for the circle against the face product angle from minus pi to pi: the standard cost 1 minus cos theta, a quadratic, a heat-kernel cost and a dashed bad cost that also vanishes at plus and minus pi. In the shaded region near 0 where smooth labelings live, the first three coincide."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>In the shaded region near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\theta=0</annotation></semantics></math>
+the first three costs are indistinguishable: all are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><msup><mi>θ</mi><mn>2</mn></msup><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">\approx\theta^2/2</annotation></semantics></math>.
+(The quadratic and heat-kernel costs stay close over the whole range
+shown; the standard cost bends away beyond about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>θ</mi><mo stretchy="false" form="prefix">|</mo><mo>≈</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">|\theta|\approx1</annotation></semantics></math>.)
+They differ far from the identity, where smooth labelings never go. The
+dashed coral cost also matches near 0, but it fails requirement 3: it
+has a second minimum at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><mi>±</mi><mi>π</mi></mrow><annotation encoding="application/x-tex">\theta=\pm\pi</annotation></semantics></math>,
+so it would also reward faces whose product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>,
+and it describes a different theory.</p>
+<p>Physicists have a name for "only the bottom of the bowl matters":
+<strong>universality</strong>. All costs that agree near the identity,
+and meet the other requirements, are believed to give the same continuum
+limit; they differ only in how fast the grid approaches it. Each variant
+has its uses:</p>
+<ul>
+<li>the <strong>heat-kernel</strong> cost makes the 2D model exactly
+unchanged when a face is subdivided, so in 2D every grid already gives
+the continuum answer;</li>
+<li><strong>improved</strong> costs add small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">1\times2</annotation></semantics></math>
+rectangles with tuned weights, which cancels the leading
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>ε</mi><mn>2</mn></msup><annotation encoding="application/x-tex">\varepsilon^2</annotation></semantics></math>
+error of Fact 6.1, so coarser grids already look continuous;</li>
+<li>the <strong>standard</strong> cost, introduced by Kenneth Wilson in
+1974, is the simplest, and it is what we have used.</li>
+</ul>
+<p>Why is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\int|F|^2</annotation></semantics></math>
+itself the right continuum energy? Run the same requirements on
+continuum expressions. The energy must be built from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+(and its derivatives), because
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+itself carries the conventions. It must be unchanged by reframings,
+local, and unchanged by rotations of space. Among such expressions,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\int|F|^2</annotation></semantics></math>
+is the simplest one. In 4D it is also the only one whose stiffness is a
+pure number (section 6.3); every more complicated expression, such as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>4</mn></msup></mrow><annotation encoding="application/x-tex">\int|F|^4</annotation></semantics></math>,
+gets suppressed by extra powers of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+as the grid is refined. (There is one exception: a "topological" term,
+called the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>-term,
+whose value does not change under small changes of the field. It is
+outside this course.)</p>
+<blockquote>
+<p><strong>Recap.</strong> For slowly varying labels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mi>A</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(\varepsilon A)</annotation></semantics></math>,
+a face costs about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>v</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">|v|^2</annotation></semantics></math>
+when its product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(v)</annotation></semantics></math>,
+and face products become
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>ε</mi><mn>2</mn></msup><mi>F</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\exp(\varepsilon^2F)</annotation></semantics></math>,
+so the total cost becomes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>ε</mi><mrow><mn>4</mn><mo>−</mo><mi>d</mi></mrow></msup><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\varepsilon^{4-d}\int|F|^2</annotation></semantics></math>,
+the Yang–Mills energy (verified, error
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∝</mo><msup><mi>ε</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\propto\varepsilon^2</annotation></semantics></math>).
+The cross term in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+is the bracket of Fact 6.2: it exists because the labels don't commute.
+The standard cost is the simplest one meeting the requirements
+(invariant, class function, minimum only at the identity,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mo stretchy="false" form="prefix">|</mo><mi>v</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\approx|v|^2</annotation></semantics></math>
+nearby, flip-positive); by universality, other such costs give the same
+continuum limit.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>For the circle group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>,
+what is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>F</mi><mrow><mi>μ</mi><mi>ν</mi></mrow></msub><annotation encoding="application/x-tex">F_{\mu\nu}</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>∂</mi><mi>μ</mi></msub><msub><mi>A</mi><mi>ν</mi></msub><mo>−</mo><msub><mi>∂</mi><mi>ν</mi></msub><msub><mi>A</mi><mi>μ</mi></msub></mrow><annotation encoding="application/x-tex">\partial_\mu A_\nu-\partial_\nu A_\mu</annotation></semantics></math>,
+with no cross term, because angles commute. This is the electromagnetic
+field:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+Yang–Mills is Maxwell's theory of light.</p>
+</details>
+<ol start="2">
+<li>Fact 6.1 is about <em>smooth</em> labelings. Are typical samples
+from the model smooth?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. Typical samples are rough at every scale (chapter 4's pictures at
+moderate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+are full of defects). Fact 6.1 explains why the <em>cost function</em>
+is the right one, not what typical samples look like. That gap is
+exactly where the difficulty of the Millennium problem lives.</p>
+</details>
+</div>
+<section id="63-why-four-dimensions-is-special" class="cell markdown">
+<h2>6.3 Why four dimensions is special</h2>
+<p>Look at the power of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+in Fact 6.1. The model's weight is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup><mo>≈</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mo>−</mo><mi>β</mi><mspace width="0.167em"></mspace><msup><mi>ε</mi><mrow><mn>4</mn><mo>−</mo><mi>d</mi></mrow></msup><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+e^{-\beta S}\approx\exp\Big(-\beta\,\varepsilon^{4-d}\int|F|^2\Big).
+</annotation></semantics></math></span></p>
+<p>To describe a fixed continuous picture as the grid is refined, the
+combination
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mspace width="0.167em"></mspace><msup><mi>ε</mi><mrow><mn>4</mn><mo>−</mo><mi>d</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\beta\,\varepsilon^{4-d}</annotation></semantics></math>
+should stay fixed. In
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">d=2</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>3</mn><annotation encoding="application/x-tex">3</annotation></semantics></math>
+that means
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+grows as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\varepsilon\to0</annotation></semantics></math>
+in a definite way. But <strong>in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">d=4</annotation></semantics></math>
+the spacing cancels</strong>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+is a pure number, and nothing in the formula says how big anything is.
+Classically, four-dimensional Yang–Mills has no built-in length scale. A
+theory with no length scale cannot have a mass gap: there is no length
+to set the size of a lightest particle.</p>
+<p>Yet the model on the grid <em>does</em> have a length: its
+correlation length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\xi(\beta)</annotation></semantics></math>,
+measured in grid steps (chapter 5's inverse gap). The resolution is that
+the naive scaling is wrong. The randomness of the labels at short
+distances changes how
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+must be tuned. The physicists' computation, done by hand in 1973 by
+Gross, Wilczek and Politzer, says that to keep the physics fixed while
+refining, the stiffness must <strong>grow</strong>, slowly:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>≈</mo><mfrac><mn>1</mn><mi mathvariant="normal">Λ</mi></mfrac><mspace width="0.167em"></mspace><msup><mi>e</mi><mrow><mi>−</mi><mn>6</mn><msup><mi>π</mi><mn>2</mn></msup><mi>β</mi><mi>/</mi><mn>11</mn></mrow></msup><mspace width="2.0em"></mspace><mo stretchy="false" form="prefix">(</mo><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="0.222em"></mspace><mrow><mtext mathvariant="normal">our </mtext><mspace width="0.333em"></mspace></mrow><mi>β</mi><mo>,</mo><mspace width="0.222em"></mspace><mtext mathvariant="normal">leading order</mtext><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\varepsilon\approx\frac{1}{\Lambda}\,e^{-6\pi^2\beta/11}\qquad(SU(2),\ \text{our }\beta,\ \text{leading order}).
+</annotation></semantics></math></span></p>
+<p>Here
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi mathvariant="normal">Λ</mi></mrow><annotation encoding="application/x-tex">1/\Lambda</annotation></semantics></math>
+is a length scale that the theory <em>creates</em>: it is not in the
+definition. This is <strong>asymptotic freedom</strong>: as the grid
+gets finer the stiffness goes to infinity, so on short scales the labels
+are nearly consistent. The number
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>11</mn><annotation encoding="application/x-tex">11</annotation></semantics></math>
+comes from counting how the non-commuting labels interact, which is the
+cross term in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+(Fact 6.2) at work. Equivalently, the area-law rate per face (the rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>c</mi><annotation encoding="application/x-tex">c</annotation></semantics></math>
+in chapter 3's decay
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><mi>W</mi><mo stretchy="false" form="postfix">⟩</mo><mo>≈</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>c</mi><mo>⋅</mo><mtext mathvariant="normal">area</mtext></mrow></msup></mrow><annotation encoding="application/x-tex">\langle W\rangle\approx e^{-c\cdot\text{area}}</annotation></semantics></math>;
+physicists call it the "string tension" in grid units) should fall like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mn>12</mn><msup><mi>π</mi><mn>2</mn></msup><mi>β</mi><mi>/</mi><mn>11</mn></mrow></msup><annotation encoding="application/x-tex">e^{-12\pi^2\beta/11}</annotation></semantics></math>.</p>
+<h3 id="what-running-means-concretely">What "running" means,
+concretely</h3>
+<p>The phrase "the stiffness must grow" is easy to say and hard to
+picture. Here it is step by step.</p>
+<ol>
+<li><strong>Pick something physical to hold fixed.</strong> For example,
+the correlation length: how far apart two faces must be before their
+behaviors become (nearly) independent. Measure it in <em>physical</em>
+units, say
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mtext mathvariant="normal">phys</mtext></msub><annotation encoding="application/x-tex">L_{\text{phys}}</annotation></semantics></math>.</li>
+<li><strong>On the grid, the model measures it in grid steps.</strong>
+The model at stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+has some correlation length
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\xi(\beta)</annotation></semantics></math>
+in grid steps, the inverse of chapter 5's gap. In physical units that is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mspace width="0.167em"></mspace><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\varepsilon\,\xi(\beta)</annotation></semantics></math>.</li>
+<li><strong>Refine the grid without changing the physics.</strong>
+Keeping
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mspace width="0.167em"></mspace><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>L</mi><mtext mathvariant="normal">phys</mtext></msub></mrow><annotation encoding="application/x-tex">\varepsilon\,\xi(\beta)=L_{\text{phys}}</annotation></semantics></math>
+while
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\varepsilon\to0</annotation></semantics></math>
+forces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>L</mi><mtext mathvariant="normal">phys</mtext></msub><mi>/</mi><mi>ε</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\xi(\beta)=L_{\text{phys}}/\varepsilon\to\infty</annotation></semantics></math>.
+The model must be tuned to stiffer and stiffer values, where its
+correlations reach across more and more grid steps.</li>
+<li><strong>How fast?</strong> Asymptotic freedom says
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\xi(\beta)</annotation></semantics></math>
+grows exponentially with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
+like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mn>6</mn><msup><mi>π</mi><mn>2</mn></msup><mi>β</mi><mi>/</mi><mn>11</mn></mrow></msup><annotation encoding="application/x-tex">e^{6\pi^2\beta/11}</annotation></semantics></math>.
+So refining by a factor 2 costs only an additive
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>β</mi><mo>≈</mo><mn>0.13</mn></mrow><annotation encoding="application/x-tex">\Delta\beta\approx0.13</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta(\varepsilon)</annotation></semantics></math>
+grows like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mn>11</mn><mrow><mn>6</mn><msup><mi>π</mi><mn>2</mn></msup></mrow></mfrac><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mi>/</mi><mi>ε</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\frac{11}{6\pi^2}\ln(1/\varepsilon)</annotation></semantics></math>:
+logarithmically slowly.</li>
+</ol>
+<p><strong>Why must
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+grow, rather than shrink?</strong> Here is a heuristic picture, not a
+proof; the direction of the effect is the <em>output</em> of the 1973
+calculation, not something you can see without it. Imagine viewing a
+fine grid from twice as far away, by combining the labels of each
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+block of faces into "coarse" labels. For non-commuting groups the random
+wiggles of the fine labels interact with each other, through the cross
+term of Fact 6.2, and their net effect is to make the coarse labels
+rougher than the fine ones: the coarse grid behaves like a model with a
+<em>smaller</em> stiffness. So to make the coarse picture match a given
+target, the fine grid must start stiffer. Physicists call this
+<em>anti-screening</em>, and counting the contributions is the
+calculation that produced the 11.</p>
+<p>The direction depends on the group. For the circle alone, the wiggles
+at different scales do not interact (at large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+in 4D the model is nearly Gaussian) and the stiffness does not run at
+all. In real electromagnetism, pairs of charged particles make it run
+the <em>other</em> way: the effective stiffness grows at long distances,
+and electric charge looks weaker from far away (physicists call this
+<em>screening</em>).</p>
+<p>The experimental signature: at very short distances, which means at
+very high energies, quarks inside a proton behave as if they were almost
+free. This was seen in electron–proton collisions at the Stanford Linear
+Accelerator Center (SLAC) from 1968 onward ("deep inelastic scattering",
+Nobel Prize 1990 for Friedman, Kendall and Taylor), before the theory
+explained it. Gross, Wilczek and Politzer received the 2004 Nobel Prize
+for the explanation.</p>
+<blockquote>
+<p><strong>Recap.</strong> In 4D the total cost of a smooth labeling
+does not depend on the spacing, so classically there is no length scale.
+Asymptotic freedom says the stiffness must grow logarithmically as the
+grid is refined, and a length scale
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi mathvariant="normal">Λ</mi></mrow><annotation encoding="application/x-tex">1/\Lambda</annotation></semantics></math>
+appears from the randomness itself.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Halving the grid spacing at fixed physics: by how much must
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+grow (leading order,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>)?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>From
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>6</mn><msup><mi>π</mi><mn>2</mn></msup><mi>β</mi><mi>/</mi><mn>11</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\varepsilon\propto e^{-6\pi^2\beta/11}</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mi>β</mi><mo>=</mo><mfrac><mn>11</mn><mrow><mn>6</mn><msup><mi>π</mi><mn>2</mn></msup></mrow></mfrac><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mn>2</mn><mo>≈</mo><mn>0.13</mn></mrow><annotation encoding="application/x-tex">\Delta\beta=\frac{11}{6\pi^2}\ln2\approx0.13</annotation></semantics></math>.
+Every halving costs the same small additive step, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>
+only logarithmically.</p>
+</details>
+<ol start="2">
+<li>In 2D, how must
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+scale with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+to keep
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><msup><mi>ε</mi><mrow><mn>4</mn><mo>−</mo><mi>d</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\beta\varepsilon^{4-d}</annotation></semantics></math>
+fixed?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><msup><mi>ε</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\beta\varepsilon^2</annotation></semantics></math>
+fixed, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>∝</mo><msup><mi>ε</mi><mrow><mi>−</mi><mn>2</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\beta\propto\varepsilon^{-2}</annotation></semantics></math>:
+it grows like the number of faces per unit area.</p>
+</details>
+</section>
+<section id="64-what-the-computer-says" class="cell markdown">
+<h2>6.4 What the computer says</h2>
+<p>In 1979–80 Michael Creutz ran exactly the experiment of chapter 4 on
+4D
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+with a machine slower than your phone. Two findings convinced physicists
+that lattice Yang–Mills is the right object.</p>
+<p><strong>Finding 1: no jump.</strong> Recall the 4D coin model:
+sweeping
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+up and down gave a hysteresis loop, an abrupt change between two
+behaviors. If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+had such a jump, the region of small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+(where the area law is <em>proven</em>, see below) would be cut off from
+the region of large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+(where the continuum lives), and lattice results would say nothing about
+the continuum. Let's look.</p>
+</section>
+<div class="cell code" data-execution_count="9">
+<pre class="python"><code>def scan(dims, G_, betas, equil, measure, rng):
+    M = GridModel(dims, G_, betas[0]).hot_start(rng)
+    out = {}
+    for name, bs in [(&quot;up&quot;, betas), (&quot;down&quot;, betas[::-1])]:
+        vals = []
+        for b in bs:
+            M.beta = b
+            M.sweep(rng, equil)
+            vals.append(np.mean([(M.sweep(rng), M.mean_face())[1] for _ in range(measure)]))
+        out[name] = np.array(vals if name == &quot;up&quot; else vals[::-1])
+    return out
+
+b_su2 = np.linspace(0.5, 1.6, 12)
+su2 = scan((6, 6, 6, 6), G, b_su2, equil=40, measure=15, rng=rng)
+b_z2 = np.linspace(0.38, 0.50, 13)
+z2 = scan((6, 6, 6, 6), Z2(), b_z2, equil=60, measure=20, rng=rng)</code></pre>
+</div>
+<div class="cell code" data-execution_count="10">
+<pre class="python"><code>fig, axs = plt.subplots(1, 2, figsize=(11, 3.8))
+for ax, bs, res, title in [(axs[0], b_z2, z2, r&quot;4D coin model ($\mathbb{Z}_2$)&quot;),
+                           (axs[1], b_su2, su2, r&quot;4D $SU(2)$ (lattice Yang–Mills)&quot;)]:
+    ax.plot(bs, res[&quot;up&quot;], &quot;o-&quot;, color=viz.TEAL, label=r&quot;$\beta$ going up&quot;)
+    ax.plot(bs, res[&quot;down&quot;], &quot;s--&quot;, color=viz.CORAL, mfc=&quot;none&quot;, label=r&quot;$\beta$ going down&quot;)
+    ax.set(title=title, xlabel=r&quot;stiffness $\beta$&quot;, ylabel=&quot;mean face&quot;)
+    ax.legend(loc=&quot;lower right&quot;, fontsize=9)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch06-media/fig3.png"><img src="ch06-media/fig3.png" width="1020" height="417" loading="lazy" alt="Mean face against stiffness, swept up and down. Left: the 4D coin model, where the passes disagree and form a jump near 0.44. Right: 4D SU(2), where the two passes lie on top of each other along a smooth rise."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Left: the jump of chapter 4. Right:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+rises smoothly, and the two passes lie on top of each other. (Sanity
+check against the literature: at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>1.2</mn></mrow><annotation encoding="application/x-tex">\beta=1.2</annotation></semantics></math>,
+physicists'
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mtext mathvariant="normal">phys</mtext></msub><mo>=</mo><mn>2.4</mn></mrow><annotation encoding="application/x-tex">\beta_{\text{phys}}=2.4</annotation></semantics></math>,
+the published mean face is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0.630</mn><annotation encoding="application/x-tex">0.630</annotation></semantics></math>.)</p>
+<p><strong>Finding 2: from strong coupling (physicists' name for small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>)
+to asymptotic freedom.</strong> Measure the area-law rate. A clean way
+to extract it from small loops is the <strong>Creutz ratio</strong></p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mfrac><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>2</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow></mfrac><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\chi(2,2)=-\ln\frac{W(2,2)\,W(1,1)}{W(1,2)^2},
+</annotation></semantics></math></span></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo>,</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W(R,T)</annotation></semantics></math>
+is the average loop observable
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">⟩</mo><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">\langle\operatorname{tr}U(\gamma)\rangle/2</annotation></semantics></math>
+of an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>R</mi><mo>×</mo><mi>T</mi></mrow><annotation encoding="application/x-tex">R\times T</annotation></semantics></math>
+rectangle. If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo>,</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>c</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo>+</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>σ</mi><mi>R</mi><mi>T</mi></mrow></msup></mrow><annotation encoding="application/x-tex">W(R,T)\approx e^{-c\,(R+T)-\sigma RT}</annotation></semantics></math>
+(a perimeter part and an area part), the perimeter parts cancel in the
+ratio and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi></mrow><annotation encoding="application/x-tex">\chi(2,2)=\sigma</annotation></semantics></math>.
+We know two limits:</p>
+<ul>
+<li><strong>small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>:</strong>
+faces are nearly independent, as in 2D (chapter 3), so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo>,</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>≈</mo><msup><mi>u</mi><mrow><mi>R</mi><mi>T</mi></mrow></msup></mrow><annotation encoding="application/x-tex">W(R,T)\approx u^{RT}</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>=</mo><msub><mi>I</mi><mn>2</mn></msub><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><msub><mi>I</mi><mn>1</mn></msub><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">u=I_2(2\beta)/I_1(2\beta)</annotation></semantics></math>
+(a ratio of Bessel functions, exact for one
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+face), giving
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mi>u</mi></mrow><annotation encoding="application/x-tex">\chi=-\ln u</annotation></semantics></math>;</li>
+<li><strong>large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>:</strong>
+asymptotic freedom predicts
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>12</mn><msup><mi>π</mi><mn>2</mn></msup><mi>β</mi><mi>/</mi><mn>11</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\chi\propto e^{-12\pi^2\beta/11}</annotation></semantics></math>,
+with one unknown constant (the scale
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Λ</mi><annotation encoding="application/x-tex">\Lambda</annotation></semantics></math>
+of section 6.3).</li>
+</ul>
+</div>
+<div class="cell code" data-execution_count="11">
+<pre class="python"><code>def creutz_22(beta, rng, dims=(6, 6, 6, 6), equil=60, measure=80):
+    M = GridModel(dims, G, beta).hot_start(rng)
+    M.sweep(rng, equil)
+    W = {k: [] for k in [(1, 1), (1, 2), (2, 2)]}
+    for _ in range(measure):
+        M.sweep(rng)
+        for k in W:
+            W[k].append(M.mean_rectangle(*k))
+    w = {k: np.mean(v) for k, v in W.items()}
+    return -np.log(w[(2, 2)] * w[(1, 1)] / w[(1, 2)] ** 2)
+
+betas_c = np.array([0.7, 0.8, 0.9, 1.0, 1.1, 1.2, 1.25])
+chi = np.array([creutz_22(b, rng) for b in betas_c])
+for b, c in zip(betas_c, chi):
+    print(f&quot;beta = {b:.2f} (physicists&#39; {2 * b:.2f}):  chi(2,2) = {c:.3f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>beta = 0.70 (physicists&#39; 1.40):  chi(2,2) = 1.102
+beta = 0.80 (physicists&#39; 1.60):  chi(2,2) = 0.995
+beta = 0.90 (physicists&#39; 1.80):  chi(2,2) = 0.775
+beta = 1.00 (physicists&#39; 2.00):  chi(2,2) = 0.618
+beta = 1.10 (physicists&#39; 2.20):  chi(2,2) = 0.389
+beta = 1.20 (physicists&#39; 2.40):  chi(2,2) = 0.247
+beta = 1.25 (physicists&#39; 2.50):  chi(2,2) = 0.201
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="12">
+<pre class="python"><code>bb = np.linspace(0.6, 1.4, 200)
+strong = -np.log(iv(2, 2 * bb) / iv(1, 2 * bb))
+C = chi[-1] / np.exp(-12 * np.pi ** 2 * betas_c[-1] / 11)        # fix the one unknown constant
+af = C * np.exp(-12 * np.pi ** 2 * bb / 11)
+fig, ax = plt.subplots(figsize=(7, 4.2))
+ax.semilogy(bb, strong, color=viz.GOLD, lw=2, label=r&quot;small-$\beta$ prediction $-\ln\,I_2(2\beta)/I_1(2\beta)$&quot;)
+ax.semilogy(bb, af, color=viz.INK, lw=1.5, ls=&quot;--&quot;, label=r&quot;asymptotic freedom $\propto e^{-12\pi^2\beta/11}$&quot;)
+ax.semilogy(betas_c, chi, &quot;o&quot;, color=viz.TEAL, ms=8, label=r&quot;measured $\chi(2,2)$, $6^4$ torus&quot;)
+ax.set(xlabel=r&quot;stiffness $\beta$ (physicists&#39; $\beta$ is $2\beta$)&quot;, ylabel=&quot;area-law rate per face&quot;,
+       ylim=(0.05, 3))
+ax.legend(fontsize=9)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch06-media/fig4.png"><img src="ch06-media/fig4.png" width="692" height="428" loading="lazy" alt="Area-law rate per face against stiffness on a log scale. Teal measurements on a 6 to the fourth torus sit on the gold small-stiffness curve at first, then bend down towards the dashed asymptotic-freedom line, with no jump."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>At small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+the measurements sit on the gold strong-coupling curve. As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+grows they peel away from it and bend toward the dashed
+asymptotic-freedom line, crossing over smoothly, with no jump. This is
+Creutz's 1980 picture, and it was the first evidence that the confining
+behavior at small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+(physicists call the area law <em>confinement</em>) and the
+asymptotically free behavior at large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+belong to <strong>one</strong> theory.</p>
+<p>Be honest about what the plot does <em>not</em> show. The points have
+not settled onto the dashed line's slope: at these stiffnesses the loops
+are only one or two grid steps across, and corrections are large.
+Physicists know this well; reaching true asymptotic scaling took larger
+boards, larger
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+and better methods, and is still checked carefully today.</p>
+<blockquote>
+<p><strong>Recap.</strong> On a 4D torus,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+shows no jump between small and large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
+unlike the coin model. The area-law rate follows the exact
+small-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+curve and then crosses over toward the asymptotic-freedom prediction, as
+Creutz first saw in 1980.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Why do the perimeter parts cancel in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>χ</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\chi(2,2)</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Perimeters:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W(2,2)</annotation></semantics></math>
+has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>+</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2+2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">W(1,1)</annotation></semantics></math>
+has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">1+1</annotation></semantics></math>,
+together
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>6</mn><annotation encoding="application/x-tex">6</annotation></semantics></math>;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>,</mo><mn>2</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">W(1,2)^2</annotation></semantics></math>
+has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">2\times(1+2)=6</annotation></semantics></math>.
+Areas:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>+</mo><mn>1</mn><mo>=</mo><mn>5</mn></mrow><annotation encoding="application/x-tex">4+1=5</annotation></semantics></math>
+versus
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn><mo>=</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">2\times2=4</annotation></semantics></math>,
+leaving exactly one unit of area.</p>
+</details>
+<ol start="2">
+<li>Why does "no jump" matter for the continuum?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The continuum is reached at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>,
+and the area law is easy to prove at small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>.
+A jump in between would mean the provable, confining region tells you
+nothing about the continuum region. Smoothness suggests (it does not
+prove) that confinement survives all the way.</p>
+</details>
+</div>
+<section id="65-the-millennium-problem-in-our-terms"
+class="cell markdown">
+<h2>6.5 The Millennium problem, in our terms</h2>
+<p>Here is the plan of the construction, using only words from this
+course.</p>
+<p><strong>The refinement.</strong> Fix a compact, simple, non-abelian
+label group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+(for example
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>).
+For a spacing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\varepsilon&gt;0</annotation></semantics></math>,
+take the four-dimensional torus grid of spacing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math>
+and side
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>L</mi><annotation encoding="application/x-tex">L</annotation></semantics></math>
+(in physical units), with the standard face cost and some stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta(\varepsilon)</annotation></semantics></math>.
+This is a model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>ε</mi></msub><annotation encoding="application/x-tex">\mu_\varepsilon</annotation></semantics></math>
+in the sense of chapter 2: an honest probability distribution on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mi>E</mi></msup><annotation encoding="application/x-tex">G^E</annotation></semantics></math>,
+a finite product of copies of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+(of 3-spheres, for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>).
+Then send
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\varepsilon\to0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">L\to\infty</annotation></semantics></math>.</p>
+<p><strong>Existence.</strong> Show that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\beta(\varepsilon)</annotation></semantics></math>
+can be chosen so that:</p>
+<ol>
+<li>averages of invariants (suitably smoothed loop observables)
+<strong>converge</strong> as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\varepsilon\to0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">L\to\infty</annotation></semantics></math>;</li>
+<li>the limit is <strong>nontrivial</strong>: not the model where all
+labels are consistent, and not a "free" (Gaussian) model;</li>
+<li>the limit keeps <strong>flip-positivity</strong> (chapter 5,
+glossary 5.7), which survives limits;</li>
+<li>the limit gains the <strong>full symmetry of 4D space</strong>: all
+rotations and translations, not only the quarter-turns and whole-step
+shifts of the grid.</li>
+</ol>
+<p>Given 1–4, the construction of chapter 5 (state space from functions
+of a layer,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">H=-\log T</annotation></semantics></math>)
+goes through in the limit. Physicists call this Osterwalder–Schrader
+reconstruction, and the result is what they mean by "quantum Yang–Mills
+theory on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℝ</mi><mn>4</mn></msup><annotation encoding="application/x-tex">\mathbb R^4</annotation></semantics></math>".</p>
+<p><strong>Mass gap.</strong> In the limit, the derived system has
+levels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>=</mo><msub><mi>E</mi><mn>0</mn></msub><mo>≤</mo><msub><mi>E</mi><mn>1</mn></msub><mo>≤</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">0=E_0\le E_1\le\dots</annotation></semantics></math>,
+and the problem asks to show</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>=</mo><msub><mi>E</mi><mn>1</mn></msub><mo>&gt;</mo><mn>0</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\Delta=E_1&gt;0 .
+</annotation></semantics></math></span></p>
+<p>In grid language: the gap measured in grid units,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mn>1</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">E_1(\beta)</annotation></semantics></math>,
+times the inverse spacing, stays bounded away from zero,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>E</mi><mn>1</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>ε</mi><mo>→</mo><mi mathvariant="normal">Δ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">E_1(\beta(\varepsilon))/\varepsilon\to\Delta&gt;0</annotation></semantics></math>.
+Equivalently, the correlation length measured in physical units,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mspace width="0.167em"></mspace><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\varepsilon\,\xi(\beta(\varepsilon))</annotation></semantics></math>,
+stays bounded (it tends to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi mathvariant="normal">Δ</mi></mrow><annotation encoding="application/x-tex">1/\Delta</annotation></semantics></math>).
+Physically: the lightest particle of the theory (a "glueball", a lump of
+pure field) has a positive mass, even though the classical theory has no
+length scale at all (section 6.3).</p>
+<p>Chatterjee's survey <em>Yang–Mills for probabilists</em> states the
+probabilistic core as three problems (its Problems 4.1, 5.1 and 5.2),
+which now read naturally. Each is about any infinite-volume limit of the
+4D model, for non-abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Problem</th>
+<th>In our words</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><strong>Area law</strong> (4.1)</td>
+<td>Rectangle loop observables are bounded by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>C</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>c</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mtext mathvariant="normal">area</mtext></mrow></msup></mrow><annotation encoding="application/x-tex">C(\beta)e^{-c(\beta)\cdot\text{area}}</annotation></semantics></math>
+at <strong>every</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+(not only small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>).</td>
+</tr>
+<tr>
+<td><strong>Mass gap (grid)</strong> (5.1)</td>
+<td>For every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
+correlations of two face observables decay like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mtext mathvariant="normal">distance</mtext><mi>/</mi><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><annotation encoding="application/x-tex">e^{-\text{distance}/\xi(\beta)}</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>&lt;</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\xi(\beta)&lt;\infty</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\xi(\beta)\to\infty</annotation></semantics></math>
+as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>.</td>
+</tr>
+<tr>
+<td><strong>Continuum limit</strong> (5.2)</td>
+<td>As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>
+there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\varepsilon(\beta)\to0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>c</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">c(\beta)\to\infty</annotation></semantics></math>
+and a constant
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>d</mi><mo>≠</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">d\neq0</annotation></semantics></math>
+with
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>W</mi><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mi>/</mi><mi>ε</mi><mo>,</mo><mi>T</mi><mi>/</mi><mi>ε</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mi>c</mi><mspace width="0.167em"></mspace><mo stretchy="false" form="prefix">(</mo><mi>R</mi><mo>+</mo><mi>T</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>d</mi><mspace width="0.167em"></mspace><mi>R</mi><mi>T</mi><mo>+</mo><mi>o</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\log W(R/\varepsilon,T/\varepsilon)=-c\,(R+T)-d\,RT+o(1)</annotation></semantics></math></span>:
+after removing a perimeter part, rescaled loop observables have a
+nontrivial limit.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>What is known (status as of November 2026).</strong></p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Statement</th>
+<th>Status</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Area law and positive gap at <strong>small</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
+any
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+any dimension</td>
+<td>Proved (Osterwalder–Seiler 1978, using expansions in powers of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>).</td>
+</tr>
+<tr>
+<td>2D: everything, exactly, at every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math></td>
+<td>Proved; the 2D model is a random walk on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+(chapter 5) and its continuum limit can be computed exactly.</td>
+</tr>
+<tr>
+<td>4D existence (items 1–4 above, with infinite volume reached along a
+subsequence)</td>
+<td><strong>Announced by OpenAI (October 2026), formalized in the Lean
+proof assistant. On November 10, 2026 a review panel chaired by David
+Gross (with Douglas, Jaffe, Klebanov, Nekrasov) affirmed it; the panel
+did not claim to fully understand the proof.</strong></td>
+</tr>
+<tr>
+<td>Uniqueness of the infinite-volume limit</td>
+<td>Open.</td>
+</tr>
+<tr>
+<td>4D mass gap
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Δ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\Delta&gt;0</annotation></semantics></math></td>
+<td><strong>Open.</strong></td>
+</tr>
+<tr>
+<td>4D area law at large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+(confinement)</td>
+<td>Open.</td>
+</tr>
+</tbody>
+</table>
+<p>Why did existence fall first? Roughly, existence is mostly about
+<strong>short distances</strong>, where asymptotic freedom makes the
+model nearly consistent and expansions around consistency are better
+behaved. The gap and the area law are about <strong>long
+distances</strong>, where the model is genuinely random and no known
+method has control. The picture below summarizes the landscape along the
+stiffness axis.</p>
+</section>
+<div class="cell code" data-execution_count="13">
+<pre class="python"><code>fig, ax = plt.subplots(figsize=(11, 2.6))
+ax.axvspan(0, 0.9, color=viz.GOLD, alpha=0.25)
+ax.axvspan(0.9, 1.4, color=viz.MUTED, alpha=0.15)
+ax.axvspan(1.4, 2.5, color=viz.TEAL, alpha=0.2)
+ax.plot(betas_c, 0.24 + 0 * betas_c, &quot;o&quot;, color=viz.INK, ms=4)
+ax.text(betas_c.mean(), 0.31, &quot;β values simulated above&quot;, ha=&quot;center&quot;, fontsize=8, color=viz.INK)
+for x, txt in [(0.45, &quot;small β: rough, confining\narea law + gap PROVED&quot;),
+               (1.15, &quot;crossover\n(no jump: measured)&quot;),
+               (1.95, &quot;large β: nearly consistent\ncontinuum lives at β → ∞\nexistence: 2026; gap: OPEN&quot;)]:
+    ax.text(x, 0.5, txt, ha=&quot;center&quot;, va=&quot;center&quot;, fontsize=10)
+ax.annotate(&quot;&quot;, xy=(2.5, 0.08), xytext=(0, 0.08), arrowprops=dict(arrowstyle=&quot;-&gt;&quot;, color=viz.INK))
+ax.text(2.48, 0.16, &quot;stiffness β&quot;, ha=&quot;right&quot;, fontsize=10)
+ax.set(xlim=(0, 2.5), ylim=(0, 1)); ax.axis(&quot;off&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch06-media/fig5.png"><img src="ch06-media/fig5.png" width="959" height="242" loading="lazy" alt="A schematic stiffness axis in three regions: small stiffness, rough and confining, where the area law and gap are proved; a crossover with no jump, measured; and large stiffness, nearly consistent, where the continuum lives, with existence proved in 2026 and the gap open. Dots mark the stiffness values simulated in the chapter."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>The picture is schematic: the region boundaries are only indicative.
+The dots are the stiffnesses we simulated. Everything the Millennium
+problem asks lives at the right edge, and it asks for control
+<em>uniformly</em> as you move right forever.</p>
+<blockquote>
+<p><strong>Recap.</strong> The Millennium problem, in our words: refine
+a 4D
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(N)</annotation></semantics></math>
+model with a tuned stiffness; show averages of invariants converge to a
+nontrivial, flip-positive, rotation-symmetric limit (existence), and
+that the derived system's gap stays positive in physical units (mass
+gap). Small
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+and 2D are understood; 4D existence was affirmed in November 2026; the
+gap is open.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Which property of chapter 5 guarantees that the limit, if it exists,
+has a <em>positive</em> Hamiltonian?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Flip-positivity (glossary 5.7). It makes the transfer matrix
+symmetric with nonnegative eigenvalues, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>H</mi><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>T</mi></mrow><annotation encoding="application/x-tex">H=-\log T</annotation></semantics></math>
+is defined and bounded below, and it survives limits because it is an
+inequality between averages.</p>
+</details>
+<ol start="2">
+<li>Why isn't rotation symmetry automatic?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The grid only has quarter-turn rotations. Full rotation symmetry has
+to <em>emerge</em> in the limit, which is part of what must be
+proved.</p>
+</details>
+<ol start="3">
+<li>A grid model at fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+has a finite correlation length. Why isn't that already a mass gap?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The gap must be positive in <em>physical</em> units after refinement.
+As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ε</mi><mo>→</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\varepsilon\to0</annotation></semantics></math>
+we need
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ξ</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\xi(\beta(\varepsilon))\to\infty</annotation></semantics></math>
+in grid units, at exactly the rate
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi>ε</mi></mrow><annotation encoding="application/x-tex">1/\varepsilon</annotation></semantics></math>;
+a finite
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ξ</mi><annotation encoding="application/x-tex">\xi</annotation></semantics></math>
+at one
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+says nothing about that limit.</p>
+</details>
+</div>
+<section id="66-what-our-elementary-framework-is-missing"
+class="cell markdown">
+<h2>6.6 What our elementary framework is missing</h2>
+<p>Everything in chapters 0–5 works for any compact group, commuting or
+not: labelings, reframings, classes, models, sampling, layers. So in one
+sense the framework already handles non-commutative labels. But physics
+with non-commuting groups uses several tools we never built. Some
+appeared in this chapter in disguise. Here they are, in roughly the
+order you would need them.</p>
+<h3 id="1-the-infinitesimal-picture-lie-algebras">1. The infinitesimal
+picture: Lie algebras</h3>
+<p>Section 6.2 used "small rotation vectors"
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>∈</mo><msup><mi mathvariant="double-struck">ℝ</mi><mn>3</mn></msup></mrow><annotation encoding="application/x-tex">v\in\mathbb R^3</annotation></semantics></math>,
+the map
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">exp</mi><annotation encoding="application/x-tex">\exp</annotation></semantics></math>,
+and the bracket
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">]</mo><mo>=</mo><mn>2</mn><mspace width="0.167em"></mspace><mi>a</mi><mo>×</mo><mi>b</mi></mrow><annotation encoding="application/x-tex">[a,b]=2\,a\times b</annotation></semantics></math>,
+all defined by hand for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>.
+The general theory is the <strong>Lie algebra</strong> of a group: the
+vectors that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">exp</mi><annotation encoding="application/x-tex">\exp</annotation></semantics></math>
+turns into group elements near the identity, with the bracket from Fact
+6.2. It is what lets you write a continuum field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">A_\mu(x)</annotation></semantics></math>,
+a continuum reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>λ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(x)=\exp(\lambda(x))</annotation></semantics></math>,
+and the curvature
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>
+for <em>any</em> group. For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(N)</annotation></semantics></math>
+the Lie algebra has dimension
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>N</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">N^2-1</annotation></semantics></math>:
+3 for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+and 8 for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>.
+Those 8 directions are the 8 kinds of <em>gluon</em>, the particles that
+carry the strong force as photons carry electromagnetism.</p>
+<h3 id="2-charged-fields-that-are-vectors-representations">2. Charged
+fields that are vectors: representations</h3>
+<p>The interlude's charged field had one complex number per vertex,
+which is enough for the circle. A quark carries a color <em>vector</em>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msup><mi mathvariant="double-struck">ℂ</mi><mi>N</mi></msup></mrow><annotation encoding="application/x-tex">\psi(v)\in\mathbb C^N</annotation></semantics></math>,
+and a reframing acts on it by a matrix. With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>
+written as a row vector, the rule that keeps the interlude's formulas
+unchanged is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\psi(v)\longmapsto\psi(v)\,h(v)^{-1}.
+</annotation></semantics></math></span></p>
+<p>The covariant difference has the same formula as before,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(s)\,U(s\to t)-\psi(t)</annotation></semantics></math>,
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+now a matrix. A way for a group to act by matrices on vectors is called
+a <strong>representation</strong>. A group has many representations, and
+different particles live in different ones:</p>
+<ul>
+<li>quarks are in the defining representation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℂ</mi><mi>N</mi></msup><annotation encoding="application/x-tex">\mathbb C^N</annotation></semantics></math>;</li>
+<li>gluons themselves are in the <em>adjoint</em> representation: the
+Lie algebra, of dimension
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>N</mi><mn>2</mn></msup><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">N^2-1</annotation></semantics></math>,
+on which
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+acts by conjugation,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>↦</mo><mi>h</mi><mi>v</mi><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">v\mapsto hvh^{-1}</annotation></semantics></math>.</li>
+</ul>
+<p>The loop observables of chapter 3 can then be taken in any
+representation:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>χ</mi><annotation encoding="application/x-tex">\chi</annotation></semantics></math>
+becomes the trace of the loop product <em>as it acts in that
+representation</em>. Different representations give different area-law
+rates. In 2D, for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+the adjoint rate approaches
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mi>/</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">8/3</annotation></semantics></math>
+times the defining one as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>
+(and equals it exactly for the heat-kernel cost).</p>
+<h3 id="3-building-invariants-from-several-charges">3. Building
+invariants from several charges</h3>
+<p>Experiments only see invariants. With vector-valued charges, which
+combinations are invariants? Two examples show the pattern.</p>
+<p><strong>A quark and an antiquark joined by a string.</strong> Take a
+quark at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>,
+with color vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(s)</annotation></semantics></math>,
+and a walk
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>γ</mi><annotation encoding="application/x-tex">\gamma</annotation></semantics></math>
+from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
+An antiquark at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+is described by a column vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">\eta(t)^{*}</annotation></semantics></math>,
+the conjugate transpose of a row vector
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\eta(t)</annotation></semantics></math>
+that reframes like a quark; since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+is unitary,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mo>*</mo></msup><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">\eta(t)^{*}\mapsto h(t)\,\eta(t)^{*}</annotation></semantics></math>.
+The number</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mo>*</mo></msup><mo>∈</mo><mi mathvariant="double-struck">ℂ</mi></mrow><annotation encoding="application/x-tex">
+\psi(s)\,U(\gamma)\,\eta(t)^{*}\in\mathbb C
+</annotation></semantics></math></span></p>
+<p>is an invariant. The reframings at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>
+cancel against the endpoints of the walk product, the same telescoping
+as in chapter 1. A single quark has no invariant at all, but a
+quark–antiquark pair joined by a path of labels does. Physicists call
+such a pair a <em>meson</em>. The string of labels between them is the
+precise sense in which charges in a gauge theory are never fully local,
+and chapter 3's area law is the cost of stretching that string.</p>
+<p><strong>Two (or three) quarks at one point.</strong> For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+two color vectors
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo>,</mo><mi>η</mi><mo>∈</mo><msup><mi mathvariant="double-struck">ℂ</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\psi,\eta\in\mathbb C^2</annotation></semantics></math>
+(rows) at the same vertex give the invariant</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><mrow><mo stretchy="true" form="prefix">(</mo><mtable><mtr><mtd columnalign="center" style="text-align: center"><mi>ψ</mi></mtd></mtr><mtr><mtd columnalign="center" style="text-align: center"><mi>η</mi></mtd></mtr></mtable><mo stretchy="true" form="postfix">)</mo></mrow><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\det\begin{pmatrix}\psi\\ \eta\end{pmatrix},
+</annotation></semantics></math></span></p>
+<p>because a reframing multiplies the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+matrix on the right by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><annotation encoding="application/x-tex">h^{-1}</annotation></semantics></math>,
+which multiplies its determinant by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\det h^{-1}=1</annotation></semantics></math>.
+Here is where the "S" of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi></mrow><annotation encoding="application/x-tex">SU</annotation></semantics></math>
+earns its place: for unitary matrices with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><mi>h</mi><mo>≠</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\det h\neq1</annotation></semantics></math>,
+this would not be an invariant. For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>
+the same construction with three color vectors gives the invariant
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>ψ</mi><mn>1</mn></msub><mo>;</mo><msub><mi>ψ</mi><mn>2</mn></msub><mo>;</mo><msub><mi>ψ</mi><mn>3</mn></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\det(\psi_1;\psi_2;\psi_3)</annotation></semantics></math>:
+three quarks combine into a color-neutral particle, a <em>baryon</em>.
+Protons and neutrons are baryons.</p>
+</section>
+<div class="cell code" data-execution_count="14">
+<pre class="python"><code>M = G.to_matrix
+B9 = Board.grid(3, 3)
+U9, h9 = random_labeling(G, B9, rng), random_reframing(G, B9, rng)
+U9r = reframe(G, B9, U9, h9)
+psi9 = rng.normal(size=(9, 2)) + 1j * rng.normal(size=(9, 2))                 # a quark field: C^2 per vertex
+psi9r = np.array([psi9[v] @ np.linalg.inv(M(h9[v])) for v in range(9)])       # reframed: psi h^{-1}
+walk = B9.walk([0, 1, 2, 5, 8])                                               # from corner 0 to corner 8
+string = lambda U, p: p[0] @ M(walk_product(G, B9, U, walk)) @ p[8].conj()
+print(&quot;quark-string-antiquark:  before&quot;, np.round(string(U9, psi9), 5), &quot;  after&quot;, np.round(string(U9r, psi9r), 5))</code></pre>
+<div class="output stream stdout">
+<pre><code>quark-string-antiquark:  before (-2.52467+4.60494j)   after (-2.52467+4.60494j)
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="15">
+<pre class="python"><code>psi, chi = psi9[4], rng.normal(size=2) + 1j * rng.normal(size=2)
+h_su2 = M(G.uniform(rng))
+h_u2 = np.exp(0.7j) * h_su2                                                   # unitary, but det = e^{1.4 i}
+det2 = lambda p, c: np.linalg.det(np.array([p, c]))
+for name, hm in [(&quot;SU(2) reframing&quot;, h_su2), (&quot;U(2) reframing &quot;, h_u2)]:
+    hi = np.linalg.inv(hm)
+    print(f&quot;{name}: det before {np.round(det2(psi, chi), 4)}   after {np.round(det2(psi @ hi, chi @ hi), 4)}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>SU(2) reframing: det before (0.841+1.5746j)   after (0.841+1.5746j)
+U(2) reframing : det before (0.841+1.5746j)   after (1.6946-0.5611j)
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>The string invariant survives the reframing exactly. The determinant
+survives an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>
+reframing but not one with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><mi>h</mi><mo>≠</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\det h\neq1</annotation></semantics></math>.</p>
+<p>Classifying <em>all</em> the ways to build invariants from several
+representations is the subject of <strong>representation
+theory</strong>: tensor products, characters, and their orthogonality.
+It is the main mathematical tool we skipped. It also powers the exact
+solution of the 2D model for non-commuting groups (a random walk on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+diagonalized by characters, just as section 5.7 did for the circle), the
+expansion behind flip-positivity (section 5.6), and predictions such as
+the ratio
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mi>/</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">8/3</annotation></semantics></math>
+between the area-law rates of adjoint and defining loops in 2D (a ratio
+of two numbers attached to each representation,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>/</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">3/4</annotation></semantics></math>).</p>
+<h3 id="4-two-things-that-need-more-than-new-tools">4. Two things that
+need more than new tools</h3>
+<ul>
+<li><strong>Quarks are fermions.</strong> Their path-integral variables
+anticommute (Grassmann variables), so their "weights" are not
+probabilities. They can be integrated out into a determinant, but that
+determinant is not always positive (it is in the cases lattice
+simulations of the strong force mostly use, but not, for example, for
+matter at high density), which breaks the stance "a model is a
+probability distribution". Putting them on a grid also hits a no-go
+theorem (Nielsen–Ninomiya): under natural assumptions, left-right
+asymmetric matter like the weak force's cannot be put on a grid
+directly.</li>
+<li><strong>Topology.</strong> Smooth fields with labels in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(2)</annotation></semantics></math>,
+the 3-sphere, can wind around the group in ways no small smooth change
+can undo (<em>instantons</em>). They carry the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>-term
+mentioned in section 6.2 and are invisible to the face-by-face reasoning
+of this course. (On a grid the winding is only approximately defined,
+since any labeling can be deformed continuously into any other.)</li>
+</ul>
+<blockquote>
+<p><strong>Recap.</strong> To go beyond pure Yang–Mills on a grid you
+need: Lie algebras (the infinitesimal side: small rotation vectors and
+the bracket), representations (charged fields that are vectors; quarks
+in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℂ</mi><mi>N</mi></msup><annotation encoding="application/x-tex">\mathbb C^N</annotation></semantics></math>,
+gluons in the Lie algebra), and representation theory (which
+combinations of charges are invariant: mesons as quark–string–antiquark,
+baryons as determinants, which is why
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\det=1</annotation></semantics></math>
+matters). Fermions and topology need genuinely new ideas.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>How many gluons does
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>
+have, and why?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>8, the dimension of its Lie algebra:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>
+anti-Hermitian matrices with trace 0 form a real vector space of
+dimension
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>9</mn><mo>−</mo><mn>1</mn><mo>=</mo><mn>8</mn></mrow><annotation encoding="application/x-tex">9-1=8</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>Why is a single quark
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)</annotation></semantics></math>
+not an invariant, while
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>γ</mi><mo stretchy="false" form="postfix">)</mo><mi>η</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mo>*</mo></msup></mrow><annotation encoding="application/x-tex">\psi(s)U(\gamma)\eta(t)^{*}</annotation></semantics></math>
+is?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>A reframing multiplies
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)</annotation></semantics></math>
+by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(v)^{-1}</annotation></semantics></math>,
+which changes it. In the string expression, the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(s)^{-1}</annotation></semantics></math>
+from the quark cancels the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)</annotation></semantics></math>
+at the start of the walk product, and the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(t)^{-1}</annotation></semantics></math>
+at the end of the walk product cancels the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(t)</annotation></semantics></math>
+from the antiquark.</p>
+</details>
+<ol start="3">
+<li>With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(3)</annotation></semantics></math>
+instead of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>
+as the label group, could three quarks form an invariant?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Not by the determinant: it would pick up the factor
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">det</mi><mo>&#8289;</mo></mrow><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">\det h^{-1}</annotation></semantics></math>,
+a phase that need not be 1.</p>
+</details>
+</div>
+<div class="cell markdown">
+<h2 id="course-recap">Course recap</h2>
+<ul>
+<li><strong>Chapter 0:</strong> a currency market is a board with
+labels; round trips are the only meaningful numbers; changing units is a
+reframing.</li>
+<li><strong>Chapter 1:</strong> for any group, labelings modulo
+reframings are classes; invariants are functions of classes; loop
+products change by conjugation; the tree normal form removes the
+redundancy.</li>
+<li><strong>Chapter 2:</strong> a model is a probability distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\propto e^{-\beta S}</annotation></semantics></math>
+over labelings, built on the uniform distribution of a compact group;
+redundancy costs nothing.</li>
+<li><strong>Chapter 3:</strong> a model knows only averages of
+invariants; single labels average to zero; loop observables reveal the
+area law.</li>
+<li><strong>Chapter 4:</strong> Markov chains sample models using only
+local information, and found a jump at a number we can derive,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msqrt><mn>2</mn></msqrt><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\tfrac12\ln(1+\sqrt2)</annotation></semantics></math>.</li>
+<li><strong>Chapter 5:</strong> cutting a board into layers turns a
+model into a transfer matrix; its levels, the "quantum system", are
+derived from the distribution alone.</li>
+<li><strong>Chapter 6:</strong> physics' label groups are the
+convention-change groups of hidden properties (phase, weak partner,
+color). Yang–Mills is our model with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(N)</annotation></semantics></math>;
+the standard cost is the simplest valid one and becomes curvature for
+smooth labels, with a term that exists only because labels don't
+commute. 4D has no built-in scale until asymptotic freedom creates one;
+the Millennium problem is a statement about refining that model. Going
+further needs Lie algebras and representation theory.</li>
+</ul>
+<h2 id="dictionary">Dictionary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Our term</th>
+<th>Physics</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>board: 4D torus grid of spacing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ε</mi><annotation encoding="application/x-tex">\varepsilon</annotation></semantics></math></td>
+<td>Euclidean spacetime with a lattice cutoff</td>
+</tr>
+<tr>
+<td>label group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>N</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(N)</annotation></semantics></math></td>
+<td>gauge group (color group;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>N</mi><mo>=</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">N=3</annotation></semantics></math>
+for the strong force)</td>
+</tr>
+<tr>
+<td>labeling,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo>=</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>ε</mi><mi>A</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U=\exp(\varepsilon A)</annotation></semantics></math></td>
+<td>gauge field, link variables</td>
+</tr>
+<tr>
+<td>reframing</td>
+<td>gauge transformation</td>
+</tr>
+<tr>
+<td>face product,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>≈</mo><mrow><mi mathvariant="normal">exp</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><msup><mi>ε</mi><mn>2</mn></msup><mi>F</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\approx\exp(\varepsilon^2F)</annotation></semantics></math></td>
+<td>plaquette, field strength / curvature</td>
+</tr>
+<tr>
+<td>standard face cost</td>
+<td>Wilson action</td>
+</tr>
+<tr>
+<td>"only the bottom of the bowl matters"</td>
+<td>universality</td>
+</tr>
+<tr>
+<td>small rotation vectors with the bracket
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mi>a</mi><mo>,</mo><mi>b</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[a,b]</annotation></semantics></math></td>
+<td>Lie algebra, commutator, structure constants</td>
+</tr>
+<tr>
+<td>color vector at a vertex,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><msup><mi mathvariant="double-struck">ℂ</mi><mi>N</mi></msup></mrow><annotation encoding="application/x-tex">\psi(v)\in\mathbb C^N</annotation></semantics></math></td>
+<td>quark field in the fundamental representation</td>
+</tr>
+<tr>
+<td>quark–string–antiquark invariant</td>
+<td>gauge-invariant meson operator</td>
+</tr>
+<tr>
+<td>determinant of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+color vectors</td>
+<td>baryon (color singlet of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+quarks)</td>
+</tr>
+<tr>
+<td>coarse labels rougher than fine ones</td>
+<td>anti-screening; running coupling</td>
+</tr>
+<tr>
+<td>stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><msup><mi>g</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">2/g^2</annotation></semantics></math>
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>
+the coupling); physicists'
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>β</mi><mtext mathvariant="normal">phys</mtext></msub><mo>=</mo><mi>N</mi><mi>β</mi><mo>=</mo><mn>2</mn><mi>N</mi><mi>/</mi><msup><mi>g</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\beta_{\text{phys}}=N\beta=2N/g^2</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>total cost for smooth labels</td>
+<td>Yang–Mills action
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo>∫</mo><mo stretchy="false" form="prefix">|</mo><mi>F</mi><msup><mo stretchy="false" form="postfix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">\int\lvert F\rvert^2</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>loop observable</td>
+<td>Wilson loop</td>
+</tr>
+<tr>
+<td>area-law rate</td>
+<td>string tension</td>
+</tr>
+<tr>
+<td>Creutz ratio</td>
+<td>Creutz ratio</td>
+</tr>
+<tr>
+<td>stiffness growing as the grid refines</td>
+<td>asymptotic freedom, running coupling</td>
+</tr>
+<tr>
+<td>length scale created by the model,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi mathvariant="normal">Λ</mi></mrow><annotation encoding="application/x-tex">1/\Lambda</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="normal">Λ</mi><mtext mathvariant="normal">QCD</mtext></msub><annotation encoding="application/x-tex">\Lambda_{\text{QCD}}</annotation></semantics></math>,
+dimensional transmutation</td>
+</tr>
+<tr>
+<td>refining the grid with tuned
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math></td>
+<td>continuum limit, renormalization</td>
+</tr>
+<tr>
+<td>derived system of the limit</td>
+<td>quantum Yang–Mills theory (Osterwalder–Schrader reconstruction)</td>
+</tr>
+<tr>
+<td>gap in physical units</td>
+<td>mass gap; lightest glueball mass</td>
+</tr>
+</tbody>
+</table>
+<h2 id="where-to-go-next">Where to go next</h2>
+<ul>
+<li>Sourav Chatterjee, <em>Yang–Mills for probabilists</em>
+(arXiv:1803.01950): the closest text to this course's point of
+view.</li>
+<li>Michael Creutz, <em>Quarks, Gluons and Lattices</em> (1983): the
+computational story, by the person who first ran it.</li>
+<li>Erhard Seiler, <em>A gentle introduction to lattice field
+theory</em> (Entropy, 2025), and the classic review by John Kogut (Rev.
+Mod. Phys., 1979).</li>
+<li>Arthur Jaffe and Edward Witten, <em>Quantum Yang–Mills Theory</em>:
+the official Clay problem statement.</li>
+<li>The 2026 existence proof:
+<ul>
+<li>the Lean code as submitted, <a
+href="https://github.com/yang-mills-group/OpenAI-YM-20261028">yang-mills-group/OpenAI-YM-20261028</a>;</li>
+<li>the shepherding committee's validation, <a
+href="https://github.com/yang-mills-group/YM">yang-mills-group/YM</a>,
+with its <a
+href="https://github.com/yang-mills-group/YM/blob/main/docs/assessment-1.pdf">assessment</a>;</li>
+<li>this course's reading notes,
+<code>notes/yang_mills_existence_2026.md</code>.</li>
+</ul></li>
+<li>Chapter 7 proves the
+small-<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+gap from scratch and explains, in these terms, what stands between it
+and the Millennium gap.</li>
+</ul>
+</div>
+
+  <nav class="pager pager-bottom" aria-label="Chapters"><a rel="prev" href="ch05.html">← Chapter 5<span class="t">: Layers and the transfer matrix</span></a><a rel="next" href="ch07.html">Chapter 7<span class="t">: A gap you can prove</span> →</a></nav>
+</main>
+</body>
+</html>

@@ -1,19 +1,141 @@
-<html>
-  <head>
-    <link href="https://fonts.googleapis.com/css?family=Montserrat&display=swap" rel="stylesheet"> 
-    <style>
-      body {
-        font-family: 'Montserrat', sans-serif;
-      }
-    </style>
-  </head>
-  <body bgcolor="#e6fff3">
-    <h1>Eyal's experimental github page</h1>
-	<body> maybe things will be here in the future </body>
-	<div>
-	<video loop autoplay src="https://video.twimg.com/tweet_video/ETThZReVAAAwGlW.mp4" type="video/mp4"></video>
-	</div>
-	<h8>maybe not</h8>
-  </body>
-</html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Eyal Merhavi</title>
+<meta name="description" content="Eyal Merhavi — technologist and researcher. Member of Technical Staff at Enigma; previously six years in vulnerability research.">
+<meta name="author" content="Eyal Merhavi">
+<link rel="canonical" href="https://eyal.merhavi.com/">
+<meta property="og:type" content="profile">
+<meta property="og:title" content="Eyal Merhavi">
+<meta property="og:description" content="Technologist, researcher. Member of Technical Staff at Enigma; previously six years in vulnerability research.">
+<meta property="og:url" content="https://eyal.merhavi.com/">
+<meta property="og:image" content="https://eyal.merhavi.com/eyal-merhavi.jpg">
+<meta property="og:image:alt" content="Eyal Merhavi at Delicate Arch, Utah">
+<meta property="profile:first_name" content="Eyal">
+<meta property="profile:last_name" content="Merhavi">
+<meta name="twitter:card" content="summary">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": "Eyal Merhavi",
+  "alternateName": "אייל מרחבי",
+  "url": "https://eyal.merhavi.com/",
+  "image": "https://eyal.merhavi.com/eyal-merhavi.jpg",
+  "jobTitle": "Member of Technical Staff",
+  "worksFor": { "@type": "Organization", "name": "Enigma", "url": "https://enigma.inc" },
+  "alumniOf": { "@type": "CollegeOrUniversity", "name": "Tel Aviv University" },
+  "knowsAbout": ["Robotics", "Vulnerability research", "Machine learning", "Mathematics"],
+  "sameAs": [
+    "https://github.com/Eyali1001",
+    "https://www.linkedin.com/in/eyal-m-592316131/"
+  ]
+}
+</script>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="style.css?v=b18eafc744">
+<script>
+  // Decide synchronously whether the robot arms may load, so space is only
+  // reserved when they have a real chance. Anything missing → plain page.
+  (function () {
+    try {
+      var d = document.documentElement
+      d.classList.add('js')
+      var f = new URLSearchParams(location.search).get('font')
+      if (f) d.setAttribute('data-font', f)
+      var b = new URLSearchParams(location.search).get('bullets')
+      if (b) d.setAttribute('data-bullets', b)
+      var c = navigator.connection || {}
+      var ok = typeof WebAssembly === 'object' && 'IntersectionObserver' in window && 'ResizeObserver' in window &&
+        !c.saveData && !/(^|-)2g$/.test(c.effectiveType || '') &&
+        !!document.createElement('canvas').getContext('webgl2')
+      if (ok) d.classList.add('has-arms')
+    } catch (e) {}
+  })()
+</script>
+</head>
+<body>
 
+<main class="home">
+  <section class="about">
+    <span class="note me" tabindex="0"><img src="eyal-merhavi.jpg" width="943" height="828" alt="Eyal Merhavi at Delicate Arch, Utah"><span class="pop" role="tooltip">Delicate Arch, from a 2026 West Coast road trip with my girlfriend, Ofir.</span></span>
+
+    <h1><span class="note egg" data-egg="eyal">Eyal</span> <span class="note egg" data-egg="merhavi">Merhavi</span></h1>
+    <p class="tagline">Technologist, Researcher</p>
+
+    <p>
+      I'm a
+      <span class="note" tabindex="0">Member of Technical Staff<span class="pop" role="tooltip">Currently working on !deploying!.</span></span>
+      at
+      <a class="note enigma" href="https://enigma.inc/posts" target="_blank" rel="noopener"><img src="enigma.svg" width="292" height="50" alt="Enigma"><span class="pop" role="tooltip">Making robots that feel right.</span></a>.
+    </p>
+    <p>
+      Before that, I spent six years in
+      <span class="note" tabindex="0">vulnerability research<span class="pop" role="tooltip">As a vigilante side-project, privately disclosed many vulnerabilities and info leaks to popular Israeli apps as cyber was imploding. <a class="ping" href="#contact">Ping me for details.</a></span></span>.
+    </p>
+    <p>
+      I studied computer science and mathematics at
+      <span class="note" tabindex="0">Tel Aviv University<span class="pop" role="tooltip">B.Sc., double major in Computer Science &amp; Mathematics — completed in two years.</span></span>.
+    </p>
+    <p>My motivation: I just fucking hate when things don't work.</p>
+
+    <div class="links" id="contact">
+      <span class="social gh" tabindex="0" role="button" aria-label="GitHub: personal or at Enigma"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M8 0c4.42 0 8 3.58 8 8a8.013 8.013 0 0 1-5.45 7.59c-.4.08-.55-.17-.55-.38 0-.27.01-1.13.01-2.2 0-.75-.25-1.23-.54-1.48 1.78-.2 3.65-.88 3.65-3.95 0-.88-.31-1.59-.82-2.15.08-.2.36-1.02-.08-2.12 0 0-.67-.22-2.2.82-.64-.18-1.32-.27-2-.27-.68 0-1.36.09-2 .27-1.53-1.03-2.2-.82-2.2-.82-.44 1.1-.16 1.92-.08 2.12-.51.56-.82 1.28-.82 2.15 0 3.06 1.86 3.75 3.64 3.95-.23.2-.44.55-.51 1.07-.46.21-1.61.55-2.33-.66-.15-.24-.6-.83-1.23-.82-.67.01-.27.38.01.53.34.19.73.9.82 1.13.16.45.68 1.31 2.69.94 0 .67.01 1.3.01 1.49 0 .21-.15.45-.55.38A7.995 7.995 0 0 1 0 8c0-4.42 3.58-8 8-8Z"/></svg><span class="label">GitHub</span><span class="split"><a class="note" href="https://github.com/Eyali1001" target="_blank" rel="me noopener">personal<span class="pop" role="tooltip" data-gh="Eyali1001">Side projects, tools, experiments.</span></a><span class="sep">/</span><a class="note" href="https://github.com/merhavi" target="_blank" rel="noopener">at Enigma<span class="pop" role="tooltip" data-gh="merhavi">GitHub at Enigma.</span></a></span></span>
+      <a class="note social" href="https://www.linkedin.com/in/eyal-m-592316131/" target="_blank" rel="me noopener"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><rect x="0.5" y="0.5" width="15" height="15" rx="2.5" fill="none" stroke="currentColor"/><rect x="3.4" y="6.3" width="1.8" height="6" /><circle cx="4.3" cy="4.2" r="1.05"/><path d="M6.9 6.3h1.7v.85c.35-.6 1.05-1 1.95-1 1.5 0 2.15.95 2.15 2.55v3.6h-1.8V9.05c0-.85-.3-1.4-1.05-1.4-.8 0-1.15.6-1.15 1.45v3.2H6.9Z"/></svg>LinkedIn<span class="pop" role="tooltip">The formal version of this page.</span></a>
+      <span class="note social email" tabindex="0" data-u="ivahrem.laye" data-d="moc.liamg"><svg class="ico" viewBox="0 0 16 16" aria-hidden="true"><path d="M1.75 2h12.5c.966 0 1.75.784 1.75 1.75v8.5A1.75 1.75 0 0 1 14.25 14H1.75A1.75 1.75 0 0 1 0 12.25v-8.5C0 2.784.784 2 1.75 2ZM1.5 12.251c0 .138.112.25.25.25h12.5a.25.25 0 0 0 .25-.25V5.809L8.38 9.397a.75.75 0 0 1-.76 0L1.5 5.809v6.442Zm13-8.181v-.32a.25.25 0 0 0-.25-.25H1.75a.25.25 0 0 0-.25.25v.32L8 7.88Z"/></svg><span class="label">Email</span><span class="pop" role="tooltip"><a class="write" href="#">Write to me</a><span class="copy-wrap" hidden> · <button type="button" class="copy">copy address</button></span></span></span>
+    </div>
+  </section>
+
+  <figure id="arms" aria-hidden="true">
+    <canvas></canvas>
+    <figcaption>drag to control the ball</figcaption>
+  </figure>
+
+  <aside class="side">
+    <h2>(public) work-stuff:</h2>
+    <ul class="projects">
+      <li><a href="https://github.com/Enigma-Incorporated/servotools" target="_blank" rel="noopener">servotools</a> <span class="alt">(<a href="https://enigma.inc/posts/sts3215-servo-hacking" target="_blank" rel="noopener">blog post</a>)</span><span class="desc"> — renumber the servos of a fully assembled robot arm without unplugging anything.</span></li>
+    </ul>
+
+    <h2>Small vibe projects</h2>
+    <ul class="projects">
+      <li><a href="https://www.paradigm.xyz/puzzles/dogfight" target="_blank" rel="noopener">Dogfight</a> <span class="alt">(first place)</span><span class="desc"> — Paradigm's puzzle: program an AI pilot that wins aerial combat.</span></li>
+      <li><a href="projects/interpretability/neuron_atlas.html#feature=sae_15688&amp;story=tell_tale_heart&amp;position=0.45625" target="_blank" rel="noopener">Literary features in a language model</a> <span class="alt">(<a href="https://github.com/Eyali1001/literary-features" target="_blank" rel="noopener">code</a>)</span><span class="desc"> — a neuron atlas: which units inside Qwen3 respond to what, in classic short stories.</span></li>
+      <li><a href="projects/lattice-gauge-course/" target="_blank" rel="noopener">Labelings, models and gauge theory</a> <span class="alt">(<a href="https://github.com/Eyali1001/lattice-gauge-course" target="_blank" rel="noopener">code</a>)</span><span class="desc"> — a computational course that builds up to lattice Yang–Mills.</span></li>
+      <li><a href="https://palomar-registry.org/entry?id=PALOMAR-2026-10-28-000017&amp;version=1" target="_blank" rel="noopener">Group constructions can't refute Set Cover</a> <span class="alt">(<a href="https://github.com/Eyali1001/scc-group-barrier" target="_blank" rel="noopener">Lean code</a>)</span><span class="desc"> — a Lean 4 proof in the Palomar registry, an experiment in formal math.</span></li>
+      <li><a href="https://github.com/Eyali1001/apkre" target="_blank" rel="noopener">apk-audit</a><span class="desc"> — a Claude Code plugin that security-audits Android apps end to end.</span></li>
+      <li><a href="https://github.com/Eyali1001/harpoon" target="_blank" rel="noopener">harpoon</a><span class="desc"> — tracing Polymarket wallets to see who bets early on Iran.</span></li>
+      <li><a href="https://github.com/Eyali1001/arxivmonitor" target="_blank" rel="noopener">arXiv monitor</a><span class="desc"> — which research areas are heating up, from arXiv metadata.</span></li>
+    </ul>
+  </aside>
+
+</main>
+
+<div id="bots" aria-hidden="true"></div>
+
+<script type="module">
+  // Everything below is decoration. Each piece fails on its own and silently.
+  const d = document.documentElement
+  if (d.classList.contains('has-arms')) {
+    const fig = document.getElementById('arms')
+    const start = () => import('./robots/scene.js?v=b18eafc744').then(m => m.mount(fig)).catch(() => { fig.remove(); d.classList.remove('has-arms') })
+    // Wait until the page is idle and the figure is near the screen.
+    const io = new IntersectionObserver(([e]) => {
+      if (!e.isIntersecting) return
+      io.disconnect()
+      ;(window.requestIdleCallback || setTimeout)(start, { timeout: 1500 })
+    }, { rootMargin: '400px' })
+    io.observe(fig)
+  }
+  import('./widgets/notes.js?v=b18eafc744').then(m => m.enhance()).catch(() => {})
+  import('./widgets/socials.js?v=b18eafc744').then(m => m.wire()).catch(() => {})
+  import('./widgets/bullets.js?v=b18eafc744').then(m => m.light()).catch(() => {})
+  import('./widgets/bots.js?v=b18eafc744').then(m => m.start(document.getElementById('bots'))).catch(() => {})
+</script>
+</body>
+</html>

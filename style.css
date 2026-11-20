@@ -1,0 +1,328 @@
+/* Bare HTML, on purpose. Browser defaults wherever they are good enough. */
+
+:root {
+  color-scheme: light;
+  --text: #111;
+  --muted: #555;
+  --rule: #ccc;
+  --link: #111;
+  --underline: rgba(0, 0, 0, 0.35);
+  --font: Charter, "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+}
+
+/* Font candidates, switchable with ?font=… while we choose. */
+:root[data-font="serif"] { --font: serif; }
+:root[data-font="georgia"] { --font: Georgia, serif; }
+:root[data-font="sans"] { --font: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+:root[data-font="helvetica"] { --font: "Helvetica Neue", Helvetica, Arial, sans-serif; }
+:root[data-font="mono"] { --font: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+
+html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+
+body {
+  margin: 0;
+  background: #fff;
+  color: var(--text);
+  font-family: var(--font);
+  font-size: 1.0625rem;
+  line-height: 1.5;
+}
+
+main {
+  max-width: 36rem;
+  margin: 0 auto;
+  padding: 2.5rem 1rem 4rem;
+  overflow-wrap: break-word;
+}
+
+/* Links: same ink as the text, with a drawn hairline underline that thickens
+   and darkens smoothly on hover. */
+a, a:visited {
+  color: var(--link);
+  text-decoration: none;
+  background-image: linear-gradient(var(--underline), var(--underline));
+  background-repeat: no-repeat;
+  background-position: 0 100%;
+  background-size: 100% 1px;
+  padding-bottom: 1px;
+  transition: background-size 0.22s ease, background-image 0.22s ease;
+}
+a:hover, a:focus-visible {
+  background-image: linear-gradient(var(--text), var(--text));
+  background-size: 100% 2px;
+}
+a:focus-visible { outline: 1px dotted var(--text); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) { a, a:visited { transition: none; } }
+
+h1 { font-size: 1.75rem; font-weight: normal; margin: 0 0 0.15rem; }
+h2 { font-size: 1.15rem; font-weight: normal; margin: 2rem 0 0.5rem; }
+.tagline { margin-top: 0; color: var(--muted); font-style: italic; }
+
+.me {
+  display: block;
+  float: right;
+  width: 42%;
+  max-width: 15rem;
+  margin: 0.3rem 0 0.75rem 1.25rem;
+  cursor: default;
+}
+.me img {
+  display: block; width: 100%; height: auto; border: 1px solid var(--rule);
+  transform-origin: top right; transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+/* Hover (or tap) the photo: it grows and the page dims behind it. */
+.me { --zoom: 2.6; z-index: 6; }
+.me:hover img, .me.open img { transform: scale(var(--zoom)); box-shadow: 0 10px 40px rgba(0, 0, 0, 0.35); }
+.me .pop { left: auto; right: 0; top: calc(var(--zoom) * 100% + 0.5rem); }
+main::after {
+  content: ''; position: fixed; inset: 0; z-index: 5; pointer-events: none;
+  background: rgba(20, 20, 20, 0.5); opacity: 0; transition: opacity 0.3s ease;
+}
+main:has(.me:hover)::after, main:has(.me.open)::after { opacity: 1; }
+@media (prefers-reduced-motion: reduce) { .me img, main::after { transition: none; } }
+
+/* Phones: keep the whole page short. The photo sits beside the name instead of
+   above it, spacing tightens, and the project list shows titles only (each
+   project page explains itself). */
+@media (max-width: 40rem) {
+  body { font-size: 1rem; }
+  main { padding: 1.25rem 1rem 2rem; }
+  h1 { font-size: 1.5rem; }
+  main p { margin: 0.6em 0; }
+  .me { width: 34%; max-width: 9rem; margin: 0.25rem 0 0.4rem 0.9rem; --zoom: 2.75; }
+  .links { margin-top: 0.85rem; gap: 0.3rem 0.9rem; }
+  #arms { margin-top: 0.6rem; }
+  .home h2 { margin: 1.1rem 0 0.3rem; }
+  .side .desc { display: none; }
+  .projects li { margin: 0.2rem 0; }
+}
+
+.links { clear: both; }
+
+/* social links: icon + word, no underline; they darken and the icon lifts on hover */
+.links a, .links a:visited, .links a:hover, span.social.email .label, span.social.email:hover .label {
+  background: none; padding-bottom: 0;
+}
+.links .note { text-decoration: none; }
+.social, .social a, .social a:visited { color: var(--muted); transition: color 0.18s ease; }
+.social:hover, .social:focus-within, .social a:hover, .social a:focus-visible { color: var(--text); }
+.social .ico { transition: transform 0.18s ease; }
+.social:hover .ico, .social:focus-within .ico { transform: translateY(-1px); }
+
+/* "Ping me for details" flashes the contact row, one link after another
+   (:target covers the no-JavaScript case). */
+.links.pinged > *, .links:target > * { animation: ping-flash 1.1s ease both; border-radius: 3px; }
+.links.pinged > :nth-child(2), .links:target > :nth-child(2) { animation-delay: 0.12s; }
+.links.pinged > :nth-child(3), .links:target > :nth-child(3) { animation-delay: 0.24s; }
+@keyframes ping-flash {
+  0%, 100% { background-color: transparent; color: var(--muted); transform: none; }
+  25% { background-color: rgba(255, 220, 40, 0.55); color: var(--text); transform: translateY(-2px); }
+  60% { background-color: rgba(255, 220, 40, 0.3); color: var(--text); transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .links.pinged > *, .links:target > * { animation-duration: 0.01s; } }
+
+/* GitHub: one link that splits into two when pressed. Opening is pure CSS
+   (:focus-within), so it works without JavaScript; socials.js adds toggling. */
+.social.gh { cursor: pointer; outline: none; }
+.social.gh .split { display: none; }
+.social.gh:focus-within .label, .social.gh.open .label { display: none; }
+.social.gh:focus-within .split, .social.gh.open .split { display: inline; }
+.social.gh .split > * { display: inline-block; animation: gh-split 0.28s ease both; }
+.social.gh .split > :last-child { animation-delay: 0.06s; }
+.social.gh .split .sep { color: var(--rule); margin: 0 0.3em; }
+.social.gh:focus-visible .ico { outline: 1px dotted var(--text); outline-offset: 2px; }
+@keyframes gh-split { from { opacity: 0; transform: translateX(-0.6em); } to { opacity: 1; transform: none; } }
+/* closing: the halves slide back together, then the word "GitHub" fades back in */
+.social.gh.closing .split > * { animation: gh-merge 0.22s ease both; }
+.social.gh.closing .split > :first-child { animation-delay: 0.04s; }
+@keyframes gh-merge { from { opacity: 1; transform: none; } to { opacity: 0; transform: translateX(-0.6em); } }
+.social.gh .label { display: inline-block; }
+.social.gh.merged .label { animation: gh-label 0.25s ease both; }
+@keyframes gh-label { from { opacity: 0; transform: translateX(0.4em); } to { opacity: 1; transform: none; } }
+@media (prefers-reduced-motion: reduce) { .social.gh .split > *, .social.gh .label { animation: none !important; } }
+
+/* social links: an icon and a handle, each with a hover card */
+.links { display: flex; flex-wrap: wrap; gap: 0.35rem 1.1rem; }
+.social { white-space: nowrap; }
+.social .ico { width: 0.95em; height: 0.95em; vertical-align: -0.12em; margin-right: 0.3em; fill: currentColor; }
+span.social.email { cursor: pointer; text-decoration: none; }
+
+.pop .copy { font: inherit; font-size: 0.85rem; padding: 0 0.35rem; border: 1px solid #999; background: #fff; cursor: pointer; }
+.pop .gh-live { display: block; margin-top: 0.3rem; color: var(--muted); }
+
+/* the Enigma wordmark sits in the sentence like a word */
+a.enigma, a.enigma:hover { text-decoration: none; background: none; }
+a.enigma img { display: inline-block; height: 0.78em; width: auto; vertical-align: -0.02em; border: 0; }
+a.enigma:hover img, a.enigma:focus img { opacity: 0.7; }
+
+.projects { padding-left: 1.25rem; }
+
+/* project pages */
+.back { margin-top: 0; }
+.meta { color: var(--muted); font-size: 0.95rem; }
+.goal { border-left: 2px solid var(--rule); padding-left: 0.85rem; }
+pre, code { font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.875em; }
+pre { overflow-x: auto; padding: 0.6rem 0.75rem; background: #f6f6f6; border: 1px solid #e4e4e4; line-height: 1.35; }
+table { border-collapse: collapse; font-size: 0.95rem; display: block; max-width: 100%; overflow-x: auto; }
+th, td { text-align: left; padding: 0.2rem 0.75rem 0.2rem 0; vertical-align: top; }
+img, video { max-width: 100%; height: auto; }
+.projects li { margin: 0.25rem 0; }
+
+/* ---------- bullets: switchable with ?bullets=bot|arrow|prompt|live ---------- */
+.home .projects { list-style: none; padding-left: 0; }
+.home .projects li { position: relative; padding-left: 2.9em; }
+.home .projects li::before {
+  position: absolute; left: 0; top: 0.3em;
+  font: 0.72em/1.2 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: var(--muted); white-space: pre;
+}
+/* bot (default): tiny robot faces. They blink every few seconds, each on its
+   own rhythm; the one you hover winks, grins when you're on its link, and its
+   neighbours look up, startled. */
+:root:not([data-bullets]) .home .projects li::before,
+:root[data-bullets="bot"] .home .projects li::before { content: '[o_o]'; animation: bullet-blink 3.1s steps(1) infinite; }
+:root:not([data-bullets]) .home .projects li:nth-child(2n)::before,
+:root[data-bullets="bot"] .home .projects li:nth-child(2n)::before { animation-duration: 3.7s; animation-delay: -1.3s; }
+:root:not([data-bullets]) .home .projects li:nth-child(3n)::before,
+:root[data-bullets="bot"] .home .projects li:nth-child(3n)::before { animation-duration: 2.6s; animation-delay: -2.1s; }
+:root:not([data-bullets]) .home .projects li:nth-child(5n)::before,
+:root[data-bullets="bot"] .home .projects li:nth-child(5n)::before { animation-duration: 4.3s; animation-delay: -0.7s; }
+:root:not([data-bullets]) .home .projects li:has(+ li:hover)::before,
+:root:not([data-bullets]) .home .projects li:hover + li::before,
+:root[data-bullets="bot"] .home .projects li:has(+ li:hover)::before,
+:root[data-bullets="bot"] .home .projects li:hover + li::before { content: '[O_O]'; animation: none; }
+:root:not([data-bullets]) .home .projects li:hover::before,
+:root[data-bullets="bot"] .home .projects li:hover::before { content: '[^_o]'; color: var(--text); animation: none; }
+:root:not([data-bullets]) .home .projects li:has(a:hover)::before,
+:root[data-bullets="bot"] .home .projects li:has(a:hover)::before { content: '[^_^]'; color: var(--text); animation: none; }
+@keyframes bullet-blink { 0% { content: '[o_o]'; } 90% { content: '[-_-]'; } 95% { content: '[o_o]'; } }
+/* arrow: slides toward the link on hover */
+:root[data-bullets="arrow"] .home .projects li { padding-left: 1.5em; }
+:root[data-bullets="arrow"] .home .projects li::before { content: '→'; font: inherit; top: 0; transition: transform 0.2s ease, color 0.2s ease; }
+:root[data-bullets="arrow"] .home .projects li:hover::before { transform: translateX(4px); color: var(--text); }
+/* prompt: a shell prompt that becomes a blinking cursor on hover */
+:root[data-bullets="prompt"] .home .projects li { padding-left: 1.5em; }
+:root[data-bullets="prompt"] .home .projects li::before { content: '$'; top: 0.25em; }
+:root[data-bullets="prompt"] .home .projects li:hover::before { content: '▌'; color: var(--text); animation: bullet-cursor 0.9s steps(1) infinite; }
+@keyframes bullet-cursor { 50% { opacity: 0; } }
+/* live: a status light; widgets/bullets.js lights it from each repo's last push */
+:root[data-bullets="live"] .home .projects li { padding-left: 1.3em; }
+:root[data-bullets="live"] .home .projects li::before {
+  content: ''; top: 0.55em; width: 0.45em; height: 0.45em; border-radius: 50%; background: #cfcfcf;
+}
+:root[data-bullets="live"] .home .projects li.fresh::before { background: #2fbf4a; animation: bullet-pulse 2.4s ease-in-out infinite; }
+:root[data-bullets="live"] .home .projects li.warm::before { background: #e3b341; }
+@keyframes bullet-pulse { 0%, 100% { box-shadow: 0 0 0 0 rgba(47, 191, 74, 0.5); } 50% { box-shadow: 0 0 0 0.35em rgba(47, 191, 74, 0); } }
+@media (prefers-reduced-motion: reduce) { .home .projects li::before { animation: none !important; } }
+.projects .alt { font-size: 0.9em; }
+
+/* ---------- hover notes ---------- */
+
+.note {
+  position: relative;
+  text-decoration: underline dotted;
+  text-decoration-color: #888;
+  text-underline-offset: 0.18em;
+  cursor: help;
+}
+a.note { cursor: pointer; }
+
+.pop {
+  display: none;
+  position: absolute;
+  z-index: 10;
+  left: 0;
+  top: calc(100% + 0.35rem);
+  width: max-content;
+  max-width: min(18rem, calc(100vw - 2rem));
+  padding: 0.5rem 0.65rem;
+  background: #fff;
+  color: var(--text);
+  border: 1px solid #999;
+  box-shadow: 2px 2px 0 rgba(0, 0, 0, 0.08);
+  font-size: 0.9rem;
+  font-style: normal;
+  line-height: 1.4;
+  text-align: left;
+  white-space: normal;
+  cursor: auto;
+  transform: translateX(var(--dx, 0));
+}
+/* easter eggs: notes with no visible hint at all */
+.note.egg { text-decoration: none; cursor: inherit; }
+.note.egg:focus { outline: none; }
+h1 .pop { font-size: 0.9rem; }
+
+/* an invisible bridge over the gap, so the pointer can reach the card */
+.pop::before { content: ''; position: absolute; left: 0; right: 0; top: -0.6rem; height: 0.6rem; }
+.note:hover > .pop,
+.note:focus > .pop,
+.note:focus-within > .pop,
+.note.open > .pop { display: block; }
+
+/* ---------- robot arms ---------- */
+
+#arms { display: none; margin: 1.5rem -1rem 0; position: relative; }
+#arms figcaption {
+  text-align: center; font-size: 0.8rem; font-style: italic; color: var(--muted);
+  opacity: 0; transition: opacity 0.8s ease 0.6s; margin-top: -0.4rem;
+}
+#arms.ready figcaption { opacity: 1; }
+#arms.ready canvas { cursor: grab; touch-action: pan-y; }
+#arms.ready canvas.grabbing { cursor: grabbing; }
+.has-arms #arms { display: block; }
+#arms canvas {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 10;
+  opacity: 0;
+  transition: opacity 0.8s ease;
+}
+#arms.ready canvas { opacity: 1; }
+
+/* ---------- floating ascii robots ---------- */
+
+#bots { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 0; }
+main { position: relative; z-index: 1; }
+.bot {
+  position: absolute;
+  top: 0;
+  left: 0;
+  margin: 0;
+  padding: 0.5rem 0.65rem;
+  background: #fff;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  border-radius: 10px;
+  font: 11px/1.2 ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+  color: #222;
+  white-space: pre;
+  will-change: transform;
+}
+
+/* ---------- home: two columns, one screen ---------- */
+
+@media (min-width: 56rem) {
+  main.home {
+    max-width: 62rem;
+    display: grid;
+    grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    grid-template-areas: "about side" "arms side";
+    grid-template-rows: auto 1fr;
+    column-gap: 3.5rem;
+    align-items: start;
+    padding-top: 2rem;
+    padding-bottom: 1rem;
+  }
+  .home .me { width: 36%; max-width: 12rem; }
+  .home .about { grid-area: about; }
+  .home .side { grid-area: side; font-size: 0.95rem; padding-top: 0.3rem; }
+  .home .side h2:first-child { margin-top: 0; }
+  .home .side li { margin: 0.35rem 0; }
+  .home #arms { grid-area: arms; margin: 0.25rem 0 0; }
+  /* the arms take whatever height is left on the screen */
+  .home #arms canvas { aspect-ratio: auto; height: clamp(170px, calc(100vh - 31rem), 380px); }
+}
+
+@media print {
+  #arms, #bots { display: none !important; }
+}

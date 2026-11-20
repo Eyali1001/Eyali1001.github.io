@@ -1,0 +1,896 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Interlude: Why the labels are forced: charged fields — Eyal Merhavi</title>
+<meta name="description" content="Interlude of the course Labelings, models, and gauge theory, rendered from the executed notebook.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="../../style.css?v=b18eafc744">
+<style>
+  .crumbs { margin-top: 0; }
+  .pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1.5rem; font-size: 0.95rem; }
+  .pager a[rel="next"] { margin-left: auto; text-align: right; }
+  .pager-top .t { display: none; }
+  @media (max-width: 40rem) { .pager-bottom { flex-direction: column; } .pager-bottom a[rel="next"] { margin-left: 0; text-align: left; } }
+  .pager-bottom { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .rendered-note { font-size: 0.9rem; color: var(--muted); }
+  .actions { margin-top: -0.25rem; }
+  .cell.code pre { font-size: 0.8rem; line-height: 1.4; }
+  .output pre { background: #fff; border: 0; border-left: 3px solid #e4e4e4; margin-top: -0.5rem; }
+  pre { max-width: 100%; box-sizing: border-box; }
+  figure { margin: 1rem 0; }
+  figure img, .anim img { display: block; max-width: 100%; height: auto; }
+  figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
+  .math-block { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+  .math-wide { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; vertical-align: middle; }
+  th, td { border: 1px solid var(--rule); padding: 0.2rem 0.5rem; }
+  blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--rule); }
+  details { margin: 0.25rem 0 0.75rem 1.25rem; }
+  summary { cursor: pointer; color: var(--muted); }
+  .cell.markdown h1 { margin-top: 1.25rem; }
+  .cell.markdown h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
+</style>
+</head>
+<body>
+<main>
+  <p class="crumbs"><a href="../../">← Eyal Merhavi</a> · <a href="./">Labelings, models, and gauge theory</a></p>
+  <nav class="pager pager-top" aria-label="Chapters"><a rel="prev" href="ch01.html">← Chapter 1<span class="t">: Labelings, reframings and classes</span></a><a rel="next" href="ch02.html">Chapter 2<span class="t">: Models: a probability distribution on labelings</span> →</a></nav>
+  <p class="rendered-note">Interlude of <a href="./"><i>Labelings, models, and gauge theory</i></a>, rendered from the executed notebook. Code cells and their outputs are shown as they ran.</p>
+  <p class="actions"><a href="lab/notebooks/index.html?path=ch01b_charged_fields.ipynb" target="_blank" rel="noopener">Run this chapter in your browser ↗</a> · <a href="https://github.com/Eyali1001/lattice-gauge-course/blob/main/chapters/ch01b_charged_fields.py" target="_blank" rel="noopener">Source on GitHub ↗</a><br><span class="rendered-note">Runs on JupyterLite. The first time, it downloads Python and its libraries (about 40 MB).</span></p>
+<section id="interlude--why-the-labels-are-forced-charged-fields"
+class="cell markdown">
+<h1>Interlude — Why the labels are forced: charged fields</h1>
+<p>Alice holds 100 dollars. Bob holds 370 shekels. Who is richer?</p>
+<p>You cannot answer by comparing 100 with 370. The two numbers are
+written in different units, and the comparison only means something
+after you convert one of them with the exchange rate. Change the units
+of the shekel (as Israel did in 1985) and the number 370 becomes 0.37,
+but nobody got poorer.</p>
+<p>This interlude turns that observation into one of the most
+influential ideas in physics. So far, our labels have lived on
+<em>edges</em>. Now we also put values on <em>vertices</em>, and ask how
+to compare a vertex with its neighbor. The answer is that <strong>you
+can't, unless there is a label on the edge between them</strong>. If
+every vertex is allowed its own convention, labels on edges are not an
+extra ingredient you may add: they are forced. For the circle group,
+those forced labels turn out to be electromagnetism.</p>
+<p><strong>What you'll learn</strong></p>
+<ul>
+<li>What a <em>charged field</em> is, and why the naive difference
+between neighboring values is meaningless.</li>
+<li>The <em>covariant difference</em>, which compares correctly by
+converting first, and why it needs the labels.</li>
+<li>How the smoothest possible charged field "feels" the face products,
+even where it never touches a defect. On a grid this produces one of the
+most famous pictures in physics.</li>
+</ul>
+<p><strong>Prerequisites:</strong> chapter 1 (labelings, reframings,
+classes, consistent labelings). Chapter 0's "prices" make a guest
+appearance. No probability is needed.</p>
+</section>
+<div class="cell code" data-execution_count="1">
+<pre class="python"><code>import numpy as np
+import matplotlib as mpl
+import matplotlib.pyplot as plt
+
+from lgt import *
+from lgt import viz
+
+viz.use_style()
+rng = np.random.default_rng(15)
+G = U1()   # the circle: labels are angles theta, i.e. the unit complex numbers e^{i theta}</code></pre>
+</div>
+<div class="cell markdown">
+<p>Throughout, the label group is the circle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>.
+A label is an angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>θ</mi><annotation encoding="application/x-tex">\theta</annotation></semantics></math>,
+which we also read as the unit complex number
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi>θ</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\theta}</annotation></semantics></math>;
+multiplying labels adds angles. A reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h:V\to U(1)</annotation></semantics></math>
+acts on labels as in chapter 1:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">U(s\to t)\mapsto h(s)\,U(s\to t)\,h(t)^{-1}</annotation></semantics></math>.</p>
+</div>
+<section id="i1-values-at-vertices" class="cell markdown">
+<h2>I.1 Values at vertices</h2>
+<p>A <strong>charged field</strong> (glossary 3.9) is a function</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi mathvariant="double-struck">ℂ</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+\psi:V\to\mathbb C,
+</annotation></semantics></math></span></p>
+<p>one complex number per vertex, written in that vertex's own
+convention. Changing conventions with a reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+changes the field as</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mspace width="0.167em"></mspace><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\psi(v)\longmapsto h(v)^{-1}\,\psi(v).
+</annotation></semantics></math></span></p>
+<p>For currencies:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)</annotation></semantics></math>
+is an amount of money held in currency
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>.
+If the new unit of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>v</mi><annotation encoding="application/x-tex">v</annotation></semantics></math>
+is worth
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(v)</annotation></semantics></math>
+old units, the same holding is described by the number
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)/h(v)</annotation></semantics></math>.
+For the circle,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>i</mi><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">h(v)^{-1}=e^{-ih(v)}</annotation></semantics></math>
+rotates the complex number
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)</annotation></semantics></math>
+by the angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">-h(v)</annotation></semantics></math>;
+its size
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\psi(v)|</annotation></semantics></math>
+never changes.</p>
+<p>A reframing is <strong>global</strong> if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>
+is the same at every vertex, and <strong>local</strong> otherwise. Here
+is the problem in one line of code: the naive difference between two
+neighbors survives global reframings, but not local ones.</p>
+</section>
+<div class="cell code" data-execution_count="2">
+<pre class="python"><code>B = Board.grid(4, 4)
+psi = np.exp(1j * rng.uniform(0, 2 * np.pi, B.n_vertices))     # a charged field with |psi| = 1
+s, t = B.edges[0]
+def naive(psi): return abs(psi[t] - psi[s])
+
+h_global = np.full(B.n_vertices, 0.9)                          # same angle everywhere
+h_local = random_reframing(G, B, rng)                          # a different angle at each vertex
+print(f&quot;naive |psi(t) - psi(s)|      : {naive(psi):.4f}&quot;)
+print(f&quot;after a global reframing     : {naive(np.exp(-1j * h_global) * psi):.4f}&quot;)
+print(f&quot;after a local reframing      : {naive(np.exp(-1j * h_local) * psi):.4f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>naive |psi(t) - psi(s)|      : 0.7542
+after a global reframing     : 0.7542
+after a local reframing      : 1.5454
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Fact I.1 (naive differences are meaningless).</strong> The
+size of the naive difference
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\psi(t)-\psi(s)|</annotation></semantics></math>
+is unchanged by global reframings, but not by local ones. So if each
+vertex may choose its own convention, "how different are the values at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>?"
+has no answer yet.</p>
+</blockquote>
+<blockquote>
+<p><strong>Recap.</strong> A charged field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi mathvariant="double-struck">ℂ</mi></mrow><annotation encoding="application/x-tex">\psi:V\to\mathbb C</annotation></semantics></math>
+puts a value at each vertex in that vertex's convention, and reframings
+act by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)\mapsto h(v)^{-1}\psi(v)</annotation></semantics></math>.
+Naive differences of neighbors depend on the conventions.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Which single number about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)</annotation></semantics></math>
+is unchanged by every reframing, for the circle group?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Its size
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\psi(v)|</annotation></semantics></math>,
+because reframing multiplies by a unit complex number. Everything else
+about a single value (its angle on the circle) is a matter of
+convention.</p>
+</details>
+<ol start="2">
+<li>Why does a global reframing preserve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\psi(t)-\psi(s)|</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Both values are multiplied by the same
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>i</mi><mi>c</mi></mrow></msup><annotation encoding="application/x-tex">e^{-ic}</annotation></semantics></math>,
+so the difference is too, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>i</mi><mi>c</mi></mrow></msup><mo stretchy="false" form="prefix">|</mo><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">|e^{-ic}|=1</annotation></semantics></math>.</p>
+</details>
+</div>
+<section id="i2-convert-then-compare-the-labels-are-forced"
+class="cell markdown">
+<h2>I.2 Convert, then compare: the labels are forced</h2>
+<p>The fix is the one you already use for money: convert, then compare.
+If the edge carries a label
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(s\to t)</annotation></semantics></math>
+that converts
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>'s
+convention into
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>'s,
+define the <strong>covariant difference</strong> (glossary 3.10)</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mi>U</mi></msub><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>∈</mo><mi mathvariant="double-struck">ℂ</mi><mi>.</mi></mrow><annotation encoding="application/x-tex">
+D_U\psi(s\to t)=\psi(s)\,U(s\to t)-\psi(t)\in\mathbb C .
+</annotation></semantics></math></span></p>
+<p>Reframe the labels <em>and</em> the field together. The label becomes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(s)\,U\,h(t)^{-1}</annotation></semantics></math>
+and the values become
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)^{-1}\psi(s)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(t)^{-1}\psi(t)</annotation></semantics></math>,
+so</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>⋅</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>−</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>.</mi></mrow><annotation encoding="application/x-tex">
+h(s)^{-1}\psi(s)\cdot h(s)\,U\,h(t)^{-1}-h(t)^{-1}\psi(t)=\big(\psi(s)\,U-\psi(t)\big)\,h(t)^{-1}.
+</annotation></semantics></math></span></p>
+<p>The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)</annotation></semantics></math>
+cancels, exactly as in chapter 1's telescoping. What remains is the old
+covariant difference times
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">h(t)^{-1}</annotation></semantics></math>,
+which has size 1.</p>
+<blockquote>
+<p><strong>Fact I.2 (comparing needs labels).</strong> Under a joint
+reframing of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo>,</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(U,\psi)</annotation></semantics></math>,
+every covariant difference is multiplied by a unit complex number, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>D</mi><mi>U</mi></msub><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|D_U\psi(s\to t)|</annotation></semantics></math>
+is an invariant. Comparing values at two vertices in a way that survives
+local reframings <em>requires</em> a label on the edge between them.</p>
+</blockquote>
+<p>That is the whole argument. Physicists call it the <strong>gauge
+principle</strong>: demand that each point may choose its own
+convention, and you are forced to introduce labels on edges (a "gauge
+field") to compare neighbors. We started from the labels in chapter 1;
+here they appear as the price of comparing.</p>
+</section>
+<div class="cell code" data-execution_count="3">
+<pre class="python"><code>U = random_labeling(G, B, rng)
+def cov_diff(U, psi):
+    s, t = B.edges[:, 0], B.edges[:, 1]
+    return psi[s] * np.exp(1j * U) - psi[t]
+
+h = random_reframing(G, B, rng)
+U2, psi2 = reframe(G, B, U, h), np.exp(-1j * h) * psi
+print(&quot;labels changed:     &quot;, not np.allclose(U, U2))
+print(&quot;field changed:      &quot;, not np.allclose(psi, psi2))
+print(&quot;|covariant diffs| unchanged:&quot;, np.allclose(abs(cov_diff(U, psi)), abs(cov_diff(U2, psi2))))</code></pre>
+<div class="output stream stdout">
+<pre><code>labels changed:      True
+field changed:       True
+|covariant diffs| unchanged: True
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>A picture makes the bookkeeping visible. Below, the field is drawn as
+a clock at each vertex and the labels as clocks on the edges. The edge
+width shows
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><msub><mi>D</mi><mi>U</mi></msub><mi>ψ</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|D_U\psi|</annotation></semantics></math>.
+After a random joint reframing every clock has turned, but every width
+is the same.</p>
+</div>
+<div class="cell code" data-execution_count="4">
+<pre class="python"><code>def draw_charged(ax, U, psi, title):
+    widths = abs(cov_diff(U, psi))
+    viz.draw_board(ax, B, U, G, faces=True, show_arrows=False, title=title)
+    for e, (a, b) in enumerate(B.edges):
+        (x0, y0), (x1, y1) = B.pos[[a, b]]
+        ax.plot([x0, x1], [y0, y1], color=viz.TEAL, lw=1 + 5 * widths[e], alpha=0.5, zorder=2)
+    for v in range(B.n_vertices):
+        viz.draw_clock(ax, B.pos[v], np.angle(psi[v]), r=0.16, color=viz.CORAL, face=&quot;white&quot;, zorder=11)
+
+fig, axs = plt.subplots(1, 2, figsize=(10, 5))
+draw_charged(axs[0], U, psi, &quot;field (coral) and labels (dark)&quot;)
+draw_charged(axs[1], U2, psi2, &quot;after a joint reframing&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01b-media/fig1.png"><img src="ch01b-media/fig1.png" width="874" height="432" loading="lazy" alt="Two copies of a small grid with clocks on the edges (labels, dark) and on the vertices (the field, coral), and teal bands whose widths show the size of the covariant difference. After a joint reframing every clock has turned, but every band width and face colour is unchanged."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Every coral and dark clock has moved; the teal widths and the face
+colors have not. The widths, the face products, and anything built from
+them are the invariants of the pair
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo>,</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(U,\psi)</annotation></semantics></math>.</p>
+<blockquote>
+<p><strong>Recap.</strong> The covariant difference
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mi>U</mi></msub><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">D_U\psi(s\to t)=\psi(s)U(s\to t)-\psi(t)</annotation></semantics></math>
+converts, then compares. Its size is invariant under joint reframings,
+and it needs the edge label: local conventions force labels on
+edges.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is the identity labeling, what is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mi>U</mi></msub><mi>ψ</mi></mrow><annotation encoding="application/x-tex">D_U\psi</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The naive difference
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(s)-\psi(t)</annotation></semantics></math>.
+The naive difference <em>is</em> a covariant difference, for the special
+(and convention-dependent) choice of all labels equal to 1.</p>
+</details>
+<ol start="2">
+<li>In currency terms, what is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>D</mi><mi>U</mi></msub><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">D_U\psi(s\to t)</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Alice's holding at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>s</mi><annotation encoding="application/x-tex">s</annotation></semantics></math>,
+converted into
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>'s
+currency at the market rate, minus Bob's holding at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>.
+A meaningful answer to "who is richer?", in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>t</mi><annotation encoding="application/x-tex">t</annotation></semantics></math>'s
+units.</p>
+</details>
+</div>
+<section id="i3-the-smoothest-charged-field" class="cell markdown">
+<h2>I.3 The smoothest charged field</h2>
+<p>Add up the squared covariant differences over all edges. This is the
+<strong>smoothness cost</strong> of the field:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>Q</mi><mi>U</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>ψ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mi>e</mi></munder><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">|</mo><msub><mi>D</mi><mi>U</mi></msub><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo><msup><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">|</mo><mn>2</mn></msup><mo>=</mo><msup><mi>ψ</mi><mo>*</mo></msup><msub><mi>L</mi><mi>U</mi></msub><mspace width="0.167em"></mspace><mi>ψ</mi><mo>,</mo></mrow><annotation encoding="application/x-tex">
+Q_U(\psi)=\sum_{e}\big|D_U\psi(e)\big|^2=\psi^{*}L_U\,\psi,
+</annotation></semantics></math></span></p>
+<p>where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math>
+is a Hermitian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>×</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|V|\times|V|</annotation></semantics></math>
+matrix, the <strong>covariant Laplacian</strong> (glossary 3.11).
+Expanding
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>u</mi><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">|\psi(s)u-\psi(t)|^2</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>u</mi><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">u=U(s\to t)</annotation></semantics></math>
+shows how to build it: each edge adds
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>
+to the two diagonal entries
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(s,s)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>,</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(t,t)</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>u</mi></mrow><annotation encoding="application/x-tex">-u</annotation></semantics></math>
+at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo>,</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(t,s)</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mover><mi>u</mi><mo accent="true">‾</mo></mover></mrow><annotation encoding="application/x-tex">-\bar u</annotation></semantics></math>
+at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>,</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">(s,t)</annotation></semantics></math>.
+For the identity labeling it is the ordinary graph Laplacian.</p>
+</section>
+<div class="cell code" data-execution_count="5">
+<pre class="python"><code>def cov_laplacian(board, U):
+    L = np.zeros((board.n_vertices, board.n_vertices), dtype=complex)
+    for e, (s, t) in enumerate(board.edges):
+        u = np.exp(1j * U[e])
+        L[s, s] += 1; L[t, t] += 1
+        L[t, s] -= u; L[s, t] -= np.conj(u)
+    return L
+
+L = cov_laplacian(B, U)
+print(&quot;smoothness cost two ways:&quot;, np.isclose(np.sum(abs(cov_diff(U, psi)) ** 2), np.real(psi.conj() @ L @ psi)))</code></pre>
+<div class="output stream stdout">
+<pre><code>smoothness cost two ways: True
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>How smooth can a charged field be? Fix its overall size,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mo>∑</mo><mi>v</mi></msub><mo stretchy="false" form="prefix">|</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><msup><mo stretchy="false" form="prefix">|</mo><mn>2</mn></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\sum_v|\psi(v)|^2=1</annotation></semantics></math>.
+The smallest possible cost is the smallest eigenvalue
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\lambda_0(U)</annotation></semantics></math>
+of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math>,
+and the minimizer is the corresponding eigenvector (linear algebra: the
+minimum of a Hermitian quadratic form on the unit sphere).</p>
+<blockquote>
+<p><strong>Fact I.3 (the spectrum only sees the class).</strong> If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>U</mi><mo>′</mo></msup><annotation encoding="application/x-tex">U&#39;</annotation></semantics></math>
+is a reframing of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>h</mi><annotation encoding="application/x-tex">h</annotation></semantics></math>,
+then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><msup><mi>U</mi><mo>′</mo></msup></msub><mo>=</mo><msup><mi>D</mi><mo>*</mo></msup><msub><mi>L</mi><mi>U</mi></msub><mi>D</mi></mrow><annotation encoding="application/x-tex">L_{U&#39;}=D^{*}L_UD</annotation></semantics></math>
+with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>D</mi><mo>=</mo><mrow><mi mathvariant="normal">diag</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">D=\operatorname{diag}(h(v))</annotation></semantics></math>,
+a unitary matrix. So
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><msup><mi>U</mi><mo>′</mo></msup></msub><annotation encoding="application/x-tex">L_{U&#39;}</annotation></semantics></math>
+have the same eigenvalues: the whole spectrum is an invariant.</p>
+</blockquote>
+<blockquote>
+<p><strong>Fact I.4 (zero cost means consistent).</strong> On a
+connected board,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\lambda_0(U)=0</annotation></semantics></math>
+if and only if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is consistent. The zero-cost field is then the reframing that turns
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+into the identity labeling: chapter 0's <em>prices</em>, now as a vertex
+field.</p>
+</blockquote>
+<p><em>Why:</em> a zero-cost field has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.167em"></mspace><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(t)=\psi(s)\,U(s\to t)</annotation></semantics></math>
+along every edge, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>ψ</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|\psi|</annotation></semantics></math>
+is constant and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>
+converts consistently around every loop, which forces every loop product
+to be 1. Conversely, a consistent
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is a reframing of the identity labeling, whose constant field costs
+0.</p>
+</div>
+<div class="cell code" data-execution_count="6">
+<pre class="python"><code>consistent = reframe(G, B, identity_labeling(G, B), random_reframing(G, B, rng))
+for name, X in [(&quot;a random labeling&quot;, U), (&quot;the same labeling, reframed&quot;, reframe(G, B, U, h)),
+                (&quot;a consistent labeling&quot;, consistent)]:
+    lam = np.linalg.eigvalsh(cov_laplacian(B, X))
+    print(f&quot;{name:&gt;28}: smallest eigenvalues {np.round(lam[:3], 4)}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>           a random labeling: smallest eigenvalues [0.2316 0.4845 0.7438]
+ the same labeling, reframed: smallest eigenvalues [0.2316 0.4845 0.7438]
+       a consistent labeling: smallest eigenvalues [0.     0.5858 0.5858]
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>The random labeling and its reframing have identical spectra (Fact
+I.3), and only the consistent labeling admits a field of zero cost (Fact
+I.4). So
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mn>0</mn></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\lambda_0(U)</annotation></semantics></math>
+is a single number measuring <em>how far
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is from consistent</em>. Outside physics, this is the idea behind the
+spectral method for <em>angular synchronization</em>, which estimates
+unknown angles from noisy measurements of their differences: the
+eigenvector of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mn>0</mn></msub><annotation encoding="application/x-tex">\lambda_0</annotation></semantics></math>
+serves as the estimate.</p>
+<blockquote>
+<p><strong>Recap.</strong> The smoothness cost of a charged field is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>ψ</mi><mo>*</mo></msup><msub><mi>L</mi><mi>U</mi></msub><mi>ψ</mi></mrow><annotation encoding="application/x-tex">\psi^{*}L_U\psi</annotation></semantics></math>.
+The spectrum of the covariant Laplacian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math>
+depends only on the class of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>,
+and its smallest eigenvalue is 0 exactly when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is consistent.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Why is every eigenvalue of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math>
+at least 0?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>ψ</mi><mo>*</mo></msup><msub><mi>L</mi><mi>U</mi></msub><mi>ψ</mi></mrow><annotation encoding="application/x-tex">\psi^{*}L_U\psi</annotation></semantics></math>
+is a sum of squared sizes, so it is never negative.</p>
+</details>
+<ol start="2">
+<li>For the identity labeling, what is the zero-cost field?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Any constant field. For the ordinary graph Laplacian of a connected
+graph, the constants are exactly the eigenvectors with eigenvalue 0.</p>
+</details>
+</div>
+<section id="i4-feeling-a-loop-without-touching-a-defect"
+class="cell markdown">
+<h2>I.4 Feeling a loop without touching a defect</h2>
+<p>Take the simplest board with a loop: a ring of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>
+vertices, with no faces at all. Every edge label is 1 except one, which
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi mathvariant="normal">Φ</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\Phi}</annotation></semantics></math>.
+The loop product around the ring is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi mathvariant="normal">Φ</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\Phi}</annotation></semantics></math>,
+and it is the only invariant (by chapter 1's tree normal form, the class
+of a ring labeling is determined by its loop product). Locally, every
+edge looks equally harmless: there is no face anywhere to be a
+defect.</p>
+<p>Yet the charged field feels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>.
+Its smoothness spectrum is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>λ</mi><mi>k</mi></msub><mo stretchy="false" form="prefix">(</mo><mi mathvariant="normal">Φ</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn><mo>−</mo><mn>2</mn><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mo minsize="180%" maxsize="180%" stretchy="true" form="prefix">(</mo><mfrac><mrow><mn>2</mn><mi>π</mi><mi>k</mi><mo>+</mo><mi mathvariant="normal">Φ</mi></mrow><mi>n</mi></mfrac><mo minsize="180%" maxsize="180%" stretchy="true" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>k</mi><mo>=</mo><mn>0</mn><mo>,</mo><mn>1</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>n</mi><mo>−</mo><mn>1</mn><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\lambda_k(\Phi)=2-2\cos\Big(\frac{2\pi k+\Phi}{n}\Big),\qquad k=0,1,\dots,n-1.
+</annotation></semantics></math></span></p>
+<p>To see why, number the vertices
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>,</mo><mi>…</mi><mo>,</mo><mi>n</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">0,\dots,n-1</annotation></semantics></math>
+around the ring with edges
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>v</mi><mo>→</mo><mi>v</mi><mo>+</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">v\to v+1</annotation></semantics></math>,
+reframe the single
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi mathvariant="normal">Φ</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\Phi}</annotation></semantics></math>
+into equal shares
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi mathvariant="normal">Φ</mi><mi>/</mi><mi>n</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\Phi/n}</annotation></semantics></math>
+on every edge, and then try
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>π</mi><mi>i</mi><mi>k</mi><mi>v</mi><mi>/</mi><mi>n</mi></mrow></msup></mrow><annotation encoding="application/x-tex">\psi(v)=e^{-2\pi ikv/n}</annotation></semantics></math>.</p>
+</section>
+<div class="cell code" data-execution_count="7">
+<pre class="python"><code>n = 8
+ring = Board.cycle(n, with_face=False)
+Phis = np.linspace(0, 4 * np.pi, 241)
+spec = []
+for Phi in Phis:
+    Ur = np.zeros(n); Ur[3] = Phi                       # one edge carries the whole loop product
+    spec.append(np.linalg.eigvalsh(cov_laplacian(ring, Ur)))
+spec = np.array(spec)
+k = np.arange(n)
+formula = np.sort(2 - 2 * np.cos((2 * np.pi * k[None, :] + Phis[:, None]) / n), axis=1)
+print(&quot;matches the formula:&quot;, np.allclose(spec, formula))</code></pre>
+<div class="output stream stdout">
+<pre><code>matches the formula: True
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="8">
+<pre class="python"><code>fig, ax = plt.subplots(figsize=(7.5, 3.8))
+ax.plot(Phis / (2 * np.pi), spec, color=viz.TEAL, lw=1.6)
+ax.plot(Phis / (2 * np.pi), spec[:, 0], color=viz.CORAL, lw=2.6, label=r&quot;smallest cost $\lambda_0$&quot;)
+ax.set(xlabel=r&quot;loop product angle $\Phi/2\pi$&quot;, ylabel=&quot;smoothness spectrum of $L_U$&quot;,
+       title=f&quot;charged field on a ring of {n} vertices&quot;)
+ax.legend(loc=&quot;upper right&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01b-media/fig2.png"><img src="ch01b-media/fig2.png" width="722" height="417" loading="lazy" alt="Eight teal curves, the smoothness spectrum of a charged field on a ring of 8 vertices, plotted against the loop product angle from 0 to 2 pi. The lowest level, in coral, touches 0 only at the two ends."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Every level moves as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+changes, and the whole picture repeats when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+goes once around the circle
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo>+</mo><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">\Phi+2\pi</annotation></semantics></math>
+are the same label). The smallest cost is 0 only when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>
+is a multiple of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">2\pi</annotation></semantics></math>:
+the consistent case of Fact I.4.</p>
+<p>The charged field lives on vertices and the labels live on edges, but
+the loop product is a property of the ring as a whole, not of any single
+edge. Physicists know this as the <strong>Aharonov–Bohm effect</strong>
+(1959): an electron going around a thin tube of magnetic field is
+affected by it, even though the magnetic field is zero everywhere the
+electron can be. The tube is our
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>;
+the electron's energy levels are our
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>λ</mi><mi>k</mi></msub><annotation encoding="application/x-tex">\lambda_k</annotation></semantics></math>.
+In 1959 it was a surprise that the "potential" (our labels, up to
+reframing) carries physical information beyond the local fields. In our
+language it is no surprise at all: loop products are invariants, and
+nothing says they must be face products.</p>
+<blockquote>
+<p><strong>Recap.</strong> On a ring with loop product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi mathvariant="normal">Φ</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\Phi}</annotation></semantics></math>
+and no defects anywhere, the smoothness spectrum still depends on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math>,
+periodically with period
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">2\pi</annotation></semantics></math>.
+Physicists call this the Aharonov–Bohm effect.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Moving the special label
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi mathvariant="normal">Φ</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\Phi}</annotation></semantics></math>
+to a different edge: does the spectrum change?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. The new labeling has the same loop product, so it is in the same
+class (a reframing moves it), and Fact I.3 says the spectrum only sees
+the class.</p>
+</details>
+<ol start="2">
+<li>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo>=</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">\Phi=\pi</annotation></semantics></math>
+the two lowest levels touch. Why might you expect that from
+symmetry?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi mathvariant="normal">Φ</mi><mo>=</mo><mi>π</mi></mrow><annotation encoding="application/x-tex">\Phi=\pi</annotation></semantics></math>
+the loop product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>,
+which equals its own inverse. Walking the ring backwards gives the same
+class, and that mirror symmetry pairs up levels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn><mo>−</mo><mi>k</mi></mrow><annotation encoding="application/x-tex">-1-k</annotation></semantics></math>
+(mod
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>n</mi><annotation encoding="application/x-tex">n</annotation></semantics></math>),
+whose formulas coincide. For
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">k=0</annotation></semantics></math>
+it pairs the two lowest levels,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">k=0</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>k</mi><mo>=</mo><mi>n</mi><mo>−</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">k=n-1</annotation></semantics></math>.</p>
+</details>
+</div>
+<section id="i5-the-butterfly" class="cell markdown">
+<h2>I.5 The butterfly</h2>
+<p>Now let every face carry the <em>same</em> defect. On an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>×</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">L\times L</annotation></semantics></math>
+torus, choose a labeling whose every face product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi>α</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\alpha}</annotation></semantics></math>.
+Chapter 1 showed that on a torus the product of all face products is the
+identity. So
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>L</mi><mn>2</mn></msup><mi>α</mi></mrow><annotation encoding="application/x-tex">L^2\alpha</annotation></semantics></math>
+must be a multiple of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">2\pi</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+can only take the values
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi><mi>m</mi><mi>/</mi><msup><mi>L</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">2\pi m/L^2</annotation></semantics></math>.
+Then ask the question of section I.3: what are the possible smoothness
+costs of a charged field?</p>
+<p>One labeling that does the job: vertical labels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi>α</mi><mi>x</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\alpha x}</annotation></semantics></math>
+in column
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>,
+and horizontal labels 1, except that the wrap-around edge from the last
+column back to column 0 in row
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>y</mi><annotation encoding="application/x-tex">y</annotation></semantics></math>
+carries
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>i</mi><mi>α</mi><mi>L</mi><mi>y</mi></mrow></msup><annotation encoding="application/x-tex">e^{-i\alpha Ly}</annotation></semantics></math>.
+Any other labeling with the same face products differs from this one by
+a reframing and by the loop products around the torus's two directions
+(chapter 1, section 7). We simply pick this one.</p>
+</section>
+<div class="cell code" data-execution_count="9">
+<pre class="python"><code>def uniform_defect(Lside, m):
+    &quot;&quot;&quot;Torus labeling with every face product exp(2 pi i m / L^2).&quot;&quot;&quot;
+    T = Board.grid(Lside, Lside, periodic=True)
+    a, Uu = 2 * np.pi * m / Lside ** 2, np.zeros(T.n_edges)
+    for (v, mu), e in T.meta[&quot;edge_index&quot;].items():
+        x, y = T.meta[&quot;coord&quot;][v]
+        if mu == 1:
+            Uu[e] = a * x
+        elif x == Lside - 1:
+            Uu[e] = -a * Lside * y                       # the wrap-around column closes the books
+    return T, Uu
+
+T, Uu = uniform_defect(6, 5)
+print(&quot;every face product equal:&quot;, np.allclose(np.mod(face_products(G, T, Uu), 2 * np.pi), 2 * np.pi * 5 / 36))</code></pre>
+<div class="output stream stdout">
+<pre><code>every face product equal: True
+</code></pre>
+</div>
+</div>
+<div class="cell code" data-execution_count="10">
+<pre class="python"><code>Lside = 24
+alphas, levels = [], []
+for m in range(0, Lside ** 2 + 1):
+    T, Uu = uniform_defect(Lside, m)
+    alphas.append(m / Lside ** 2)
+    levels.append(np.linalg.eigvalsh(cov_laplacian(T, Uu)))
+fig, ax = plt.subplots(figsize=(7.5, 7))
+for a_, lev in zip(alphas, levels):
+    ax.plot(np.full_like(lev, a_), lev, &quot;,&quot;, color=viz.INK, alpha=0.6)
+ax.set(xlabel=r&quot;face product angle per face, $\alpha/2\pi$&quot;, ylabel=&quot;smoothness spectrum of $L_U$&quot;,
+       title=rf&quot;every face carries the same defect ({Lside}$\times${Lside} torus)&quot;, xlim=(0, 1), ylim=(0, 8))
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch01b-media/fig3.png"><img src="ch01b-media/fig3.png" width="719" height="688" loading="lazy" alt="Hofstadter&#x27;s butterfly: a dense, symmetric fractal of dots. For a 24 by 24 torus where every face carries the same defect, each column of dots is the smoothness spectrum at one value of the face angle, from 0 to 2 pi; the single band at the left edge splits into ever finer sub-bands with gaps."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Each vertical column of dots is the full spectrum of one
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>576</mn><mo>×</mo><mn>576</mn></mrow><annotation encoding="application/x-tex">576\times576</annotation></semantics></math>
+matrix, for one value of the common face angle. At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\alpha=0</annotation></semantics></math>
+(left edge) the labeling is consistent and the spectrum fills a single
+band from 0 to 8. As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+grows the band shatters: it splits into sub-bands with gaps, and the
+pattern of gaps repeats inside itself at every scale (look near
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mi>/</mi><mn>2</mn><mi>π</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>3</mn></mrow><annotation encoding="application/x-tex">\alpha/2\pi=1/3</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mn>4</mn></mrow><annotation encoding="application/x-tex">1/4</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mn>5</mn></mrow><annotation encoding="application/x-tex">2/5</annotation></semantics></math>).
+This is <strong>Hofstadter's butterfly</strong> (1976): the energy
+levels (up to a constant shift) of an electron hopping on a square
+crystal in a uniform magnetic field. It is often cited as one of the
+first fractals found in physics, and experimental signatures of it were
+reported in 2013, in graphene stacked on boron nitride.</p>
+<p>Everything in this picture came from one question: <em>how smooth can
+a charged field be, if every face has the same defect?</em></p>
+<blockquote>
+<p><strong>Recap.</strong> On a torus, every face can carry the same
+face product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi>α</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\alpha}</annotation></semantics></math>
+only for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mo>∈</mo><mfrac><mrow><mn>2</mn><mi>π</mi></mrow><msup><mi>L</mi><mn>2</mn></msup></mfrac><mi mathvariant="double-struck">ℤ</mi></mrow><annotation encoding="application/x-tex">\alpha\in\frac{2\pi}{L^2}\mathbb Z</annotation></semantics></math>.
+The smoothness spectrum, plotted against
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>,
+is a fractal: Hofstadter's butterfly.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Why is the picture symmetric about
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>α</mi><mi>/</mi><mn>2</mn><mi>π</mi><mo>=</mo><mn>1</mn><mi>/</mi><mn>2</mn></mrow><annotation encoding="application/x-tex">\alpha/2\pi=1/2</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The labelings with face angles
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>α</mi><annotation encoding="application/x-tex">\alpha</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi>α</mi><mo>≡</mo><mn>2</mn><mi>π</mi><mo>−</mo><mi>α</mi></mrow><annotation encoding="application/x-tex">-\alpha\equiv2\pi-\alpha</annotation></semantics></math>
+are complex conjugates of each other, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>L</mi><mover><mi>U</mi><mo accent="true">‾</mo></mover></msub><mo>=</mo><mover><msub><mi>L</mi><mi>U</mi></msub><mo accent="true">¯</mo></mover></mrow><annotation encoding="application/x-tex">L_{\bar U}=\overline{L_U}</annotation></semantics></math>
+has the same (real) eigenvalues.</p>
+</details>
+<ol start="2">
+<li>Why must the smallest level be above 0 for every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>0</mn><mo>&lt;</mo><mi>α</mi><mo>&lt;</mo><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">0&lt;\alpha&lt;2\pi</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Each such labeling has defects, so it is not consistent, and Fact I.4
+says only consistent labelings admit a zero-cost field.</p>
+</details>
+</div>
+<section id="i6-what-this-has-to-do-with-electromagnetism"
+class="cell markdown">
+<h2>I.6 What this has to do with electromagnetism</h2>
+<p>Everything above was about labels on a board and values at its
+vertices. Here is the physicists' reading, which you can now check line
+by line.</p>
+<ul>
+<li>The <strong>circle group</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+is the group of phases of a quantum wavefunction. A charged particle's
+wavefunction is our charged field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math>,
+and multiplying it by a phase at each point separately is a local
+reframing.</li>
+<li>Demanding that physics not depend on that local choice is the
+<strong>gauge principle</strong>. It forces a label on every edge, that
+is, a connection: the <strong>electromagnetic potential</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>,
+with
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo>→</mo><mi>x</mi><mo>+</mo><mi>ε</mi><msub><mi>e</mi><mi>μ</mi></msub><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>i</mi><mi>ε</mi><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">U(x\to x+\varepsilon e_\mu)=e^{i\varepsilon A_\mu(x)}</annotation></semantics></math></span>.</li>
+<li>The covariant difference is the <strong>covariant
+derivative</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><msub><mi>∂</mi><mi>μ</mi></msub><mo>−</mo><mi>i</mi><msub><mi>A</mi><mi>μ</mi></msub><mo stretchy="false" form="postfix">)</mo><mi>ψ</mi></mrow><annotation encoding="application/x-tex">(\partial_\mu-iA_\mu)\psi</annotation></semantics></math>,
+the only way a charged particle can "feel"
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>A</mi><annotation encoding="application/x-tex">A</annotation></semantics></math>
+(minimal coupling).</li>
+<li><strong>Face angles are magnetic flux</strong>: the angle of a face
+product is the flux of the magnetic field through that face (times the
+particle's charge). Consistent labelings are "no magnetic field
+anywhere".</li>
+<li>The covariant Laplacian is the <strong>energy of a charged particle
+hopping on a grid in a magnetic field</strong>. Section I.4 is the
+Aharonov–Bohm effect; section I.5 is the Hofstadter butterfly.</li>
+<li>The labels' <em>own</em> cost, the standard face cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mi>θ</mi></mrow><annotation encoding="application/x-tex">1-\cos\theta</annotation></semantics></math>
+of chapter 2, becomes <strong>Maxwell's energy</strong> of the magnetic
+field for smooth labels (chapter 6, Fact 6.1, with no cross term because
+angles commute). Electric fields appear once the board has a time
+direction (chapter 5's layers).</li>
+</ul>
+<p>Replace the circle by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>
+and the complex numbers by vectors in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi mathvariant="double-struck">ℂ</mi><mn>3</mn></msup><annotation encoding="application/x-tex">\mathbb C^3</annotation></semantics></math>,
+and the same argument gives the strong force: the forced labels are the
+gluon field, and because
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SU(3)</annotation></semantics></math>
+does not commute, the labels' cost contains the cross term of chapter
+6.</p>
+<blockquote>
+<p><strong>Recap.</strong> Electromagnetism is what the gauge principle
+produces for the circle group: labels are the potential, face angles are
+magnetic flux, and the charged field's smoothness spectrum is the energy
+of a charged particle.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>In this picture, what is a labeling with all face products equal to
+1, but a nontrivial loop product around the torus?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Zero magnetic field everywhere, but a flux through the "hole" of the
+torus that no face can see: the torus version of the Aharonov–Bohm setup
+in section I.4.</p>
+</details>
+</section>
+<div class="cell markdown">
+<h2 id="interlude-recap">Interlude recap</h2>
+<ul>
+<li>A <strong>charged field</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi mathvariant="double-struck">ℂ</mi></mrow><annotation encoding="application/x-tex">\psi:V\to\mathbb C</annotation></semantics></math>
+lives on vertices, in each vertex's convention, and reframes as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo><mo>↦</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><msup><mo stretchy="false" form="postfix">)</mo><mrow><mi>−</mi><mn>1</mn></mrow></msup><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>v</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(v)\mapsto h(v)^{-1}\psi(v)</annotation></semantics></math>.</li>
+<li>Naive differences of neighbors are convention-dependent. The
+<strong>covariant difference</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo>→</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo><mo>−</mo><mi>ψ</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\psi(s)U(s\to t)-\psi(t)</annotation></semantics></math>
+converts, then compares, and its size is invariant. Labels on edges are
+forced: the gauge principle.</li>
+<li>The <strong>covariant Laplacian</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math>
+measures smoothness. Its spectrum depends only on the class of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>,
+and its smallest eigenvalue vanishes exactly for consistent
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>.</li>
+<li>A ring's loop product shifts the spectrum though no face is a defect
+(Aharonov–Bohm). A uniform defect on every face produces a fractal
+spectrum (Hofstadter's butterfly).</li>
+<li>For the circle group this is electromagnetism: labels = potential,
+face angles = magnetic flux.</li>
+</ul>
+<h2 id="dictionary">Dictionary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Our term</th>
+<th>Other names</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>charged field
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ψ</mi><annotation encoding="application/x-tex">\psi</annotation></semantics></math></td>
+<td>matter field, wavefunction of a charged particle; section of a
+bundle</td>
+</tr>
+<tr>
+<td>global / local reframing</td>
+<td>global / local (gauge) symmetry</td>
+</tr>
+<tr>
+<td>covariant difference</td>
+<td>covariant derivative, minimal coupling</td>
+</tr>
+<tr>
+<td>"local conventions force labels"</td>
+<td>the gauge principle (Weyl 1929; Yang and Mills 1954 for
+non-commuting groups)</td>
+</tr>
+<tr>
+<td>covariant Laplacian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math></td>
+<td>magnetic Laplacian; tight-binding Hamiltonian with Peierls phases;
+connection Laplacian</td>
+</tr>
+<tr>
+<td>circle labels
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>i</mi><mi>ε</mi><mi>A</mi></mrow></msup><annotation encoding="application/x-tex">e^{i\varepsilon A}</annotation></semantics></math></td>
+<td>electromagnetic (vector) potential</td>
+</tr>
+<tr>
+<td>face angle</td>
+<td>magnetic flux through a face</td>
+</tr>
+<tr>
+<td>ring loop product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi mathvariant="normal">Φ</mi><annotation encoding="application/x-tex">\Phi</annotation></semantics></math></td>
+<td>Aharonov–Bohm flux</td>
+</tr>
+<tr>
+<td>spectrum vs uniform face angle</td>
+<td>Hofstadter's butterfly</td>
+</tr>
+<tr>
+<td>eigenvector of the smallest eigenvalue of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>L</mi><mi>U</mi></msub><annotation encoding="application/x-tex">L_U</annotation></semantics></math></td>
+<td>spectral method for angular synchronization</td>
+</tr>
+</tbody>
+</table>
+<h2 id="whats-next">What's next</h2>
+<p>Chapter 2 puts probability on the labels: instead of one labeling, a
+whole distribution over labelings that favors few defects. The charged
+field returns in later chapters as the thing that "probes" a random
+labeling.</p>
+</div>
+
+  <nav class="pager pager-bottom" aria-label="Chapters"><a rel="prev" href="ch01.html">← Chapter 1<span class="t">: Labelings, reframings and classes</span></a><a rel="next" href="ch02.html">Chapter 2<span class="t">: Models: a probability distribution on labelings</span> →</a></nav>
+</main>
+</body>
+</html>

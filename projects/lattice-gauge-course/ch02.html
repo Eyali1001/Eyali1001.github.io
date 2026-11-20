@@ -1,0 +1,1327 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chapter 2: Models: a probability distribution on labelings — Eyal Merhavi</title>
+<meta name="description" content="Chapter 2 of the course Labelings, models, and gauge theory, rendered from the executed notebook.">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<meta name="theme-color" content="#ffffff">
+<link rel="stylesheet" href="../../style.css?v=b18eafc744">
+<style>
+  .crumbs { margin-top: 0; }
+  .pager { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 0.4rem 1.5rem; font-size: 0.95rem; }
+  .pager a[rel="next"] { margin-left: auto; text-align: right; }
+  .pager-top .t { display: none; }
+  @media (max-width: 40rem) { .pager-bottom { flex-direction: column; } .pager-bottom a[rel="next"] { margin-left: 0; text-align: left; } }
+  .pager-bottom { margin-top: 2.5rem; padding-top: 1rem; border-top: 1px solid var(--rule); }
+  .rendered-note { font-size: 0.9rem; color: var(--muted); }
+  .actions { margin-top: -0.25rem; }
+  .cell.code pre { font-size: 0.8rem; line-height: 1.4; }
+  .output pre { background: #fff; border: 0; border-left: 3px solid #e4e4e4; margin-top: -0.5rem; }
+  pre { max-width: 100%; box-sizing: border-box; }
+  figure { margin: 1rem 0; }
+  figure img, .anim img { display: block; max-width: 100%; height: auto; }
+  figcaption { font-size: 0.9rem; color: var(--muted); margin-top: 0.35rem; }
+  .math-block { display: block; max-width: 100%; overflow-x: auto; overflow-y: hidden; padding: 0.25rem 0; }
+  .math-wide { display: inline-block; max-width: 100%; overflow-x: auto; overflow-y: hidden; vertical-align: middle; }
+  th, td { border: 1px solid var(--rule); padding: 0.2rem 0.5rem; }
+  blockquote { margin: 1rem 0; padding-left: 1rem; border-left: 3px solid var(--rule); }
+  details { margin: 0.25rem 0 0.75rem 1.25rem; }
+  summary { cursor: pointer; color: var(--muted); }
+  .cell.markdown h1 { margin-top: 1.25rem; }
+  .cell.markdown h3 { font-size: 1.05rem; margin: 1.5rem 0 0.5rem; }
+</style>
+</head>
+<body>
+<main>
+  <p class="crumbs"><a href="../../">← Eyal Merhavi</a> · <a href="./">Labelings, models, and gauge theory</a></p>
+  <nav class="pager pager-top" aria-label="Chapters"><a rel="prev" href="ch01b.html">← Interlude<span class="t">: Why the labels are forced: charged fields</span></a><a rel="next" href="ch03.html">Chapter 3<span class="t">: What a model can tell you</span> →</a></nav>
+  <p class="rendered-note">Chapter 2 of <a href="./"><i>Labelings, models, and gauge theory</i></a>, rendered from the executed notebook. Code cells and their outputs are shown as they ran.</p>
+  <p class="actions"><a href="lab/notebooks/index.html?path=ch02_models.ipynb" target="_blank" rel="noopener">Run this chapter in your browser ↗</a> · <a href="https://github.com/Eyali1001/lattice-gauge-course/blob/main/chapters/ch02_models.py" target="_blank" rel="noopener">Source on GitHub ↗</a><br><span class="rendered-note">Runs on JupyterLite. The first time, it downloads Python and its libraries (about 40 MB).</span></p>
+<section
+id="chapter-2--models-putting-a-probability-distribution-on-labelings"
+class="cell markdown">
+<h1>Chapter 2 — Models: putting a probability distribution on
+labelings</h1>
+<p>Take the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+grid wrapped around in both directions, so that it becomes a torus as in
+chapter 1. It has 4 vertices, 8 edges and 4 faces. Flip a fair coin for
+every edge and write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>
+or
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>
+on it. How many faces do you expect to be <strong>defects</strong>,
+meaning faces whose face product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>?
+Now suppose someone tells you that defects are <em>expensive</em>, and
+that a labeling with many of them should be less likely. How would you
+tilt the coins?</p>
+<p>This chapter answers that question, and the answer is the central
+object of the whole course. We stop looking at <strong>one</strong>
+labeling and start looking at a <strong>probability distribution over
+all labelings</strong>. We call that distribution a <em>model</em>.
+Everything that comes later (averages, correlations, and in chapter 5
+even "dynamics") will be read off from the model alone.</p>
+<p><strong>What you'll learn</strong></p>
+<ul>
+<li>What it means to pick a group element "uniformly at random", and why
+that needs a <em>compact</em> group.</li>
+<li>How a cost on faces and a single number
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+(the <em>stiffness</em>) turn the uniform distribution into a
+model.</li>
+<li>Why the redundancy from chapter 1 (reframings) does no harm, and
+why, on a planar grid with the coin group, the faces are independent
+coins.</li>
+</ul>
+<p><strong>Prerequisites:</strong> chapter 1 (boards, labelings, face
+products, reframings, classes, tree normal form). Chapter 0 helps for
+intuition but is not required.</p>
+</section>
+<div class="cell code" data-execution_count="1">
+<pre class="python"><code>import numpy as np
+import matplotlib.pyplot as plt
+from lgt import *
+from lgt import viz
+
+viz.use_style()
+rng = np.random.default_rng(2)</code></pre>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="1-choosing-a-label-uniformly-at-random">1. Choosing a label
+"uniformly at random"</h2>
+<p>Before we can make labelings <em>unequally</em> likely, we need to
+know what <em>equally likely</em> means. For a fair coin this is
+obvious:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>
+each get probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><annotation encoding="application/x-tex">\tfrac12</annotation></semantics></math>.
+For a general group the right notion is this: picking an element at
+random and then multiplying it by any fixed element should not change
+the odds.</p>
+<p><strong>Definition (uniform distribution, glossary 4.1).</strong> Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+be a group. A <em>uniform distribution</em> on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is a probability distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+such that, for every fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>∈</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">g\in G</annotation></semantics></math>
+and every set
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>A</mi><mo>⊆</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">A\subseteq G</annotation></semantics></math>,</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>g</mi><mi>A</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mi>A</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>g</mi><mi>A</mi><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>g</mi><mi>a</mi><mo>:</mo><mi>a</mi><mo>∈</mo><mi>A</mi><mo stretchy="false" form="postfix">}</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\sigma(gA)=\sigma(A),\qquad gA=\lbrace ga : a\in A\rbrace .
+</annotation></semantics></math></span></p>
+<p>In words: if
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>x</mi><annotation encoding="application/x-tex">x</annotation></semantics></math>
+is drawn from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>,
+then
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mi>x</mi></mrow><annotation encoding="application/x-tex">gx</annotation></semantics></math>
+is drawn from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+too.</p>
+<p>Our examples:</p>
+<ul>
+<li><strong>Coin group</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><mo>=</mo><mo stretchy="false" form="prefix">{</mo><mi>+</mi><mn>1</mn><mo>,</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">\mathbb Z_2=\lbrace +1,-1\rbrace</annotation></semantics></math>:
+each element gets probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><annotation encoding="application/x-tex">\tfrac12</annotation></semantics></math>.</li>
+<li><strong><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mi>N</mi></msub><annotation encoding="application/x-tex">\mathbb Z_N</annotation></semantics></math></strong>
+(integers mod
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>):
+each element gets probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mstyle displaystyle="false"><mfrac><mn>1</mn><mi>N</mi></mfrac></mstyle><annotation encoding="application/x-tex">\tfrac1N</annotation></semantics></math>.</li>
+<li><strong>Circle</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>
+(angles mod
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>π</mi></mrow><annotation encoding="application/x-tex">2\pi</annotation></semantics></math>):
+the angle is uniform on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mn>2</mn><mi>π</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">[0,2\pi)</annotation></semantics></math>.</li>
+<li><strong>Rotations</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>:
+a "uniformly random rotation". As we'll see in a moment, this is not
+what you might first guess.</li>
+</ul>
+<blockquote>
+<p><strong>Fact 2.1 (when a uniform distribution exists).</strong> A
+uniform distribution on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+exists exactly when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is <em>compact</em>, and then it is unique. For us, "compact" means one
+of two things: finite (like
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mi>N</mi></msub><annotation encoding="application/x-tex">\mathbb Z_N</annotation></semantics></math>,
+the permutations
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>),
+or a closed and bounded set of matrices (like the circle or the
+rotations
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>).</p>
+</blockquote>
+<p>The exchange rates of chapter 0 live in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">\mathbb R_{&gt;0}</annotation></semantics></math>,
+which is <strong>not</strong> compact. Picking a "uniformly random
+positive number" is as impossible as picking a uniformly random integer.
+That is why chapter 0 had no randomness in it.</p>
+</div>
+<div class="cell code" data-execution_count="2">
+<pre class="python"><code>for G in [Z2(), ZN(5), U1()]:
+    print(f&quot;{str(G):&gt;4}: eight uniform draws -&gt;&quot;, np.round(G.uniform(rng, 8), 2))</code></pre>
+<div class="output stream stdout">
+<pre><code>  Z2: eight uniform draws -&gt; [-1  1  1  1  1 -1  1  1]
+  Z5: eight uniform draws -&gt; [1 3 4 3 4 0 4 0]
+  U1: eight uniform draws -&gt; [1.73 4.13 3.53 0.94 2.72 4.21 2.66 3.98]
+</code></pre>
+</div>
+</div>
+<section
+id="a-surprise-a-uniform-rotation-does-not-have-a-uniform-angle"
+class="cell markdown">
+<h3>A surprise: a uniform rotation does <em>not</em> have a uniform
+angle</h3>
+<p>Every rotation of 3D space turns by some angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mi>π</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\omega\in[0,\pi]</annotation></semantics></math>
+about some axis. You might expect a uniformly random rotation to have a
+uniformly random angle. It doesn't.</p>
+<blockquote>
+<p><strong>Fact 2.2 (angle of a uniform rotation).</strong> If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>R</mi><annotation encoding="application/x-tex">R</annotation></semantics></math>
+is drawn from the uniform distribution on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>,
+its rotation angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>ω</mi><mo>∈</mo><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mi>π</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">\omega\in[0,\pi]</annotation></semantics></math>
+has density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>p</mi><mo stretchy="false" form="prefix">(</mo><mi>ω</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mi>ω</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>π</mi></mrow><annotation encoding="application/x-tex">p(\omega)=(1-\cos\omega)/\pi</annotation></semantics></math>.</p>
+</blockquote>
+<p><em>Why, roughly:</em> the rotations by a fixed angle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ω</mi><annotation encoding="application/x-tex">\omega</annotation></semantics></math>
+form a whole sphere's worth of axes, and that sphere gets bigger as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>ω</mi><annotation encoding="application/x-tex">\omega</annotation></semantics></math>
+grows. Large angles have "more room", so tiny rotations are rare.</p>
+<p>The figure checks two things. The filled histogram is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>200</mn><mo>,</mo><mn>000</mn></mrow><annotation encoding="application/x-tex">200{,}000</annotation></semantics></math>
+uniform rotations; look at how it follows the dark curve and not the
+flat dashed line. The outlined histogram is the same rotations each
+multiplied by one fixed rotation
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>g</mi><annotation encoding="application/x-tex">g</annotation></semantics></math>.
+It is indistinguishable from the first, which is exactly the defining
+property of "uniform".</p>
+</section>
+<div class="cell code" data-execution_count="3">
+<pre class="python"><code>R = SO3()
+w = R.rotation_angle(R.uniform(rng, 200_000))
+g = R.about_axis([1, 2, 0], 2.0)                       # one fixed rotation
+w_g = R.rotation_angle(R.mul(g, R.uniform(rng, 200_000)))
+om = np.linspace(0, np.pi, 300)
+fig, ax = plt.subplots(figsize=(7.5, 3.6))
+ax.hist(w, bins=60, density=True, alpha=0.5, label=&quot;uniform rotations $R$&quot;)
+ax.hist(w_g, bins=60, density=True, histtype=&quot;step&quot;, lw=2, label=&quot;the same, each turned into $gR$&quot;)
+ax.plot(om, (1 - np.cos(om)) / np.pi, color=viz.INK, lw=2, label=r&quot;$(1-\cos\omega)/\pi$&quot;)
+ax.axhline(1 / np.pi, ls=&quot;--&quot;, color=viz.MUTED, label=&quot;flat: what you might have guessed&quot;)
+ax.set(xlabel=r&quot;rotation angle $\omega$&quot;, ylabel=&quot;density&quot;, xlim=(0, np.pi))
+ax.legend(frameon=False, fontsize=9, loc=&quot;upper left&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch02-media/fig1.png"><img src="ch02-media/fig1.png" width="722" height="377" loading="lazy" alt="Histogram of the rotation angle of 200,000 uniform random 3D rotations, rising from 0 to a peak at pi. It follows the curve (1 minus cos omega) over pi, not the flat dashed line, and a second histogram of the same rotations turned by a fixed rotation is indistinguishable from it."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A uniform distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>σ</mi><annotation encoding="application/x-tex">\sigma</annotation></semantics></math>
+on a group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is one that multiplying by a fixed element leaves unchanged. It exists
+(and is unique) exactly for compact groups: finite groups, the circle,
+rotations. It does not exist for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">\mathbb R_{&gt;0}</annotation></semantics></math>.
+"Uniform" is a statement about the group, not about any coordinate, so a
+uniform rotation does not have a uniform angle.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Show from the definition that the uniform distribution on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mi>N</mi></msub><annotation encoding="application/x-tex">\mathbb Z_N</annotation></semantics></math>
+must give every element probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">1/N</annotation></semantics></math>.</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Take
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">g=1</annotation></semantics></math>
+(adding 1). Invariance says
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">{</mo><mi>k</mi><mo>+</mo><mn>1</mn><mo stretchy="false" form="postfix">}</mo><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>σ</mi><mo stretchy="false" form="prefix">(</mo><mo stretchy="false" form="prefix">{</mo><mi>k</mi><mo stretchy="false" form="postfix">}</mo><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\sigma(\lbrace k+1\rbrace)=\sigma(\lbrace k\rbrace)</annotation></semantics></math></span>
+for every
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>,
+so all
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>N</mi><annotation encoding="application/x-tex">N</annotation></semantics></math>
+elements have the same probability. The probabilities sum to 1, so each
+is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mi>N</mi></mrow><annotation encoding="application/x-tex">1/N</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>Why can't there be a uniform distribution on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">\mathbb R_{&gt;0}</annotation></semantics></math>
+(with multiplication)?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Invariance under multiplying by 2 would force the intervals
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>1</mn><mo>,</mo><mn>2</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mo stretchy="false" form="prefix">[</mo><mn>2</mn><mo>,</mo><mn>4</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mo stretchy="false" form="prefix">[</mo><mn>4</mn><mo>,</mo><mn>8</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">[1,2),[2,4),[4,8),\dots</annotation></semantics></math>
+(and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mo>,</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mi>…</mi></mrow><annotation encoding="application/x-tex">[\tfrac12,1),\dots</annotation></semantics></math>)
+to all have the same probability. There are infinitely many of these
+disjoint intervals, so that common probability must be 0. But they cover
+all of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">\mathbb R_{&gt;0}</annotation></semantics></math>,
+so the total would be 0, not 1.</p>
+</details>
+<ol start="3">
+<li>Here is a recipe for a random rotation: pick a uniformly random axis
+and an angle uniform in
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">[</mo><mn>0</mn><mo>,</mo><mi>π</mi><mo stretchy="false" form="postfix">]</mo></mrow><annotation encoding="application/x-tex">[0,\pi]</annotation></semantics></math>.
+Is the result uniform on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>No. Its angle histogram would be the flat dashed line, not
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mi>ω</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>π</mi></mrow><annotation encoding="application/x-tex">(1-\cos\omega)/\pi</annotation></semantics></math>,
+so it gives far too many small rotations.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="2-putting-a-price-on-defects-face-cost-and-total-cost">2.
+Putting a price on defects: face cost and total cost</h2>
+<p>Now the tilt. We want labelings with defects to be <em>less
+likely</em>, and big defects even less likely than small ones. So we
+first attach a price to every face.</p>
+<p><strong>Definition (face cost, glossary 4.2).</strong> A <em>face
+cost</em> is a function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>:</mo><mi>G</mi><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">\varphi:G\to\mathbb R</annotation></semantics></math>
+that is a class function, so
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>h</mi><mi>x</mi><msup><mi>h</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\varphi(hxh^{-1})=\varphi(x)</annotation></semantics></math>,
+and that is smallest at the identity. We use the standard choice,
+written in <code>lgt</code> as <code>standard_face_cost(G)</code>:</p>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>group</th>
+<th>face cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\varphi(x)</annotation></semantics></math></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>coin
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math></td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>+</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>0</mn><mo>,</mo><mspace width="0.222em"></mspace><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">\varphi(+1)=0,\ \varphi(-1)=2</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>circle
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">U(1)</annotation></semantics></math>,
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mi>N</mi></msub><annotation encoding="application/x-tex">\mathbb Z_N</annotation></semantics></math>
+drawn as angles</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mi>θ</mi></mrow><annotation encoding="application/x-tex">1-\cos\theta</annotation></semantics></math></td>
+</tr>
+<tr>
+<td>matrices
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>
+as permutation matrices,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mi>O</mi><mo stretchy="false" form="prefix">(</mo><mn>3</mn><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">SO(3)</annotation></semantics></math>)</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">Re</mi><mo>&#8289;</mo></mrow><mrow><mi mathvariant="normal">tr</mi><mo>&#8289;</mo></mrow><mo stretchy="false" form="prefix">(</mo><mi>I</mi><mo>−</mo><mi>x</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\operatorname{Re}\operatorname{tr}(I-x)</annotation></semantics></math></td>
+</tr>
+</tbody>
+</table>
+<p><strong>Definition (total cost, glossary 4.3).</strong> For a board
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>
+with faces
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>F</mi><annotation encoding="application/x-tex">F</annotation></semantics></math>,
+the <em>total cost</em> of a labeling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><munder><mo>∑</mo><mrow><mi>f</mi><mo>∈</mo><mi>F</mi></mrow></munder><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>f</mi></msub><mo stretchy="false" form="postfix">)</mo><mspace width="0.222em"></mspace><mo>∈</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>≥</mo><mn>0</mn></mrow></msub><mo>,</mo><mspace width="2.0em"></mspace><mi>S</mi><mo>:</mo><msup><mi>G</mi><mi>E</mi></msup><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>≥</mo><mn>0</mn></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+S(U)=\sum_{f\in F}\varphi(U_f)\ \in\mathbb R_{\ge0},\qquad S:G^E\to\mathbb R_{\ge 0}.
+</annotation></semantics></math></span></p>
+<p>For the coin group,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>2</mn><mo>×</mo><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">number of defects</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(U)=2\times(\text{number of defects})</annotation></semantics></math>.</p>
+<p>The plot shows the face cost on the circle, with the elements of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>5</mn></msub><annotation encoding="application/x-tex">\mathbb Z_5</annotation></semantics></math>
+sitting on the same curve.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mi>N</mi></msub><annotation encoding="application/x-tex">\mathbb Z_N</annotation></semantics></math>
+is a finite "pixelation" of the circle.</p>
+</div>
+<div class="cell code" data-execution_count="4">
+<pre class="python"><code>th = np.linspace(0, 2 * np.pi, 400)
+fig, ax = plt.subplots(figsize=(7, 3.2))
+ax.plot(th, standard_face_cost(U1())(th), color=viz.INK, lw=2, label=r&quot;circle: $\varphi(\theta)=1-\cos\theta$&quot;)
+for G, mk, ms in [(ZN(5), &quot;s&quot;, 8), (Z2(), &quot;o&quot;, 15)]:
+    x = G.elements()
+    ax.plot(G.angle(x), standard_face_cost(G)(x), mk, ms=ms, mfc=&quot;none&quot;, mew=2.5,
+            label=f&quot;elements of {G}&quot;)
+ax.set(xlabel=r&quot;face product, as an angle $\theta$&quot;, ylabel=r&quot;$\varphi$&quot;,
+       xticks=[0, np.pi, 2 * np.pi], xticklabels=[&quot;0&quot;, r&quot;$\pi$&quot;, r&quot;$2\pi$&quot;])
+ax.legend(frameon=False, fontsize=9)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch02-media/fig2.png"><img src="ch02-media/fig2.png" width="679" height="343" loading="lazy" alt="The face cost 1 minus cos theta for the circle, a single hump from 0 at theta 0 to 2 at theta pi and back to 0 at 2 pi. The five elements of Z5 (squares) and the two elements of Z2 (circles) sit on the same curve."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>Why do we insist that
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>
+is a class function? A face product depends on where you start walking
+around the face, and on the reframing. Both change it only by a
+conjugation (glossary 3.5). A class function doesn't notice either.</p>
+<blockquote>
+<p><strong>Fact 2.3 (total cost is an invariant).</strong> For every
+labeling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+and every reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">h:V\to G</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mrow><mtext mathvariant="normal">reframed </mtext><mspace width="0.333em"></mspace></mrow><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(\text{reframed }U)=S(U)</annotation></semantics></math>.</p>
+</blockquote>
+<p>Let's check it on a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4\times4</annotation></semantics></math>
+grid with four groups: finite and continuous, abelian and
+non-abelian.</p>
+</div>
+<div class="cell code" data-execution_count="5">
+<pre class="python"><code>B = Board.grid(4, 4)
+for G in [Z2(), U1(), S3(), SO3()]:
+    M = Model(B, G)
+    U, h = random_labeling(G, B, rng), random_reframing(G, B, rng)
+    print(f&quot;{str(G):&gt;4}:  S(U) = {M.cost(U):8.4f}   S(reframed U) = {M.cost(reframe(G, B, U, h)):8.4f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>  Z2:  S(U) =  10.0000   S(reframed U) =  10.0000
+  U1:  S(U) =   9.5657   S(reframed U) =   9.5657
+  S3:  S(U) =  12.0000   S(reframed U) =  12.0000
+ SO3:  S(U) =  23.7503   S(reframed U) =  23.7503
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Here is one random coin labeling on that grid. Gold edges carry
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>,
+coral faces are defects. Count the coral faces and double the count:
+that's
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(U)</annotation></semantics></math>.</p>
+</div>
+<div class="cell code" data-execution_count="6">
+<pre class="python"><code>G, B = Z2(), Board.grid(4, 4)
+U = random_labeling(G, B, rng)
+fig, ax = plt.subplots(figsize=(4, 4))
+viz.draw_board(ax, B, U, G, title=f&quot;S(U) = {Model(B, G).cost(U):.0f}  &quot;
+               f&quot;({defects(G, B, U).sum()} defects)&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch02-media/fig3.png"><img src="ch02-media/fig3.png" width="360" height="383" loading="lazy" alt="A random coin labeling of a 4 by 4 grid. Gold edges carry minus one; two faces are coral defects, so the total cost S(U) is 4."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> A face cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>:</mo><mi>G</mi><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">\varphi:G\to\mathbb R</annotation></semantics></math>
+prices a single face. It is a class function, minimal at the identity.
+The total cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo>:</mo><msup><mi>G</mi><mi>E</mi></msup><mo>→</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>≥</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">S:G^E\to\mathbb R_{\ge0}</annotation></semantics></math>
+adds up the prices of all faces. Because
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>
+ignores conjugation,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+is an invariant: reframings don't change it.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>A coin-group labeling on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>4</mn><mo>×</mo><mn>4</mn></mrow><annotation encoding="application/x-tex">4\times4</annotation></semantics></math>
+grid has 3 defects. What is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(U)</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>3</mn><mo>⋅</mo><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">S(U)=3\cdot\varphi(-1)=6</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>A face is a closed walk, but which vertex does it start at? Explain
+why this choice cannot affect
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>f</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\varphi(U_f)</annotation></semantics></math>.</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Starting the same loop at a different vertex turns the product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>a</mi><mi>b</mi><mi>c</mi><mi>d</mi></mrow><annotation encoding="application/x-tex">abcd</annotation></semantics></math>
+into, for example,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>b</mi><mi>c</mi><mi>d</mi><mi>a</mi><mo>=</mo><msup><mi>a</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo stretchy="false" form="prefix">(</mo><mi>a</mi><mi>b</mi><mi>c</mi><mi>d</mi><mo stretchy="false" form="postfix">)</mo><mi>a</mi></mrow><annotation encoding="application/x-tex">bcda=a^{-1}(abcd)a</annotation></semantics></math>.
+That is a conjugate, and a class function gives conjugates the same
+value.</p>
+</details>
+<ol start="3">
+<li>On the circle, for which face products is the face cost zero?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Only for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>θ</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\theta=0</annotation></semantics></math>,
+the identity.
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mi>θ</mi><mo>&gt;</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">1-\cos\theta&gt;0</annotation></semantics></math>
+for every other angle.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="3-stiffness-and-the-model">3. Stiffness and the model</h2>
+<p>One more ingredient: a single number that says how <em>seriously</em>
+to take the cost.</p>
+<p><strong>Definition (stiffness, glossary 4.4).</strong> The stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>∈</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>≥</mo><mn>0</mn></mrow></msub></mrow><annotation encoding="application/x-tex">\beta\in\mathbb R_{\ge0}</annotation></semantics></math>
+is a number. Large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+means defects are heavily punished;
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>
+means cost is ignored.</p>
+<p><strong>Definition (model, glossary 4.5).</strong> Let
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mi>E</mi></msup><annotation encoding="application/x-tex">\sigma^E</annotation></semantics></math>
+be "every edge label uniform and independent", a probability
+distribution on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mi>E</mi></msup><annotation encoding="application/x-tex">G^E</annotation></semantics></math>.
+The <em>model</em> with board
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>X</mi><annotation encoding="application/x-tex">X</annotation></semantics></math>,
+group
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+face cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>
+and stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+is the probability distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>G</mi><mi>E</mi></msup><annotation encoding="application/x-tex">G^E</annotation></semantics></math>
+given by</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><mn>1</mn><mrow><mi>Z</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><msup><mi>σ</mi><mi>E</mi></msup><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>,</mo><mspace width="2.0em"></mspace><mi>Z</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mo>∫</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><msup><mi>σ</mi><mi>E</mi></msup><mo stretchy="false" form="prefix">(</mo><mi>d</mi><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mspace width="0.222em"></mspace><mo>∈</mo><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mu_\beta(dU)=\frac{1}{Z(\beta)} e^{-\beta S(U)} \sigma^E(dU),\qquad
+Z(\beta)=\int e^{-\beta S(U)} \sigma^E(dU)\ \in\mathbb R_{&gt;0}.
+</annotation></semantics></math></span></p>
+<p>For a finite group, the integral is just an average over the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|E|}</annotation></semantics></math>
+labelings, and this reads</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mfrac><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow></msup><mrow><munder><mo>∑</mo><msup><mi>U</mi><mo>′</mo></msup></munder><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><msup><mi>U</mi><mo>′</mo></msup><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow></mfrac><mi>.</mi></mrow><annotation encoding="application/x-tex">
+\mu_\beta(U)=\frac{e^{-\beta S(U)}}{\sum_{U&#39;} e^{-\beta S(U&#39;)}}.
+</annotation></semantics></math></span></p>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Z(\beta)</annotation></semantics></math>
+is just the normalizing number that makes the probabilities add up to
+1.</p>
+<p><strong>The stance of this course.</strong> The model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+<em>is</em> the object we study. The cost is not extra information on
+top of it. Up to the constant
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>Z</mi></mrow><annotation encoding="application/x-tex">\log Z</annotation></semantics></math>,
+the scaled cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mi>S</mi></mrow><annotation encoding="application/x-tex">\beta S</annotation></semantics></math>
+is just minus the logarithm of the density of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+relative to uniform:</p>
+<p><span class="math-block"><math display="block" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mfrac><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><mrow><msup><mi>σ</mi><mi>E</mi></msup><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow></mfrac><mo>=</mo><mi>β</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>+</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>Z</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo><mi>.</mi></mrow><annotation encoding="application/x-tex">
+-\log\frac{\mu_\beta(U)}{\sigma^E(U)}=\beta S(U)+\log Z(\beta).
+</annotation></semantics></math></span></p>
+<p>So a model is completely specified by four things: (board,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>).</p>
+<p>For finite groups, <code>lgt</code> computes
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+<em>exactly</em>, by listing every labeling. Let's do that for the coin
+model on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+torus from the opening puzzle:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>8</mn></msup><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">2^8=256</annotation></semantics></math>
+labelings.</p>
+</div>
+<div class="cell code" data-execution_count="7">
+<pre class="python"><code>T = Board.grid(2, 2, periodic=True)
+beta = 1.0
+ex = Model(T, Z2(), beta=beta).exact()          # every labeling with its probability
+k = (ex.cost / 2).astype(int)                   # number of defects of each labeling
+for kk in np.unique(k):
+    sel = k == kk
+    print(f&quot;{kk} defects: {sel.sum():3d} labelings, each with probability &quot;
+          f&quot;{ex.p[sel][0]:.5f}  (together {ex.p[sel].sum():.3f})&quot;)
+print(f&quot;\nZ(beta={beta}) = {np.exp(ex.log_Z):.5f}&quot;)
+print(&quot;cost = log-density?&quot;, np.allclose(-np.log(ex.p * 256), beta * ex.cost + ex.log_Z))</code></pre>
+<div class="output stream stdout">
+<pre><code>0 defects:  32 labelings, each with probability 0.02815  (together 0.901)
+2 defects: 192 labelings, each with probability 0.00052  (together 0.099)
+4 defects:  32 labelings, each with probability 0.00001  (together 0.000)
+
+Z(beta=1.0) = 0.13878
+cost = log-density? True
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Three things to notice:</p>
+<ul>
+<li>A torus never has exactly 1 or 3 defects. Every edge lies on exactly
+two faces, so the product of all face products is always
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>.
+We'll come back to this in section 5.</li>
+<li>Each individual 4-defect labeling is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mn>8</mn></mrow></msup><mo>≈</mo><mn>3</mn><mo>×</mo><msup><mn>10</mn><mrow><mi>−</mi><mn>4</mn></mrow></msup></mrow><annotation encoding="application/x-tex">e^{-8}\approx 3\times10^{-4}</annotation></semantics></math>
+times as likely as a 0-defect labeling.</li>
+<li>The last line confirms the stance:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mi mathvariant="normal">log</mi></mrow><annotation encoding="application/x-tex">-\log</annotation></semantics></math>
+of the density <em>is</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mi>S</mi><mo>+</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>Z</mi></mrow><annotation encoding="application/x-tex">\beta S+\log Z</annotation></semantics></math>.</li>
+</ul>
+<p>And the opening puzzle: with fair coins
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>),
+each face is a defect with probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><annotation encoding="application/x-tex">\tfrac12</annotation></semantics></math>,
+so you expect
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>2</mn><annotation encoding="application/x-tex">2</annotation></semantics></math>
+defects out of 4.</p>
+<blockquote>
+<p><strong>Recap.</strong> A model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+is the uniform distribution on labelings, reweighted by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup><annotation encoding="application/x-tex">e^{-\beta S}</annotation></semantics></math>
+and renormalized by
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Z(\beta)</annotation></semantics></math>.
+It is determined by (board,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>).
+Up to sign, scale and a constant, the cost is the log-density relative
+to uniform, so the model is the single object that holds everything.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>In the torus model at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">\beta=1</annotation></semantics></math>,
+how much less likely is a particular labeling with 2 defects than a
+particular labeling with none?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The costs are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>4</mn><annotation encoding="application/x-tex">4</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>,
+so the ratio is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mn>4</mn></mrow></msup><mo>≈</mo><mn>0.018</mn></mrow><annotation encoding="application/x-tex">e^{-4}\approx0.018</annotation></semantics></math>.
+The normalizer
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>Z</mi><annotation encoding="application/x-tex">Z</annotation></semantics></math>
+cancels in ratios.</p>
+</details>
+<ol start="2">
+<li>Someone hands you
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+as a table of probabilities but forgets to tell you
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>.
+Can you recover
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mi>S</mi></mrow><annotation encoding="application/x-tex">\beta S</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Yes, up to an additive constant:
+<span class="math-wide"><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>−</mi><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mo minsize="120%" maxsize="120%" stretchy="true" form="prefix">(</mo><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><msup><mi>σ</mi><mi>E</mi></msup><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo minsize="120%" maxsize="120%" stretchy="true" form="postfix">)</mo><mo>−</mo><mrow><mi mathvariant="normal">log</mi><mo>&#8289;</mo></mrow><mi>Z</mi></mrow><annotation encoding="application/x-tex">\beta S(U)=-\log\big(\mu_\beta(U)/\sigma^E(U)\big)-\log Z</annotation></semantics></math></span>.
+The constant is pinned down by the identity labeling, whose cost is
+0.</p>
+</details>
+<ol start="3">
+<li>What happens to the model if you double
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+and halve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Nothing. Only the product
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mi>φ</mi></mrow><annotation encoding="application/x-tex">\beta\varphi</annotation></semantics></math>
+enters
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>.
+Stiffness is the convention for "how sharp" the cost is, measured
+against a fixed
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="4-redundancy-does-no-harm">4. Redundancy does no harm</h2>
+<p>In chapter 1 we saw that a labeling carries both real information
+(its class) and convention (a reframing). Does that convention distort
+the model? No, for three reasons.</p>
+<blockquote>
+<p><strong>Fact 2.4 (the model doesn't see reframings).</strong> For
+every reframing
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>:</mo><mi>V</mi><mo>→</mo><mi>G</mi></mrow><annotation encoding="application/x-tex">h:V\to G</annotation></semantics></math>
+and every labeling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mrow><mtext mathvariant="normal">reframed </mtext><mspace width="0.333em"></mspace></mrow><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mi>μ</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">\mu_\beta(\text{reframed }U)=\mu_\beta(U)</annotation></semantics></math>.
+Equivalently, reframing a random labeling drawn from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+gives a random labeling with the <em>same</em> distribution
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>.</p>
+</blockquote>
+<p><em>Why:</em> a reframing permutes the labelings, it leaves
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mi>E</mi></msup><annotation encoding="application/x-tex">\sigma^E</annotation></semantics></math>
+unchanged, and it leaves
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+unchanged (Fact 2.3). Below we reframe all 256 labelings at once, see
+where each one lands, and compare probabilities.</p>
+</div>
+<div class="cell code" data-execution_count="8">
+<pre class="python"><code>def index_of(U):
+    &quot;&quot;&quot;Position of a coin labeling in the enumeration order of `Model.exact()`.&quot;&quot;&quot;
+    bits = (np.asarray(U) == -1).astype(np.int64)
+    return bits @ (2 ** np.arange(bits.shape[-1])[::-1])
+
+assert np.all(index_of(ex.U) == np.arange(len(ex.U)))
+h = random_reframing(Z2(), T, rng)
+moved = index_of(reframe(Z2(), T, ex.U, h))           # where each labeling goes
+print(&quot;reframing permutes the labelings:&quot;, len(np.unique(moved)) == len(moved))
+print(&quot;and preserves every probability: &quot;, np.allclose(ex.p[moved], ex.p))</code></pre>
+<div class="output stream stdout">
+<pre><code>reframing permutes the labelings: True
+and preserves every probability:  True
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Next, how big are the classes? For an abelian group they all have the
+same size.</p>
+<blockquote>
+<p><strong>Fact 2.5 (class sizes).</strong> If
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is finite and abelian (recall that boards are connected), every class
+contains exactly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|V|-1}</annotation></semantics></math>
+labelings, and there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|E|-|V|+1}</annotation></semantics></math>
+classes. Hence the probability of a class is proportional to
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup><annotation encoding="application/x-tex">e^{-\beta S}</annotation></semantics></math>
+of any of its members.</p>
+<p>For non-abelian
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+classes can have different sizes.</p>
+</blockquote>
+<p><em>Why the exponent is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|V|-1</annotation></semantics></math>:</em>
+there are
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|V|}</annotation></semantics></math>
+reframings. When
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is abelian, a reframing leaves a labeling unchanged exactly when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>s</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>h</mi><mo stretchy="false" form="prefix">(</mo><mi>t</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">h(s)=h(t)</annotation></semantics></math>
+on every edge, that is, when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>≡</mo><mi>g</mi></mrow><annotation encoding="application/x-tex">h\equiv g</annotation></semantics></math>
+is constant. So each labeling in a class is reached by exactly
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|G|</annotation></semantics></math>
+reframings, and the class has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo></mrow></msup><mi>/</mi><mo stretchy="false" form="prefix">|</mo><mi>G</mi><mo stretchy="false" form="prefix">|</mo></mrow><annotation encoding="application/x-tex">|G|^{|V|}/|G|</annotation></semantics></math>
+members.</p>
+</div>
+<div class="cell code" data-execution_count="9">
+<pre class="python"><code>sizes = np.bincount(class_ids(Z2(), T, ex.U))
+print(f&quot;coin on the torus: {len(sizes)} classes, sizes {set(sizes.tolist())}&quot;
+      f&quot;  (formula: 2^{T.cycle_rank} classes of size 2^{T.n_vertices - 1})&quot;)
+
+S, tri = S3(), Board.triangle()
+Us = all_labelings(S, tri)
+ids = class_ids(S, tri, Us)
+loop = loop_product(S, tri, Us, [0, 1, 2, 0])
+for c in range(ids.max() + 1):
+    print(f&quot;S3 on the triangle, class {c}: {np.sum(ids == c):3d} labelings, &quot;
+          f&quot;loop product like {viz.format_label(S, loop[ids == c][0])}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>coin on the torus: 32 classes, sizes {8}  (formula: 2^5 classes of size 2^3)
+S3 on the triangle, class 0:  36 labelings, loop product like e
+S3 on the triangle, class 1: 108 labelings, loop product like (23)
+S3 on the triangle, class 2:  72 labelings, loop product like (123)
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>On the triangle with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>,
+a class is determined by the conjugacy class of its loop product
+(chapter 1). The 216 labelings split
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>36</mn><mi>/</mi><mn>108</mn><mi>/</mi><mn>72</mn></mrow><annotation encoding="application/x-tex">36/108/72</annotation></semantics></math>,
+because identity, transpositions and 3-cycles make up
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><mn>6</mn></mrow><annotation encoding="application/x-tex">1/6</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mi>/</mi><mn>6</mn></mrow><annotation encoding="application/x-tex">3/6</annotation></semantics></math>
+and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mi>/</mi><mn>6</mn></mrow><annotation encoding="application/x-tex">2/6</annotation></semantics></math>
+of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>.
+So, unlike the abelian case, the class sizes differ. That's fine: the
+size is simply how much uniform probability the class carries.</p>
+<p>The most useful form of "redundancy does no harm" is the next fact.
+It lets us throw the redundancy away <em>before</em> computing. It is
+about averages: for a function
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>:</mo><msup><mi>G</mi><mi>E</mi></msup><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">f:G^E\to\mathbb R</annotation></semantics></math>,
+we write
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><mi>f</mi><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub><mo>∈</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">\langle f\rangle_\beta\in\mathbb R</annotation></semantics></math>
+for its expectation when
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>U</mi><annotation encoding="application/x-tex">U</annotation></semantics></math>
+is drawn from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+(glossary 4.6). Chapter 3 is all about averages; here we only need the
+notation.</p>
+<blockquote>
+<p><strong>Fact 2.6 (fixing the tree is free).</strong> Pick a spanning
+tree. For any invariant
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo>:</mo><msup><mi>G</mi><mi>E</mi></msup><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">f:G^E\to\mathbb R</annotation></semantics></math>,
+the average
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><mi>f</mi><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub></mrow><annotation encoding="application/x-tex">\langle f\rangle_\beta</annotation></semantics></math>
+equals the average of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+in the smaller model where every tree edge is fixed to the identity and
+only the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">|E|-|V|+1</annotation></semantics></math>
+other labels are random (with the same weight
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup><annotation encoding="application/x-tex">e^{-\beta S}</annotation></semantics></math>).</p>
+</blockquote>
+<p><em>Why:</em> putting a uniformly random labeling into tree normal
+form leaves the non-tree labels uniform and independent. Each of them is
+a walk product that contains its own edge's uniform label exactly once.
+Invariants and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math>
+don't change.</p>
+<p>Let's verify this with two invariants on the torus (the number of
+defects, and the face product of one face) and one on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>
+triangle
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>χ</mi><annotation encoding="application/x-tex">\chi</annotation></semantics></math>
+of the loop product, where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>χ</mi><annotation encoding="application/x-tex">\chi</annotation></semantics></math>
+is the trace of the permutation matrix).</p>
+</div>
+<div class="cell code" data-execution_count="10">
+<pre class="python"><code>def tree_fixed_average(model, f):
+    &quot;&quot;&quot;Average of f when tree labels are pinned to the identity (Fact 2.6).&quot;&quot;&quot;
+    tree = model.board.spanning_tree()[0]
+    ex = model.exact()
+    keep = np.all(model.G.is_identity(ex.U[:, tree]), axis=1)
+    p = ex.p[keep] / ex.p[keep].sum()
+    return float(np.sum(p * f(ex.U[keep]))), int(keep.sum())
+
+M = Model(T, Z2(), beta=0.7)
+for name, f in [(&quot;number of defects&quot;, lambda U: defects(Z2(), T, U).sum(-1)),
+                (&quot;product of face 0&quot;, lambda U: face_products(Z2(), T, U)[:, 0])]:
+    small, n = tree_fixed_average(M, f)
+    print(f&quot;{name:&gt;25}: full model {M.average(f):+.5f} | tree fixed {small:+.5f} ({n} labelings)&quot;)
+
+Mt = Model(tri, S, beta=0.7)
+chi = lambda U: S.chi(loop_product(S, tri, U, [0, 1, 2, 0]))
+print(f&quot;{&#39;S3 triangle, chi(loop)&#39;:&gt;25}: full model {Mt.average(chi):+.5f} | &quot;
+      f&quot;tree fixed {tree_fixed_average(Mt, chi)[0]:+.5f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>        number of defects: full model +0.54401 | tree fixed +0.54401 (32 labelings)
+        product of face 0: full model +0.72799 | tree fixed +0.72799 (32 labelings)
+   S3 triangle, chi(loop): full model +1.88431 | tree fixed +1.88431
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>Same numbers, from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>5</mn></msup><mo>=</mo><mn>32</mn></mrow><annotation encoding="application/x-tex">2^5=32</annotation></semantics></math>
+instead of
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>256</mn><annotation encoding="application/x-tex">256</annotation></semantics></math>
+labelings on the torus, and from 6 instead of 216 on the triangle. On
+big boards this saving is enormous.</p>
+<blockquote>
+<p><strong>Recap.</strong> Reframings permute labelings without changing
+their probability (Fact 2.4). For abelian groups all classes have the
+same size, so the redundancy is a constant overcount that cancels (Fact
+2.5). For any group, you may pin a spanning tree to the identity before
+computing averages of invariants (Fact 2.6).</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>Coin model on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>
+torus (9 vertices, 18 edges). How many classes, and how big is
+each?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mn>18</mn><mo>−</mo><mn>9</mn><mo>+</mo><mn>1</mn></mrow></msup><mo>=</mo><msup><mn>2</mn><mn>10</mn></msup><mo>=</mo><mn>1024</mn></mrow><annotation encoding="application/x-tex">2^{18-9+1}=2^{10}=1024</annotation></semantics></math>
+classes, each with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mrow><mn>9</mn><mo>−</mo><mn>1</mn></mrow></msup><mo>=</mo><mn>256</mn></mrow><annotation encoding="application/x-tex">2^{9-1}=256</annotation></semantics></math>
+labelings. Check:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1024</mn><mo>⋅</mo><mn>256</mn><mo>=</mo><msup><mn>2</mn><mn>18</mn></msup></mrow><annotation encoding="application/x-tex">1024\cdot256=2^{18}</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>With
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>S</mi><mn>3</mn></msub><annotation encoding="application/x-tex">S_3</annotation></semantics></math>
+on the triangle, the class of the identity labeling has only 36 members.
+Which reframings leave the identity labeling unchanged?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>The six constant reframings
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>h</mi><mo>≡</mo><mi>g</mi></mrow><annotation encoding="application/x-tex">h\equiv g</annotation></semantics></math>:
+they give
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>g</mi><mi>e</mi><msup><mi>g</mi><mrow><mi>−</mi><mn>1</mn></mrow></msup><mo>=</mo><mi>e</mi></mrow><annotation encoding="application/x-tex">g e g^{-1}=e</annotation></semantics></math>
+on every edge. Each labeling in the class is therefore produced by 6
+different reframings, and the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mn>6</mn><mn>3</mn></msup><annotation encoding="application/x-tex">6^3</annotation></semantics></math>
+reframings give only
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>6</mn><mn>3</mn></msup><mi>/</mi><mn>6</mn><mo>=</mo><mn>36</mn></mrow><annotation encoding="application/x-tex">6^3/6=36</annotation></semantics></math>
+different labelings. A labeling whose loop product is a 3-cycle is fixed
+by only 3 reframings, so its class has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>6</mn><mn>3</mn></msup><mi>/</mi><mn>3</mn><mo>=</mo><mn>72</mn></mrow><annotation encoding="application/x-tex">6^3/3=72</annotation></semantics></math>
+members.</p>
+</details>
+<ol start="3">
+<li>Fact 2.6 needs
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+to be an invariant. Find a non-invariant
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>
+for which it fails.</li>
+</ol>
+<details><summary>Answer</summary>
+<p>In the coin model, take
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>f</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><mi>U</mi><mo stretchy="false" form="prefix">(</mo><mi>e</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">f(U)=U(e)</annotation></semantics></math>
+for a <em>tree</em> edge
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>e</mi><annotation encoding="application/x-tex">e</annotation></semantics></math>.
+In the tree-fixed model it is always
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>,
+so its average there is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>1</mn><annotation encoding="application/x-tex">1</annotation></semantics></math>.
+In the full model its average is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>0</mn><annotation encoding="application/x-tex">0</annotation></semantics></math>,
+as chapter 3 explains.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="5-the-stiffness-dial">5. The stiffness dial</h2>
+<p>What does turning
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+do? Look at the two ends first.</p>
+<blockquote>
+<p><strong>Fact 2.7 (the two ends of the dial).</strong></p>
+<ul>
+<li>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mn>0</mn></msub><mo>=</mo><msup><mi>σ</mi><mi>E</mi></msup></mrow><annotation encoding="application/x-tex">\mu_0=\sigma^E</annotation></semantics></math>:
+all labels are independent and uniform.</li>
+<li>As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>
+piles up on the labelings with <strong>no defects</strong> (cost 0),
+spread uniformly over them.</li>
+</ul>
+</blockquote>
+<p>On a torus, "no defects" is a <em>weaker</em> condition than
+"consistent" (glossary 2.6). A loop that goes once around the torus is
+not a product of faces, so its loop product can still be
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>
+when every face product is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>.
+On the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>2</mn><mo>×</mo><mn>2</mn></mrow><annotation encoding="application/x-tex">2\times2</annotation></semantics></math>
+torus there are 32 defect-free labelings, but only 8 consistent
+ones.</p>
+</div>
+<div class="cell code" data-execution_count="11">
+<pre class="python"><code>for beta in [0.0, 1.0, 3.0, 6.0]:
+    ex_b = Model(T, Z2(), beta=beta).exact()
+    k = (ex_b.cost / 2).astype(int)
+    ok = is_consistent(Z2(), T, ex_b.U)
+    print(f&quot;beta = {beta:3.1f}:  P(no defects) = {ex_b.p[k == 0].sum():.4f}   &quot;
+          f&quot;P(consistent) = {ex_b.p[ok].sum():.4f}&quot;)
+print(&quot;defect-free labelings:&quot;, int(np.sum(k == 0)), &quot;| consistent:&quot;, int(ok.sum()))</code></pre>
+<div class="output stream stdout">
+<pre><code>beta = 0.0:  P(no defects) = 0.1250   P(consistent) = 0.0312
+beta = 1.0:  P(no defects) = 0.9007   P(consistent) = 0.2252
+beta = 3.0:  P(no defects) = 1.0000   P(consistent) = 0.2500
+beta = 6.0:  P(no defects) = 1.0000   P(consistent) = 0.2500
+defect-free labelings: 32 | consistent: 8
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>At large
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><mtext mathvariant="normal">consistent</mtext><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(\text{consistent})</annotation></semantics></math>
+settles at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>8</mn><mi>/</mi><mn>32</mn><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>4</mn></mfrac></mstyle></mrow><annotation encoding="application/x-tex">8/32=\tfrac14</annotation></semantics></math>:
+the model spreads evenly over the 32 defect-free labelings, and only 8
+of them are consistent.</p>
+<p>Now the whole dial, on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>
+torus
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>18</mn></msup><mo>=</mo><mn>262</mn><mo>,</mo><mn>144</mn></mrow><annotation encoding="application/x-tex">2^{18}=262{,}144</annotation></semantics></math>
+labelings, still exact). The weight of a labeling depends only on its
+number of defects
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>.
+So we count the labelings with each
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>k</mi><annotation encoding="application/x-tex">k</annotation></semantics></math>
+once, at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>,
+and reweight:
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>P</mi><mi>β</mi></msub><mo stretchy="false" form="prefix">(</mo><mi>k</mi><mo stretchy="false" form="postfix">)</mo><mo>∝</mo><msub><mi>N</mi><mi>k</mi></msub><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi><mi>k</mi></mrow></msup></mrow><annotation encoding="application/x-tex">P_\beta(k)\propto N_k e^{-2\beta k}</annotation></semantics></math>,
+where
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>N</mi><mi>k</mi></msub><annotation encoding="application/x-tex">N_k</annotation></semantics></math>
+is that count.</p>
+<p>What to look at:</p>
+<ul>
+<li><strong>Left:</strong> at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>
+the defect count is a binomial-like hump around half the faces (only
+even counts are possible, as before). As
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+grows the hump slides to 0.</li>
+<li><strong>Right:</strong> the average fraction of defect faces drops
+smoothly. The dashed curve is a formula for <em>planar</em> grids (not
+wrapped around), coming next.</li>
+</ul>
+</div>
+<div class="cell code" data-execution_count="12">
+<pre class="python"><code>T3 = Board.grid(3, 3, periodic=True)
+ex3 = Model(T3, Z2(), beta=0.0).exact()
+N_k = np.bincount((ex3.cost / 2).astype(int))           # labelings with k defects
+kk = np.arange(len(N_k))
+def P_defects(beta):
+    w = N_k * np.exp(-2 * beta * kk)
+    return w / w.sum()
+
+betas = np.linspace(0, 2.5, 101)
+mean_frac = [P_defects(b) @ kk / T3.n_faces for b in betas]
+fig, (a1, a2) = plt.subplots(1, 2, figsize=(11, 3.6))
+for i, b in enumerate([0, 0.3, 0.6, 1.0, 2.0]):
+    a1.bar(kk + (i - 2) * 0.16, P_defects(b), width=0.16, label=fr&quot;$\beta={b}$&quot;)
+a1.set(xlabel=&quot;number of defects $k$ (of 9 faces)&quot;, ylabel=&quot;probability&quot;, xticks=kk)
+a1.legend(frameon=False, fontsize=9)
+a2.plot(betas, mean_frac, lw=2.5, label=r&quot;$3\times3$ torus (exact)&quot;)
+a2.plot(betas, np.exp(-2 * betas) / (1 + np.exp(-2 * betas)), &quot;--&quot;, color=viz.INK,
+        label=r&quot;planar grid: $e^{-2\beta}/(1+e^{-2\beta})$&quot;)
+a2.set(xlabel=r&quot;stiffness $\beta$&quot;, ylabel=&quot;average fraction of defect faces&quot;)
+a2.legend(frameon=False, fontsize=9)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch02-media/fig4.png"><img src="ch02-media/fig4.png" width="1020" height="377" loading="lazy" alt="Left: bar chart of the probability of each number of defects, out of 9 faces, at stiffness 0, 0.3, 0.6, 1 and 2; the hump slides towards 0 defects as stiffness grows. Right: the average fraction of defect faces falls smoothly from 0.5 to near 0 as stiffness goes from 0 to 2.5, with a dashed planar-grid formula just above it."></a></figure>
+</div>
+</div>
+<section id="on-a-planar-grid-the-faces-are-independent-coins"
+class="cell markdown">
+<h3>On a planar grid, the faces are independent coins</h3>
+<p>The dashed curve comes from a fact that makes the coin model on a
+planar grid almost embarrassingly simple. Chapter 3 builds on it.</p>
+<blockquote>
+<p><strong>Fact 2.8 (independent faces).</strong> In the coin model
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>G</mi><mo>=</mo><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub></mrow><annotation encoding="application/x-tex">G=\mathbb Z_2</annotation></semantics></math>,
+standard face cost) on a planar grid (not wrapped around), the face
+products
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>U</mi><mi>f</mi></msub><mo>∈</mo><mo stretchy="false" form="prefix">{</mo><mi>±</mi><mn>1</mn><mo stretchy="false" form="postfix">}</mo></mrow><annotation encoding="application/x-tex">U_f\in\lbrace\pm1\rbrace</annotation></semantics></math>,
+one per face
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>f</mi><annotation encoding="application/x-tex">f</annotation></semantics></math>,
+are <strong>independent</strong>. Each is a defect with probability
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>P</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>f</mi></msub><mo>=</mo><mi>−</mi><mn>1</mn><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi></mrow></msup><mi>/</mi><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>+</mo><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi></mrow></msup><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">P(U_f=-1)=e^{-2\beta}/(1+e^{-2\beta})</annotation></semantics></math>;
+equivalently,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><msub><mi>U</mi><mi>f</mi></msub><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\langle U_f\rangle_\beta=\tanh\beta</annotation></semantics></math>.</p>
+</blockquote>
+<p><em>Why, lightly:</em> put the labeling in tree normal form (Fact
+2.6). On a planar grid the number of non-tree edges equals the number of
+faces, since
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>E</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>+</mi><mn>1</mn><mo>=</mo><mo stretchy="false" form="prefix">(</mo><mi>L</mi><mo>−</mo><mn>1</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">|E|-|V|+1=(L-1)^2</annotation></semantics></math>
+for an
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>L</mi><mo>×</mo><mi>L</mi></mrow><annotation encoding="application/x-tex">L\times L</annotation></semantics></math>
+grid. The non-tree labels and the face products determine each other
+one-to-one. So the face products are independent fair coins under
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msup><mi>σ</mi><mi>E</mi></msup><annotation encoding="application/x-tex">\sigma^E</annotation></semantics></math>.
+The weight
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup><mo>=</mo><msub><mo>∏</mo><mi>f</mi></msub><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>f</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow></msup></mrow><annotation encoding="application/x-tex">e^{-\beta S}=\prod_f e^{-\beta\varphi(U_f)}</annotation></semantics></math>
+then tilts each coin separately.</p>
+<p>Let's check it exactly on the
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>3</mn><mo>×</mo><mn>3</mn></mrow><annotation encoding="application/x-tex">3\times3</annotation></semantics></math>
+grid (12 edges, 4 faces). We compare all 16 joint probabilities of the
+four face products with the product of the four marginals.</p>
+</section>
+<div class="cell code" data-execution_count="13">
+<pre class="python"><code>P3 = Board.grid(3, 3)
+beta = 0.6
+exP = Model(P3, Z2(), beta=beta).exact()
+FP = face_products(Z2(), P3, exP.U)                      # (4096, 4): one row per labeling
+patterns = np.array(np.meshgrid(*[[1, -1]] * 4, indexing=&quot;ij&quot;)).reshape(4, -1).T
+marg = (1 + np.tanh(beta) * patterns) / 2                # P(U_f = s) = (1 + s tanh beta)/2
+joint = np.array([exP.p[np.all(FP == s, axis=1)].sum() for s in patterns])
+print(&quot;largest |joint - product of marginals| over 16 patterns:&quot;,
+      f&quot;{np.abs(joint - marg.prod(axis=1)).max():.1e}&quot;)
+print(f&quot;&lt;U_f&gt; = {exP.average(lambda U: face_products(Z2(), P3, U)[:, 0]):.5f}&quot;
+      f&quot;   tanh(beta) = {np.tanh(beta):.5f}&quot;)</code></pre>
+<div class="output stream stdout">
+<pre><code>largest |joint - product of marginals| over 16 patterns: 5.6e-17
+&lt;U_f&gt; = 0.53705   tanh(beta) = 0.53705
+</code></pre>
+</div>
+</div>
+<div class="cell markdown">
+<p>The independence fails on a torus, and we already know why: there the
+product of <em>all</em> face products is forced to be
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>.</p>
+</div>
+<div class="cell code" data-execution_count="14">
+<pre class="python"><code>FP3 = face_products(Z2(), T3, ex3.U)
+print(&quot;3x3 torus: product of all face products is +1 for every labeling:&quot;,
+      bool(np.all(FP3.prod(axis=1) == 1)))</code></pre>
+<div class="output stream stdout">
+<pre><code>3x3 torus: product of all face products is +1 for every labeling: True
+</code></pre>
+</div>
+</div>
+<section id="seeing-the-dial" class="cell markdown">
+<h3>Seeing the dial</h3>
+<p>Fact 2.8 hands us an <em>exact</em> sampler for large planar grids,
+far too large to enumerate. Flip one tilted coin per face. Then build
+any labeling with those face products: keep vertical edges at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>
+and fill in the horizontal edges row by row. Finally apply a random
+reframing so that the labeling doesn't look special. (By Fact 2.4 the
+result is an exact draw from
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>.)</p>
+<p>What to look at:</p>
+<ul>
+<li><strong>The faces:</strong> the coral defects thin out as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>
+grows.</li>
+<li><strong>The edges:</strong> the gold
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>−</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">-1</annotation></semantics></math>
+edges look like the same random noise at <em>every</em>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>.</li>
+</ul>
+<p>Edge labels are mostly convention. The information lives on the
+faces.</p>
+</section>
+<div class="cell code" data-execution_count="15">
+<pre class="python"><code>def sample_coin_planar(L, beta, rng):
+    &quot;&quot;&quot;Exact draw from the coin model on an L x L planar grid (Fact 2.8 + Fact 2.4).&quot;&quot;&quot;
+    B, G = Board.grid(L, L), Z2()
+    idx = B.meta[&quot;edge_index&quot;]                           # (vertex, direction) -&gt; edge
+    p = np.exp(-2 * beta) / (1 + np.exp(-2 * beta))
+    face = np.where(rng.random((L - 1, L - 1)) &lt; p, -1, 1)
+    U = G.identity(B.n_edges)                            # vertical edges stay +1
+    for y in range(L - 1):
+        for x in range(L - 1):                           # face (x,y) = bottom edge * top edge
+            U[idx[(x + L * (y + 1), 0)]] = U[idx[(x + L * y, 0)]] * face[x, y]
+    return B, reframe(G, B, U, random_reframing(G, B, rng))</code></pre>
+</div>
+<div class="cell code" data-execution_count="16">
+<pre class="python"><code>fig, axs = plt.subplots(1, 4, figsize=(16, 4.4))
+for ax, beta in zip(axs, [0.0, 0.5, 1.0, 2.0]):
+    B, U = sample_coin_planar(10, beta, rng)
+    viz.draw_board(ax, B, U, Z2(), show_arrows=False, vertex_size=8, pad=0.2,
+                   title=fr&quot;$\beta={beta}$:  {defects(Z2(), B, U).sum()} defects of {B.n_faces}&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch02-media/fig5.png"><img src="ch02-media/fig5.png" width="1386" height="342" loading="lazy" alt="Four samples of a 10 by 10 coin model at stiffness 0, 0.5, 1 and 2. The number of coral defect faces drops from 49 to 23 to 12 to 3, while the gold minus-one edges look equally random in all four."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<p>The same dial works for any compact group. Here is the circle on a
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>6</mn><mo>×</mo><mn>6</mn></mrow><annotation encoding="application/x-tex">6\times6</annotation></semantics></math>
+grid. The samples come from a simple random-update sampler, which we'll
+explain in chapter 4. Clock hands show the edge labels, and face colour
+shows the face product as an angle: pale means near the identity, dark
+means far from it. Again the clock hands look random at every stiffness,
+while the faces calm down.</p>
+</div>
+<div class="cell code" data-execution_count="17">
+<pre class="python"><code>G, B = U1(), Board.grid(6, 6)
+fig, axs = plt.subplots(1, 4, figsize=(16, 4.4))
+for ax, beta in zip(axs, [0.0, 1.0, 3.0, 10.0]):
+    step = min(1.0, 1.5 / np.sqrt(beta + 1e-9))          # smaller moves when stiff
+    U = Model(B, G, beta=beta).metropolis(rng, n_samples=1, burn_in=400, step=step)[0]
+    viz.draw_board(ax, B, U, G, show_arrows=False, vertex_size=8, clock_r=0.13,
+                   title=fr&quot;$\beta={beta}$&quot;)
+plt.show()</code></pre>
+<div class="output display_data">
+<figure><a href="ch02-media/fig6.png"><img src="ch02-media/fig6.png" width="1386" height="342" loading="lazy" alt="Four samples of the circle model on a 6 by 6 grid at stiffness 0, 1, 3 and 10. The clock hands on the edges look random in every panel, while the face colours fade from strong purples and reds to pale as stiffness grows."></a></figure>
+</div>
+</div>
+<div class="cell markdown">
+<blockquote>
+<p><strong>Recap.</strong> At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>
+the model is uniform, and as
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>
+it piles up on the defect-free labelings. On a torus those include
+non-consistent ones, whose loop product once around the torus is not the
+identity. On a planar grid with the coin group, the faces are
+independent coins with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><msub><mi>U</mi><mi>f</mi></msub><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\langle U_f\rangle_\beta=\tanh\beta</annotation></semantics></math>
+(Fact 2.8). Pictures of samples show the lesson of this chapter: edges
+look like noise, and faces carry the information.</p>
+</blockquote>
+<p><strong>Check yourself</strong></p>
+<ol>
+<li>In the planar-grid coin model, what is the probability that a given
+face is a defect at
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>?
+At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mn>3</mn></mrow><annotation encoding="application/x-tex">\beta=\tfrac12\ln 3</annotation></semantics></math>?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>
+it is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><annotation encoding="application/x-tex">\tfrac12</annotation></semantics></math>.
+At
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>2</mn></mfrac></mstyle><mrow><mi mathvariant="normal">ln</mi><mo>&#8289;</mo></mrow><mn>3</mn></mrow><annotation encoding="application/x-tex">\beta=\tfrac12\ln3</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mi>e</mi><mrow><mi>−</mi><mn>2</mn><mi>β</mi></mrow></msup><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>3</mn></mfrac></mstyle></mrow><annotation encoding="application/x-tex">e^{-2\beta}=\tfrac13</annotation></semantics></math>,
+so the probability is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mfrac><mrow><mn>1</mn><mi>/</mi><mn>3</mn></mrow><mrow><mn>1</mn><mo>+</mo><mn>1</mn><mi>/</mi><mn>3</mn></mrow></mfrac><mo>=</mo><mstyle displaystyle="false"><mfrac><mn>1</mn><mn>4</mn></mfrac></mstyle></mrow><annotation encoding="application/x-tex">\frac{1/3}{1+1/3}=\tfrac14</annotation></semantics></math>.</p>
+</details>
+<ol start="2">
+<li>Why can a torus never have exactly one defect?</li>
+</ol>
+<details><summary>Answer</summary>
+<p>Every edge lies on exactly two faces. In the product of all face
+products, each label appears twice, and
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mi>±</mi><mn>1</mn><msup><mo stretchy="false" form="postfix">)</mo><mn>2</mn></msup><mo>=</mo><mn>1</mn></mrow><annotation encoding="application/x-tex">(\pm1)^2=1</annotation></semantics></math>.
+So the product of all face products is
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>+</mi><mn>1</mn></mrow><annotation encoding="application/x-tex">+1</annotation></semantics></math>,
+which means the number of defects is even.</p>
+</details>
+<ol start="3">
+<li>The
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>10</mn><mo>×</mo><mn>10</mn></mrow><annotation encoding="application/x-tex">10\times10</annotation></semantics></math>
+grid in the dial picture has
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mn>180</mn><annotation encoding="application/x-tex">180</annotation></semantics></math>
+edges. How many labelings is that, and why could we still sample it
+exactly?</li>
+</ol>
+<details><summary>Answer</summary>
+<p><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msup><mn>2</mn><mn>180</mn></msup><mo>≈</mo><mn>1.5</mn><mo>×</mo><msup><mn>10</mn><mn>54</mn></msup></mrow><annotation encoding="application/x-tex">2^{180}\approx1.5\times10^{54}</annotation></semantics></math>
+labelings, far beyond enumeration. Fact 2.8 reduces the problem to 81
+independent tilted coins, one per face. Fact 2.4 lets us reframe the
+result freely.</p>
+</details>
+</div>
+<div class="cell markdown">
+<hr />
+<h2 id="chapter-recap">Chapter recap</h2>
+<ul>
+<li>A <strong>uniform distribution</strong> on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+is unchanged by multiplying by a fixed element. It exists exactly for
+compact
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>
+(finite groups, circle, rotations), not for
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℝ</mi><mrow><mo>&gt;</mo><mn>0</mn></mrow></msub><annotation encoding="application/x-tex">\mathbb R_{&gt;0}</annotation></semantics></math>.
+A uniform rotation's angle has density
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">(</mo><mn>1</mn><mo>−</mo><mrow><mi mathvariant="normal">cos</mi><mo>&#8289;</mo></mrow><mi>ω</mi><mo stretchy="false" form="postfix">)</mo><mi>/</mi><mi>π</mi></mrow><annotation encoding="application/x-tex">(1-\cos\omega)/\pi</annotation></semantics></math>.</li>
+<li>A <strong>face cost</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>φ</mi><mo>:</mo><mi>G</mi><mo>→</mo><mi mathvariant="double-struck">ℝ</mi></mrow><annotation encoding="application/x-tex">\varphi:G\to\mathbb R</annotation></semantics></math>
+is a class function, minimal at the identity. The <strong>total
+cost</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>S</mi><mo stretchy="false" form="prefix">(</mo><mi>U</mi><mo stretchy="false" form="postfix">)</mo><mo>=</mo><msub><mo>∑</mo><mi>f</mi></msub><mi>φ</mi><mo stretchy="false" form="prefix">(</mo><msub><mi>U</mi><mi>f</mi></msub><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">S(U)=\sum_f\varphi(U_f)</annotation></semantics></math>
+is an invariant.</li>
+<li>The <strong>model</strong>
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><msub><mi>μ</mi><mi>β</mi></msub><mo>∝</mo><msup><mi>e</mi><mrow><mi>−</mi><mi>β</mi><mi>S</mi></mrow></msup><msup><mi>σ</mi><mi>E</mi></msup></mrow><annotation encoding="application/x-tex">\mu_\beta\propto e^{-\beta S} \sigma^E</annotation></semantics></math>
+is determined by (board,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math>,
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math>).
+The cost is its log-density relative to uniform, so the model is the one
+object that holds everything.</li>
+<li><strong>Redundancy does no harm:</strong> reframings preserve
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math>.
+Abelian classes all have size
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">|</mo><mi>G</mi><msup><mo stretchy="false" form="prefix">|</mo><mrow><mo stretchy="false" form="prefix">|</mo><mi>V</mi><mo stretchy="false" form="prefix">|</mo><mi>−</mi><mn>1</mn></mrow></msup></mrow><annotation encoding="application/x-tex">|G|^{|V|-1}</annotation></semantics></math>.
+You may pin a spanning tree to the identity before averaging
+invariants.</li>
+<li><strong>The stiffness dial</strong> runs from uniform labels
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>=</mo><mn>0</mn></mrow><annotation encoding="application/x-tex">\beta=0</annotation></semantics></math>)
+to defect-free labelings
+(<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>β</mi><mo>→</mo><mi>∞</mi></mrow><annotation encoding="application/x-tex">\beta\to\infty</annotation></semantics></math>).</li>
+<li>On a <strong>planar grid with the coin group</strong>, faces are
+independent coins with
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><msub><mi>U</mi><mi>f</mi></msub><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub><mo>=</mo><mrow><mi mathvariant="normal">tanh</mi><mo>&#8289;</mo></mrow><mi>β</mi></mrow><annotation encoding="application/x-tex">\langle U_f\rangle_\beta=\tanh\beta</annotation></semantics></math>.</li>
+</ul>
+<h2 id="dictionary">Dictionary</h2>
+<table>
+<colgroup>
+<col style="width: 50%" />
+<col style="width: 50%" />
+</colgroup>
+<thead>
+<tr>
+<th>Our term</th>
+<th>Other names</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>uniform distribution on
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>G</mi><annotation encoding="application/x-tex">G</annotation></semantics></math></td>
+<td>Haar measure</td>
+</tr>
+<tr>
+<td>face cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>φ</mi><annotation encoding="application/x-tex">\varphi</annotation></semantics></math></td>
+<td>Wilson action (per plaquette)</td>
+</tr>
+<tr>
+<td>total cost
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>S</mi><annotation encoding="application/x-tex">S</annotation></semantics></math></td>
+<td>action, Euclidean action; energy (statistical mechanics)</td>
+</tr>
+<tr>
+<td>stiffness
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mi>β</mi><annotation encoding="application/x-tex">\beta</annotation></semantics></math></td>
+<td>inverse coupling
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mn>1</mn><mi>/</mi><msup><mi>g</mi><mn>2</mn></msup></mrow><annotation encoding="application/x-tex">1/g^2</annotation></semantics></math>
+(up to a constant); inverse temperature</td>
+</tr>
+<tr>
+<td>model
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi>μ</mi><mi>β</mi></msub><annotation encoding="application/x-tex">\mu_\beta</annotation></semantics></math></td>
+<td>lattice gauge theory; "the theory"; Euclidean path integral; Gibbs
+measure</td>
+</tr>
+<tr>
+<td>normalizer
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mi>Z</mi><mo stretchy="false" form="prefix">(</mo><mi>β</mi><mo stretchy="false" form="postfix">)</mo></mrow><annotation encoding="application/x-tex">Z(\beta)</annotation></semantics></math></td>
+<td>partition function</td>
+</tr>
+<tr>
+<td>average
+<math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><mrow><mo stretchy="false" form="prefix">⟨</mo><mi>f</mi><msub><mo stretchy="false" form="postfix">⟩</mo><mi>β</mi></msub></mrow><annotation encoding="application/x-tex">\langle f\rangle_\beta</annotation></semantics></math></td>
+<td>expectation value; vacuum expectation value</td>
+</tr>
+<tr>
+<td>coin model</td>
+<td><math display="inline" xmlns="http://www.w3.org/1998/Math/MathML"><semantics><msub><mi mathvariant="double-struck">ℤ</mi><mn>2</mn></msub><annotation encoding="application/x-tex">\mathbb Z_2</annotation></semantics></math>
+lattice gauge theory (Wegner's Ising gauge model)</td>
+</tr>
+<tr>
+<td>fixing the tree (Fact 2.6)</td>
+<td>gauge fixing (maximal-tree / axial gauge)</td>
+</tr>
+</tbody>
+</table>
+<h2 id="whats-next">What's next</h2>
+<p>A model is a distribution, but we can only ever <em>ask</em> it
+questions: "on average, what is this number?" Chapter 3 is about which
+questions make sense. Averages of non-invariant quantities, like a
+single edge label, turn out to be useless, and you'll see exactly why.
+Averages of loop products are where the structure shows up. On a planar
+grid, Fact 2.8 already tells you how the average loop product of a big
+rectangle must behave. Try to guess before you turn the page.</p>
+</div>
+
+  <nav class="pager pager-bottom" aria-label="Chapters"><a rel="prev" href="ch01b.html">← Interlude<span class="t">: Why the labels are forced: charged fields</span></a><a rel="next" href="ch03.html">Chapter 3<span class="t">: What a model can tell you</span> →</a></nav>
+</main>
+</body>
+</html>

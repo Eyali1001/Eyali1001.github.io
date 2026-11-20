@@ -1,0 +1,28 @@
+{
+  "lgt": {
+    "releases": {
+      "0.1.0": [
+        {
+          "comment_text": "",
+          "digests": {
+            "md5": "e34c1cd75b88b62d7390a31bd3c564a5",
+            "sha256": "130ddb1e5e8b58480dd36abad2f94718d179b6c196ca24644c4869830996bfe2"
+          },
+          "downloads": -1,
+          "filename": "lgt-0.1.0-py3-none-any.whl",
+          "has_sig": false,
+          "md5_digest": "e34c1cd75b88b62d7390a31bd3c564a5",
+          "packagetype": "bdist_wheel",
+          "python_version": "py3",
+          "requires_python": ">=3.12",
+          "size": 22840,
+          "upload_time": "2026-11-15T19:06:57.071907Z",
+          "upload_time_iso_8601": "2026-11-15T19:06:57.071907Z",
+          "url": "./lgt-0.1.0-py3-none-any.whl",
+          "yanked": false,
+          "yanked_reason": null
+        }
+      ]
+    }
+  }
+}
