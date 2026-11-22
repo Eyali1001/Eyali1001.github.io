@@ -202,6 +202,21 @@ export function createArms(mujoco, model, data) {
   // A visitor's pointer hovering over the scene: idle arms turn to look at it.
   const look = { target: null, p: null, w: 0 }
 
+  // Turn the tool from `dir` toward the pointer, but only a little: a glance never
+  // swings it more than ~25° off its usual direction, and fades out when the pointer
+  // is right at the gripper (where the direction to it is meaningless).
+  const GLANCE = 0.45 // rad
+  function glance(dir, pos, idle) {
+    const to = v3.sub(look.p, pos), d = v3.len(to)
+    const w = 0.55 * look.w * idle * smooth((d - 0.05) / 0.1)
+    if (w <= 0) return dir
+    const g = v3.norm(v3.lerp(dir, v3.scale(to, 1 / d), w))
+    const c = v3.dot(g, dir)
+    if (c >= Math.cos(GLANCE)) return g
+    const perp = v3.norm(v3.sub(g, v3.scale(dir, c)))
+    return v3.add(v3.scale(dir, Math.cos(GLANCE)), v3.scale(perp, Math.sin(GLANCE)))
+  }
+
   // Plan for one arm at cycle time t: where the grasp site should be, where the
   // gripper should point, and how open it is.
   // `wall` is continuous time, used for the idle sway so it never jumps when
@@ -212,7 +227,7 @@ export function createArms(mujoco, model, data) {
     const sway = [0.015 * k0 * Math.sin(wall * 1.3 + i), 0.01 * k0 * Math.sin(wall * 0.9 + 2 * i), 0.012 * k0 * Math.sin(wall * 1.7 + i)]
     let pos = v3.add(idlePoint(i), sway)
     let dir = idleDir(i)
-    if (look.p && look.w > 0.001) dir = v3.norm(v3.lerp(dir, v3.norm(v3.sub(look.p, pos)), 0.55 * look.w))
+    let busy = Infinity // how far (s) this arm is from its nearest throw or catch
     let grip = g.rest
 
     // Walk the throws of the previous, current and next loop, so phases that
@@ -231,6 +246,8 @@ export function createArms(mujoco, model, data) {
       const throwDir = aimFor(a, 0.45 * towards(a, b), 0.45)
       const meet = meetDir(a, b)
 
+      if (i === a) busy = Math.min(busy, Math.max(0, s - 0.55 - t, t - (tr + 0.6)))
+      if (i === b) busy = Math.min(busy, Math.max(0, tc - 0.5 - t, t - (tc + 0.6)))
       if (i === a) {
         if (t >= s - 0.55 && t < s) {
           // carry the ball from where it was caught to the wind-up point
@@ -274,6 +291,8 @@ export function createArms(mujoco, model, data) {
         }
       }
     }
+    // only an idle arm glances at the pointer; it looks back well before its next throw or catch
+    if (look.p && look.w > 0.001) dir = glance(v3.norm(dir), pos, smooth(busy / 0.3))
     return { pos, dir: v3.norm(dir), grip }
   }
 

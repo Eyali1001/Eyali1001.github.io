@@ -38,7 +38,7 @@
 <link rel="icon" href="/favicon-32.png" sizes="32x32" type="image/png">
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <meta name="theme-color" content="#ffffff">
-<link rel="stylesheet" href="style.css?v=c869802274">
+<link rel="stylesheet" href="style.css?v=96806b8202">
 <script>
   // Decide synchronously whether the robot arms may load, so space is only
   // reserved when they have a real chance. Anything missing → plain page.
@@ -126,7 +126,7 @@
   const d = document.documentElement
   if (d.classList.contains('has-arms')) {
     const fig = document.getElementById('arms')
-    const start = () => import('./robots/scene.js?v=c869802274').then(m => m.mount(fig)).catch(() => { fig.remove(); d.classList.remove('has-arms') })
+    const start = () => import('./robots/scene.js?v=96806b8202').then(m => m.mount(fig)).catch(() => { fig.remove(); d.classList.remove('has-arms') })
     // Wait until the page is idle and the figure is near the screen.
     const io = new IntersectionObserver(([e]) => {
       if (!e.isIntersecting) return
@@ -135,12 +135,12 @@
     }, { rootMargin: '400px' })
     io.observe(fig)
   }
-  import('./widgets/notes.js?v=c869802274').then(m => m.enhance()).catch(() => {})
-  import('./widgets/socials.js?v=c869802274').then(m => m.wire()).catch(() => {})
-  import('./widgets/bullets.js?v=c869802274').then(m => m.light()).catch(() => {})
-  import('./widgets/projects.js?v=c869802274').then(m => m.wire()).catch(() => {})
-  import('./widgets/jukebox.js?v=c869802274').then(m => m.wire()).catch(() => {})
-  import('./widgets/bots.js?v=c869802274').then(m => m.start(document.getElementById('bots'))).catch(() => {})
+  import('./widgets/notes.js?v=96806b8202').then(m => m.enhance()).catch(() => {})
+  import('./widgets/socials.js?v=96806b8202').then(m => m.wire()).catch(() => {})
+  import('./widgets/bullets.js?v=96806b8202').then(m => m.light()).catch(() => {})
+  import('./widgets/projects.js?v=96806b8202').then(m => m.wire()).catch(() => {})
+  import('./widgets/jukebox.js?v=96806b8202').then(m => m.wire()).catch(() => {})
+  import('./widgets/bots.js?v=96806b8202').then(m => m.start(document.getElementById('bots'))).catch(() => {})
 </script>
 </body>
 </html>
